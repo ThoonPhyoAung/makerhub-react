@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Rocket,
   ArrowRight,
@@ -12,10 +13,10 @@ import {
 
 function HeroSection() {
   const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
-  const activeDays = 4; 
+  const activeDays = 4;
 
   return (
-    <section className="relative bg-bg overflow-hidden py-16 lg:py-14 min-h-[100vh] flex items-center">
+    <section className="relative bg-bg overflow-hidden py-16 lg:py-14 lg:min-h-[80vh] flex items-start lg:items-center">
       {/* Background grid pattern - CSS ထဲက ::before ကို inline style နဲ့ ပြန်ဆောက်တာ */}
       <div
         className="absolute inset-0 opacity-100 pointer-events-none"
@@ -61,12 +62,13 @@ function HeroSection() {
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-3 mb-12">
-            <a
-              href="/learning/arduino"
+            <Link
+              to="/learning/arduino"
               className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-extrabold text-sm px-6 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(34,197,94,0.3)] transition-all"
             >
               Start Learning <ArrowRight size={16} />
-            </a>
+            </Link>
+            {/* Same-page anchor, not a route — stays as <a> so it scrolls to #journeys instead of navigating */}
             <a
               href="#journeys"
               className="inline-flex items-center bg-bg-subtle text-text-muted font-bold text-sm px-6 py-2.5 rounded-lg border border-purple-400 hover:text-white hover:bg-purple-900/20 transition-all"

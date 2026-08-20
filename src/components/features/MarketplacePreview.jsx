@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { ArrowRight, Loader2 } from "lucide-react";
 
 function MarketplacePreview() {
@@ -10,14 +11,14 @@ function MarketplacePreview() {
         <div className="flex justify-between items-center mb-6 pb-3 border-b border-border">
           <h2 className="text-text text-2xl font-bold">Marketplace Preview</h2>
 
-          <a
-            href="/marketplace"
+          <Link
+            to="/marketplace"
             className="flex items-center gap-2 text-text font-semibold text-sm hover:text-primary transition-colors shrink-0 whitespace-nowrap"
           >
             <span className="hidden sm:inline">View Marketplace</span>
             <span className="sm:hidden text-text-muted">View All</span>
             <ArrowRight size={15} />
-          </a>
+          </Link>
         </div>
 
         {isLoading ? (

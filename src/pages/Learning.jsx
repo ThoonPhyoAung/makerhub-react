@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BookOpen, Users, Star, ChevronRight } from "lucide-react";
 import { journeys } from "../data/journeys";
 
@@ -13,7 +14,7 @@ function Learning() {
         </p>
       </div>
 
-       <div className="max-w-7xl mx-auto px-4 lg:px-8 grid lg:grid-cols-2 gap-6">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 grid lg:grid-cols-2 gap-6">
         {journeys.map((j) => {
           const Icon = j.icon;
           return (
@@ -88,13 +89,13 @@ function Learning() {
                     <Star size={13} /> {j.xp}
                   </span>
 
-                  <a
-                    href={j.link}
+                  <Link
+                    to={j.link}
                     className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border"
                     style={{ borderColor: j.color, color: j.color }}
                   >
                     Continue <ChevronRight size={12} />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

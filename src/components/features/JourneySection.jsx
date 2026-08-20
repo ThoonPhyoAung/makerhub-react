@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import {
   Infinity as InfinityIcon,
   Wifi,
@@ -97,13 +98,13 @@ function JourneySection() {
                     <Star size={13} /> {j.xp}
                   </span>
 
-                  <a
-                    href={j.link}
+                  <Link
+                    to={j.link}
                     className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border"
                     style={{ borderColor: j.color, color: j.color }}
                   >
                     Continue <ChevronRight size={12} />
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>
