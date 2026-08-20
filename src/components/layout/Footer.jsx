@@ -54,7 +54,7 @@ function Footer() {
   const socials = [GithubIcon, InstagramIcon, YoutubeIcon, DiscordIcon];
 
   return (
-    <footer className="pt-16 pb-6 bg-bg border-t border-border-muted">
+    <footer className="pt-8 md:pt-16 pb-6 bg-bg border-t border-border-muted">
       <div className="max-w-7xl mx-auto px-4">
         <div className="grid grid-cols-2 lg:grid-cols-6 gap-x-6 gap-y-10 mb-12">
           {/* Brand column — Mobile: full width (span 2), Desktop: 2/6 width */}

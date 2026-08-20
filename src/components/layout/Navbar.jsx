@@ -33,7 +33,7 @@ function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-nav-bg border-b border-border">
+    <header className="sticky top-0 z-50 bg-nav-bg border-b border-border relative">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
         {/* Logo */}
         <a href="/" className="flex items-center gap-2 shrink-0">
@@ -155,11 +155,17 @@ function Navbar() {
         </button>
       </nav>
 
-      {/* Mobile Menu (Collapsible) */}
-      {isMenuOpen && (
-        <div className="lg:hidden px-4 pb-4 border-t border-border">
+      {/* Mobile Menu — absolute overlay + original .navbar-collapse card style */}
+      <div
+        className={`lg:hidden absolute left-4 right-4 top-full overflow-hidden transition-all duration-300 ease-out ${
+          isMenuOpen
+            ? "max-h-[80vh] opacity-100 mt-3"
+            : "max-h-0 opacity-0 mt-0"
+        }`}
+      >
+        <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-4 overflow-y-auto max-h-[80vh]">
           {/* Mobile top strip: auth/profile + theme */}
-          <div className="flex items-center justify-between py-3 border-b border-border-muted">
+          <div className="flex items-center justify-between pb-3 border-b border-border-muted">
             {isLoggedIn ? (
               <div className="relative">
                 <button onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
@@ -199,7 +205,7 @@ function Navbar() {
               <div className="flex items-center gap-2">
                 <a
                   href="/login"
-                  className="px-3 py-1 rounded-full text-sm bg-bg-elevated text-text"
+                  className="px-3 py-1 rounded-full text-sm bg-bg-subtle text-text"
                 >
                   Log in
                 </a>
@@ -214,7 +220,7 @@ function Navbar() {
 
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-full bg-bg-elevated text-text-muted"
+              className="p-2 rounded-full bg-bg-subtle text-text-muted"
             >
               {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
             </button>
@@ -250,11 +256,11 @@ function Navbar() {
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               placeholder="Search projects or items..."
-              className="w-full bg-bg-elevated border border-border rounded-full pl-9 pr-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary"
+              className="w-full bg-bg-subtle border border-border rounded-full pl-9 pr-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary"
             />
           </form>
         </div>
-      )}
+      </div>
     </header>
   );
 }

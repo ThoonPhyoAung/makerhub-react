@@ -8,7 +8,7 @@ function StatsRibbon() {
   ];
 
   return (
-    <section className="py-4 mb-12 bg-bg-elevated border-y border-border">
+    <section className="py-6 md:py-8 bg-bg-elevated border-y border-border">
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div
           className="flex flex-nowrap items-center gap-8 overflow-x-auto"

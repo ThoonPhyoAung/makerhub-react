@@ -15,7 +15,7 @@ function HeroSection() {
   const activeDays = 4; 
 
   return (
-    <section className="relative bg-bg overflow-hidden py-16 lg:py-14 min-h-[80vh] flex items-center">
+    <section className="relative bg-bg overflow-hidden py-16 lg:py-14 min-h-[100vh] flex items-center">
       {/* Background grid pattern - CSS ထဲက ::before ကို inline style နဲ့ ပြန်ဆောက်တာ */}
       <div
         className="absolute inset-0 opacity-100 pointer-events-none"

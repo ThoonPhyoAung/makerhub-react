@@ -20,7 +20,7 @@ function HowItWorks() {
   ];
 
   return (
-    <section className="py-16">
+    <section className="py-10 md:py-16">
       <div className="max-w-5xl mx-auto px-4 text-center">
         <h2 className="text-text text-3xl font-extrabold mb-12">
           How It Works
