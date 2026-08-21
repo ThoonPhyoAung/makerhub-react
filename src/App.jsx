@@ -6,6 +6,7 @@ import Learning from "./pages/Learning";
 import JourneyDetail from "./pages/JourneyDetail";
 import LessonDetail from "./pages/LessonDetail";
 import Community from "./pages/Community";
+import Marketplace from "./pages/Marketplace";
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
           element={<LessonDetail />}
         />
         <Route path="/community" element={<Community />} />
+        <Route path="/marketplace" element={<Marketplace />} />
       </Routes>
       <Footer />
     </div>

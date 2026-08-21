@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Cpu, Heart } from "lucide-react";
 
 // Lucide v1+ က Brand/Logo Icon တွေ (Github, Youtube...) ကို ဖြုတ်လိုက်လို့
@@ -32,26 +33,52 @@ const DiscordIcon = (props) => (
 );
 
 function Footer() {
+  // path: null ဖြစ်ရင် page မတည်ဆောက်ရသေးလို့ "#" placeholder အတိုင်းထားတယ်
+  // (TODO: ဒီ page တွေဆောက်ပြီးရင် path ဖြည့်ပေးရမယ်)
   const columns = [
     {
       heading: "Platform",
-      links: ["Arduino", "ESP32", "Raspberry Pi", "All Tutorials"],
+      links: [
+        { name: "Arduino", path: "/learning/arduino" },
+        { name: "ESP32", path: "/learning/esp32" },
+        { name: "Raspberry Pi", path: "/learning/raspberry-pi" },
+        { name: "All Tutorials", path: "/learning" },
+      ],
     },
     {
       heading: "Community",
-      links: ["Discussions", "Project Showcase", "Events"],
+      links: [
+        { name: "Discussions", path: null },
+        { name: "Project Showcase", path: "/community" },
+        { name: "Events", path: null },
+      ],
     },
     {
       heading: "Marketplace",
-      links: ["All Products", "Sensors", "Motors"],
+      links: [
+        { name: "All Products", path: "/marketplace" },
+        { name: "Sensors", path: null },
+        { name: "Motors", path: null },
+      ],
     },
     {
       heading: "Company",
-      links: ["About Us", "Contact", "Privacy Policy"],
+      links: [
+        { name: "About Us", path: null },
+        { name: "Contact", path: null },
+        { name: "Privacy Policy", path: null },
+      ],
     },
   ];
 
-  const socials = [GithubIcon, InstagramIcon, YoutubeIcon, DiscordIcon];
+  // TODO: Real social media URL ရလာရင် href: "#" တွေကို အစားထိုးမယ်.
+  // External site ဖြစ်လို့ Link မဟုတ်ဘဲ <a> အတိုင်းထားရမယ်.
+  const socials = [
+    { Icon: GithubIcon, href: "#" },
+    { Icon: InstagramIcon, href: "#" },
+    { Icon: YoutubeIcon, href: "#" },
+    { Icon: DiscordIcon, href: "#" },
+  ];
 
   return (
     <footer className="pt-8 md:pt-16 pb-6 bg-bg border-t border-border-muted">
@@ -79,16 +106,27 @@ function Footer() {
                 {col.heading}
               </h6>
               <ul className="space-y-2.5">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <a
-                      href="#"
-                      className="text-text-muted text-sm hover:text-primary hover:translate-x-1 inline-block transition-all"
-                    >
-                      {link}
-                    </a>
-                  </li>
-                ))}
+                {col.links.map((link) =>
+                  link.path ? (
+                    <li key={link.name}>
+                      <Link
+                        to={link.path}
+                        className="text-text-muted text-sm hover:text-primary hover:translate-x-1 inline-block transition-all"
+                      >
+                        {link.name}
+                      </Link>
+                    </li>
+                  ) : (
+                    <li key={link.name}>
+                      <a
+                        href="#"
+                        className="text-text-muted text-sm hover:text-primary hover:translate-x-1 inline-block transition-all"
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ),
+                )}
               </ul>
             </div>
           ))}
@@ -98,10 +136,12 @@ function Footer() {
 
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex gap-4">
-            {socials.map((Icon, i) => (
+            {socials.map(({ Icon, href }, i) => (
               <a
                 key={i}
-                href="#"
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="text-text-subtle hover:text-text transition-colors"
               >
                 <Icon className="w-5 h-5" />

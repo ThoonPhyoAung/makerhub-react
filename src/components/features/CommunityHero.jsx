@@ -11,6 +11,7 @@ const slides = [
     image: "/assets/Project.hub-Hero-Banner.jpg",
     badgeIcon: Cpu,
     badgeText: "Featured Hardware",
+    badgeClass: "bg-black/80 text-white", // original: badge bg-dark text-white
     title: "Arduino VENTUNO Q",
     lead: "Where AI takes action. Explore cutting-edge DIY projects powered by edge computing.",
     buttonText: "Explore Projects",
@@ -23,6 +24,9 @@ const slides = [
     image: "/assets/esp32-s31-banner.png",
     badgeIcon: null,
     badgeText: "Community Showcase",
+    // original: badge bg-primary text-white — Bootstrap ရဲ့ --bs-primary ကို
+    // override မလုပ်ထားလို့ Bootstrap default blue (#0d6efd) ဖြစ်ခဲ့တာ, screenshot နဲ့ကိုက်တယ်
+    badgeClass: "bg-[#0d6efd] text-white",
     title: "ESP32-S31 Series",
     lead: "See what fellow makers are building with next-gen Wi-Fi & AI capabilities.",
     buttonText: "View Maker Projects",
@@ -34,6 +38,7 @@ const slides = [
     image: "/assets/hero_img.png",
     badgeIcon: null,
     badgeText: "Arduino Learning Hub",
+    badgeClass: "bg-primary text-white", // original: background: var(--green); color: white
     title: "Build, Learn, Share",
     lead: "Join fellow developers in mastering embedded systems. Showcase your electronics and code.",
     buttonText: "Share Your Project",
@@ -55,7 +60,7 @@ function CommunityHero() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 my-4">
-      <div className="relative rounded-3xl overflow-hidden shadow-sm h-[220px] md:h-[400px]">
+      <div className="relative rounded-3xl overflow-hidden shadow-sm h-[150px] md:h-[350px]">
         {slides.map((slide, i) => {
           const BadgeIcon = slide.badgeIcon;
           const ButtonIcon = slide.buttonIcon;
@@ -75,7 +80,9 @@ function CommunityHero() {
               />
               <div className="absolute inset-0 flex items-center">
                 <div className="px-4 md:px-8 max-w-lg">
-                  <span className="inline-flex items-center gap-1.5 bg-bg-elevated/90 text-text px-3 py-1.5 rounded-full text-xs font-bold mb-2 md:mb-3 shadow-sm">
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold mb-2 md:mb-3 shadow-sm ${slide.badgeClass}`}
+                  >
                     {BadgeIcon && (
                       <BadgeIcon size={13} className="text-amber-400" />
                     )}
@@ -91,14 +98,14 @@ function CommunityHero() {
                   {slide.to ? (
                     <Link
                       to={slide.to}
-                      className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-bold text-sm md:text-base px-4 py-2 md:px-6 md:py-3 rounded-lg shadow hover:brightness-110 transition-all"
+                      className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/30 text-white font-bold text-sm md:text-base px-4 py-2 md:px-6 md:py-3 rounded-lg shadow hover:bg-white/25 transition-all"
                     >
                       {slide.buttonText} <ButtonIcon size={16} />
                     </Link>
                   ) : (
                     <a
                       href={slide.href}
-                      className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-bold text-sm md:text-base px-4 py-2 md:px-6 md:py-3 rounded-lg shadow hover:brightness-110 transition-all"
+                      className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/30 text-white font-bold text-sm md:text-base px-4 py-2 md:px-6 md:py-3 rounded-lg shadow hover:bg-white/25 transition-all"
                     >
                       {slide.buttonText} <ButtonIcon size={16} />
                     </a>

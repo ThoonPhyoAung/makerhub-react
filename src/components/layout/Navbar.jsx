@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import {
   Search,
   Moon,
@@ -36,12 +36,12 @@ function Navbar() {
     <header className="sticky top-0 z-50 bg-nav-bg border-b border-border relative">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
         {/* Logo */}
-        <a href="/" className="flex items-center gap-2 shrink-0">
+        <Link to="/" className="flex items-center gap-2 shrink-0">
           <Cpu size={20} className="text-primary" />
           <span className="text-text font-bold text-lg">
             Maker<span className="text-primary">Hub</span> MM
           </span>
-        </a>
+        </Link>
 
         {/* Desktop Nav Links */}
         <ul className="hidden lg:flex items-center gap-6">
@@ -106,18 +106,18 @@ function Navbar() {
                   <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border">
                     User Name
                   </p>
-                  <a
-                    href="/profile"
+                  <Link
+                    to="/profile"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:text-text hover:bg-bg-subtle"
                   >
                     <User size={14} /> Profile
-                  </a>
-                  <a
-                    href="/profile/edit"
+                  </Link>
+                  <Link
+                    to="/profile/edit"
                     className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:text-text hover:bg-bg-subtle"
                   >
                     <Settings size={14} /> Settings
-                  </a>
+                  </Link>
                   <button
                     onClick={() => setIsLoggedIn(false)}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-bg-subtle"
@@ -129,18 +129,18 @@ function Navbar() {
             </div>
           ) : (
             <div className="flex items-center gap-2">
-              <a
-                href="/login"
+              <Link
+                to="/login"
                 className="px-4 py-1.5 rounded-full text-sm font-medium bg-bg-elevated text-text hover:bg-bg-subtle transition-colors"
               >
                 Log in
-              </a>
-              <a
-                href="/signup"
+              </Link>
+              <Link
+                to="/signup"
                 className="px-4 py-1.5 rounded-full text-sm font-medium bg-primary text-white hover:bg-primary-hover transition-colors"
               >
                 Sign up
-              </a>
+              </Link>
             </div>
           )}
         </div>
@@ -180,18 +180,18 @@ function Navbar() {
                     <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border">
                       User Name
                     </p>
-                    <a
-                      href="/profile"
+                    <Link
+                      to="/profile"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:text-text"
                     >
                       <User size={14} /> Profile
-                    </a>
-                    <a
-                      href="/profile/edit"
+                    </Link>
+                    <Link
+                      to="/profile/edit"
                       className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:text-text"
                     >
                       <Settings size={14} /> Settings
-                    </a>
+                    </Link>
                     <button
                       onClick={() => setIsLoggedIn(false)}
                       className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500"
@@ -203,18 +203,18 @@ function Navbar() {
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <a
-                  href="/login"
+                <Link
+                  to="/login"
                   className="px-3 py-1 rounded-full text-sm bg-bg-subtle text-text"
                 >
                   Log in
-                </a>
-                <a
-                  href="/signup"
+                </Link>
+                <Link
+                  to="/signup"
                   className="px-3 py-1 rounded-full text-sm bg-primary text-white"
                 >
                   Sign up
-                </a>
+                </Link>
               </div>
             )}
 
