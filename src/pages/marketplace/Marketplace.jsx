@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import MarketplaceHero from "../components/features/MarketplaceHero";
-import MarketplaceCategoryNav from "../components/features/MarketplaceCategoryNav";
+import MarketplaceHero from "./MarketplaceHero";
+import MarketplaceCategoryNav from "./MarketplaceCategoryNav";
 
 function Marketplace() {
   const [activeCategory, setActiveCategory] = useState("All");

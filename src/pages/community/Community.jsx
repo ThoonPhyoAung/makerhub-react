@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Loader2 } from "lucide-react";
-import CommunityHero from "../components/features/CommunityHero";
-import CommunityCategoryNav from "../components/features/CommunityCategoryNav";
+import CommunityHero from "./CommunityHero";
+import CommunityCategoryNav from "./CommunityCategoryNav";
 
 function Community() {
   const [activeCategory, setActiveCategory] = useState("all");

@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { BookOpen, Users, Star, ChevronRight } from "lucide-react";
-import { journeys } from "../data/journeys";
+import { journeys } from "../../data/journeys";
 
 function Learning() {
   return (

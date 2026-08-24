@@ -1,7 +1,7 @@
 import { useParams, Link } from "react-router-dom";
 import { ArrowLeft, ChevronLeft, ChevronRight, Star } from "lucide-react";
-import { journeys } from "../data/journeys";
-import { getLessonsByJourney } from "../data/lessons";
+import { journeys } from "../../data/journeys";
+import { getLessonsByJourney } from "../../data/lessons";
 
 function LessonDetail() {
   const { journeyId, lessonSlug } = useParams();
