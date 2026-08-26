@@ -10,7 +10,7 @@ import Marketplace from "./pages/marketplace/Marketplace";
 import CreatePost from "./pages/community/CreatePost";
 // Auth Pages Import
 import Login from "./pages/auth/Login";
-import Signup from "./pages/auth/SignUp";
+import SignUp from "./pages/auth/SignUp";
 
 function App() {
   return (
@@ -23,7 +23,7 @@ function App() {
         <Route path="/admin/login" element={<Login />} />
 
         {/* Signup */}
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={<SignUp />} />
 
         {/* Admin Layout */}
 
