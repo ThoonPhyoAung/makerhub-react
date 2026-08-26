@@ -1,9 +1,9 @@
-import { Infinity as InfinityIcon, Wifi, Server, Cpu } from "lucide-react";
+import { SiArduino, SiEspressif, SiRaspberrypi } from "react-icons/si";
 
 export const journeys = [
   {
     id: "arduino",
-    icon: InfinityIcon,
+    icon: SiArduino,
     title: "Arduino Journey",
     badge: "Beginner",
     desc: "Master Arduino programming from LED blinking to advanced robotics projects.",
@@ -18,7 +18,7 @@ export const journeys = [
   },
   {
     id: "esp32",
-    icon: Wifi,
+    icon: SiEspressif,
     title: "ESP32 Journey",
     badge: "Intermediate",
     desc: "Build WiFi & Bluetooth IoT devices with the powerful ESP32 microcontroller.",
@@ -33,7 +33,7 @@ export const journeys = [
   },
   {
     id: "esp8266",
-    icon: Server,
+    icon: SiEspressif,
     title: "ESP8266 Journey",
     badge: "Beginner",
     desc: "Create smart home projects and web-connected sensors with the affordable ESP8266.",
@@ -48,7 +48,7 @@ export const journeys = [
   },
   {
     id: "raspberrypi",
-    icon: Cpu,
+    icon: SiRaspberrypi,
     title: "Raspberry Pi Journey",
     badge: "Advanced",
     desc: "Transform ideas into reality with the versatile Raspberry Pi single-board computer.",

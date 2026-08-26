@@ -8,11 +8,23 @@ import LessonDetail from "./pages/learning/LessonDetail";
 import Community from "./pages/community/Community";
 import Marketplace from "./pages/marketplace/Marketplace";
 import CreatePost from "./pages/community/CreatePost";
+// Auth Pages Import
+import Login from "./pages/auth/Login";
+import Signup from "./pages/auth/SignUp";
 
 function App() {
   return (
     <div>
       <Routes>
+        {/* User Login Route */}
+        <Route path="/login" element={<Login />} />
+
+        {/* Admin Login Route */}
+        <Route path="/admin/login" element={<Login />} />
+
+        {/* Signup */}
+        <Route path="/signup" element={<Signup />} />
+
         {/* Admin Layout */}
 
         {/* Weblayout */}

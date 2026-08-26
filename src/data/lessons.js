@@ -46,7 +46,7 @@ export const lessons = [
       "Placeholder lesson content. analogRead() သုံးပြီး sensor value ဖတ်တာ, Serial Monitor မှာ ပြတာ.",
   },
 
-  // esp32 / esp8266 / raspberry-pi journeys: lesson content မရေးရသေးဘူး —
+  // esp32 / esp8266 / raspberrypi journeys: lesson content မရေးရသေးဘူး —
   // getLessonsByJourney() က empty array ပြန်ပေးမှာမို့ JourneyDetail
   // page ထဲမှာ "Coming soon" empty state ကိုယ်တိုင် ပြပါလိမ့်မယ်.
 ];
