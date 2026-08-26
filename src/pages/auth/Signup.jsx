@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { User, Mail, Lock, ArrowRight, Cpu, Moon, Sun } from "lucide-react";
 
-function Signup() {
+function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -152,4 +152,4 @@ function Signup() {
   );
 }
 
-export default Signup;
+export default SignUp;
