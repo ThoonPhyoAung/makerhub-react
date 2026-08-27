@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Rocket,
   ArrowRight,
@@ -14,6 +15,10 @@ import {
 function HeroSection() {
   const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
   const activeDays = 4;
+
+  // Redux Auth State
+  const user = useSelector((state) => state.auth.user); // slice name/field ကို authSlice.js အတိုင်း ချိန်ညှိပါ
+  // const isLoggedIn = !!user; // user ရှိရင် true, null ဆိုရင် false
 
   return (
     <section className="relative bg-bg overflow-hidden py-16 lg:py-14 lg:min-h-[80vh] flex items-start lg:items-center">
@@ -89,7 +94,7 @@ function HeroSection() {
               </div>
               <div className="mb-3">
                 <span className="text-amber-400 text-2xl font-extrabold tracking-tight">
-                  0
+                  {user?.xp || 0}
                 </span>
                 <span className="text-text-subtle text-xs font-medium">
                   {" "}
@@ -99,7 +104,7 @@ function HeroSection() {
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-green-500 to-cyan-500 rounded-full"
-                  style={{ width: "0%" }}
+                 style={{ width: `${user?.xp || 0}%` }}
                 />
               </div>
             </div>
@@ -113,7 +118,7 @@ function HeroSection() {
                 </span>
               </div>
               <div className="text-amber-400 text-2xl font-extrabold tracking-tight mb-3">
-                0 Days
+                {user?.streakDays || 0} Days
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex gap-1">
@@ -143,7 +148,7 @@ function HeroSection() {
                 </span>
               </div>
               <div className="text-cyan-400 text-2xl font-extrabold mb-1">
-                0%
+                {user?.progress || 0} %
               </div>
               <div className="text-text-muted text-xs mb-3">
                 Journey Completion
@@ -151,7 +156,7 @@ function HeroSection() {
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-                  style={{ width: "0%" }}
+                  style={{ width: `${user?.progress || 0}%` }}
                 />
               </div>
             </div>

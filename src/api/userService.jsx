@@ -14,8 +14,9 @@ const defaultUsers = [
     role: "admin", // admin role
     email: "admin@makerhub.mm",
     password: "admin",
-    xp: 9999,
+    xp: 99,
     streakDays: 30,
+    progress: 20,
     completedLessons: [],
   },
   {
@@ -24,8 +25,9 @@ const defaultUsers = [
     role: "learner", // learner role
     email: "learner@makerhub.mm",
     password: "123456",
-    xp: 450,
+    xp: 45,
     streakDays: 5,
+    progress: 20,
     completedLessons: ["esp32-basics-01"],
   },
 ];
@@ -72,6 +74,7 @@ export const userLogin = (userinfo) => {
     email: user.email,
     xp: user.xp || 0,
     streakDays: user.streakDays || 1,
+    progress: user.progress || 0,
     completedLessons: user.completedLessons || [],
   };
 
@@ -81,6 +84,7 @@ export const userLogin = (userinfo) => {
     status: 1,
     message: "Login successful!",
     data: activeUser,
+    role: user.role,
   };
 };
 
@@ -128,7 +132,7 @@ export const deleteUserAccount = (userId) => {
 
   localStorage.setItem(USERS_KEY, JSON.stringify(users));
 
-  // if Active User , direct Logout 
+  // if Active User , direct Logout
   const activeUser = JSON.parse(localStorage.getItem(ACTIVE_USER_KEY));
   if (activeUser && activeUser.id === userId) {
     localStorage.removeItem(ACTIVE_USER_KEY);

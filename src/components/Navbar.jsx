@@ -3,6 +3,8 @@ import { NavLink, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
 import { userLogout } from "../api/userService";
+// for alert
+import { useAlert } from "../context/AlertContext";
 import {
   Search,
   Moon,
@@ -22,6 +24,9 @@ function Navbar() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [searchValue, setSearchValue] = useState("");
 
+  // show alert
+  const showAlert = useAlert();
+
   // Redux Auth State
   const { user, isLogin } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
@@ -37,9 +42,11 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Logout
   const handleLogout = () => {
-    userLogout(); // LocalStorage ရှင်းထုတ်ခြင်း
+    const response = userLogout(); // LocalStorage ရှင်းထုတ်ခြင်း
     dispatch(logout()); // Redux State ရှင်းထုတ်ခြင်း
+    showAlert(response.message);
     setIsDropdownOpen(false);
     setIsMenuOpen(false);
   };
@@ -109,7 +116,7 @@ function Navbar() {
             aria-label="Toggle Theme"
             className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
           >
-            {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           {isLogin ? (
@@ -236,7 +243,7 @@ function Navbar() {
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
             >
-              {isDarkMode ? <Moon size={18} /> : <Sun size={18} />}
+              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
             </button>
           </div>
 

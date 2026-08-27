@@ -1,18 +1,72 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Mail, Lock, ArrowRight, Cpu, Moon, Sun } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+
+// use fake api did with userService.jsx
+import { login } from "../../features/auth/authSlice";
+import { userLogin } from "../../api/userService";
+
+// to know current route location
+import { useLocation } from "react-router-dom";
+
+// show alert
+import { useAlert } from "../../context/AlertContext";
 
 function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const [errors, setErrors] = useState({});
+  const [loginError, setLoginError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true); // dummy state pattern — Navbar.jsx အတိုင်း
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const currentRoute = useLocation();
+  const showAlert = useAlert();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: authApi.login({ email, password }) ချိတ်မယ်.
-    // Success -> navigate("/"), Fail -> setError(err.message)
+
+    const err = validateData();
+    if (Object.keys(err).length > 0) {
+      return false;
+    } else {
+      setIsSubmitting(true); // this is for button text "Signing in..."
+      let email = emailRef.current.value;
+      let password = passwordRef.current.value;
+
+      //if api have,  call API - login API
+      const response = userLogin({ email, password });
+      if (response.status === 1) {
+        dispatch(login(response.data)); // login action creator
+        console.log(currentRoute);
+
+        if (
+          currentRoute.pathname.includes("/admin") &&
+          response.data.role === "admin"
+        ) {
+          showAlert(response.message); // "Login successful!"
+          navigate("/admin/dashboard");
+        } else {
+          showAlert(response.message); // "Login successful!"
+          navigate("/");
+        }
+      } else {
+        setIsSubmitting(false);
+        setLoginError(response.message);
+      }
+    }
+  };
+
+  // validation
+  const validateData = () => {
+    const errs = {};
+    if (!emailRef.current.value) errs.email = "Email is Required";
+    if (!passwordRef.current.value) errs.password = "Password is required";
+    setErrors(errs);
+    return errs;
   };
 
   return (
@@ -54,13 +108,18 @@ function Login() {
               </p>
             </div>
 
-            {error && (
+            {loginError && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
-                {error}
+                {loginError}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            {/* noValidate can prevent browser default form validation */}
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex flex-col gap-4"
+            >
               <div>
                 <label
                   htmlFor="email"
@@ -73,13 +132,16 @@ function Login() {
                   <input
                     id="email"
                     type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    // required
+                    ref={emailRef}
+                    autoComplete="off"
                     placeholder="name@example.com"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -91,30 +153,32 @@ function Login() {
                     Password
                   </label>
                   {/* Forgot-password page မဆောက်ရသေးလို့ placeholder ချည်းသာ */}
-                  <a
-                    href="#"
+                  <Link
+                    to="/forgot-password"
                     className="text-primary text-xs font-medium hover:underline"
                   >
                     Forgot password?
-                  </a>
+                  </Link>
                 </div>
                 <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5 focus-within:border-primary transition-colors">
                   <Lock size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="password"
                     type="password"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    // required
+                    ref={passwordRef}
+                    autoComplete="off"
                     placeholder="••••••••"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
+                {errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                )}
               </div>
 
               <button
                 type="submit"
-                disabled={isSubmitting}
                 className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-2.5 rounded-xl mt-2 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? "Signing in..." : "Sign In"}

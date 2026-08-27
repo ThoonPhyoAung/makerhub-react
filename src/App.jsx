@@ -11,37 +11,41 @@ import CreatePost from "./pages/community/CreatePost";
 // Auth Pages Import
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
+// Alert
+import { AlertProvider } from "./context/AlertContext";  // ✅ named import — curly braces ပါရမယ်
 
 function App() {
   return (
-    <div>
-      <Routes>
-        {/* User Login Route */}
-        <Route path="/login" element={<Login />} />
+    <AlertProvider>
+      <div>
+        <Routes>
+          {/* User Login Route */}
+          <Route path="/login" element={<Login />} />
 
-        {/* Admin Login Route */}
-        <Route path="/admin/login" element={<Login />} />
+          {/* Admin Login Route */}
+          <Route path="/admin" element={<Login />} />
 
-        {/* Signup */}
-        <Route path="/signup" element={<SignUp />} />
+          {/* Signup */}
+          <Route path="/signup" element={<SignUp />} />
 
-        {/* Admin Layout */}
+          {/* Admin Layout */}
 
-        {/* Weblayout */}
-        <Route element={<WebLayout />}>
-          <Route path="/" element={<Home />} />
-          <Route path="/learning" element={<Learning />} />
-          <Route path="/learning/:journeyId" element={<JourneyDetail />} />
-          <Route
-            path="/learning/:journeyId/:lessonSlug"
-            element={<LessonDetail />}
-          />
-          <Route path="/community" element={<Community />} />
-          <Route path="/community/create-post" element={<CreatePost />} />
-          <Route path="/marketplace" element={<Marketplace />} />
-        </Route>
-      </Routes>
-    </div>
+          {/* Weblayout */}
+          <Route element={<WebLayout />}>
+            <Route path="/" element={<Home />} />
+            <Route path="/learning" element={<Learning />} />
+            <Route path="/learning/:journeyId" element={<JourneyDetail />} />
+            <Route
+              path="/learning/:journeyId/:lessonSlug"
+              element={<LessonDetail />}
+            />
+            <Route path="/community" element={<Community />} />
+            <Route path="/community/create-post" element={<CreatePost />} />
+            <Route path="/marketplace" element={<Marketplace />} />
+          </Route>
+        </Routes>
+      </div>
+    </AlertProvider>
   );
 }
 
