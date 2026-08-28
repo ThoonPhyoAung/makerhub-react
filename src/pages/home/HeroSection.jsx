@@ -13,8 +13,12 @@ import {
 } from "lucide-react";
 
 function HeroSection() {
-  const streakDays = ["M", "T", "W", "T", "F", "S", "S"];
-  const activeDays = 4;
+  const streakDays = ["S", "M", "T", "W", "T", "F", "S"];
+
+  // to get real date (Sun=0, Mon=1, ..., Fri=5, Sat=6)
+  const currentDayIndex = new Date().getDay();
+
+  const activeDays = currentDayIndex + 1;
 
   // Redux Auth State
   const user = useSelector((state) => state.auth.user); // slice name/field ကို authSlice.js အတိုင်း ချိန်ညှိပါ
@@ -104,7 +108,9 @@ function HeroSection() {
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
                 <div
                   className="h-full bg-gradient-to-r from-green-500 to-cyan-500 rounded-full"
-                 style={{ width: `${user?.xp || 0}%` }}
+                  style={{
+                    width: `${Math.min(((user?.xp || 0) / 10000) * 100, 100)}%`,
+                  }}
                 />
               </div>
             </div>
@@ -122,12 +128,21 @@ function HeroSection() {
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex gap-1">
-                  {streakDays.map((_, i) => (
-                    <div
-                      key={i}
-                      className={`w-[13px] h-[13px] rounded-sm ${i < activeDays ? "bg-primary" : "bg-surface"}`}
-                    />
-                  ))}
+                  {streakDays.map((_, index) => {
+                    // checking today
+                    const isToday = index === currentDayIndex;
+
+                    return (
+                      <div
+                        key={index}
+                        className={`w-[13px] h-[13px] rounded-sm transition-colors ${
+                          isToday
+                            ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" // if today, Fade In/Out 
+                            : "bg-surface border border-border" // other days
+                        }`}
+                      />
+                    );
+                  })}
                 </div>
                 <div className="flex gap-1 text-[10px] text-text-subtle">
                   {streakDays.map((day, i) => (

@@ -1,19 +1,61 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { User, Mail, Lock, ArrowRight, Cpu, Moon, Sun } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+
+// use fake api did with userService.jsx
+import { login } from "../../features/auth/authSlice";
+import { userSignUp } from "../../api/userService";
+
+// show alert
+import { useAlert } from "../../context/AlertContext";
 
 function SignUp() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState(null);
+  const nameRef = useRef(null);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+  const [errors, setErrors] = useState({});
+  const [signUpError, setSignUpError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true); // Login.jsx ရဲ့ dummy state pattern အတိုင်း
+  const [isDarkMode, setIsDarkMode] = useState(true); 
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const showAlert = useAlert();
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // TODO: authApi.signup({ name, email, password }) ချိတ်မယ်.
-    // Success -> navigate("/"), Fail -> setError(err.message)
+    const err = validateData();
+    if (Object.keys(err).length > 0) {
+      return false;
+    } else {
+      setIsSubmitting(true); // this is for button text "Signing in..."
+      let name = nameRef.current.value;
+      let email = emailRef.current.value;
+      let password = passwordRef.current.value;
+
+      //if api have,  call API - login API
+      const response = userSignUp({ name, email, password });
+      if (response.status === 1) {
+        dispatch(login(response.data));
+        showAlert(response.message); // "signup sucess"
+        // navigate("/login"); 
+        navigate("/");
+      } else {
+        setIsSubmitting(false);
+        setSignUpError(response.message);
+      }
+    }
+  };
+
+  // validation
+  const validateData = () => {
+    const errs = {};
+    if (!nameRef.current.value) errs.name = "Name is Required";
+    if (!emailRef.current.value) errs.email = "Email is Required";
+    if (!passwordRef.current.value) errs.password = "Password is required";
+    setErrors(errs);
+    return errs;
   };
 
   return (
@@ -55,9 +97,10 @@ function SignUp() {
               </p>
             </div>
 
-            {error && (
+            {/* error message box */}
+            {signUpError && (
               <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
-                {error}
+                {signUpError}
               </div>
             )}
 
@@ -74,13 +117,15 @@ function SignUp() {
                   <input
                     id="name"
                     type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    ref={nameRef}
+                    autoComplete="off"
                     placeholder="e.g. Aung Aung"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
+                {errors.name && (
+                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                )}
               </div>
 
               <div>
@@ -95,13 +140,16 @@ function SignUp() {
                   <input
                     id="email"
                     type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    ref={emailRef}
+                    autoComplete="off"
+                    // onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
+                {errors.email && (
+                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                )}
               </div>
 
               <div>
@@ -116,14 +164,16 @@ function SignUp() {
                   <input
                     id="password"
                     type="password"
-                    required
                     minLength={6}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    ref={passwordRef}
+                    autoComplete="off"
                     placeholder="Minimum 6 characters"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
+                {errors.password && (
+                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                )}
               </div>
 
               <button

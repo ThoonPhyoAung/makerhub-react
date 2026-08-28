@@ -102,11 +102,13 @@ export const userSignUp = (userData) => {
   const newUser = {
     id: `usr_${Date.now()}`,
     name,
+    role: "learner", // learner role
     email,
     password,
     role,
     xp: 100, // Sign up bonus XP
     streakDays: 1,
+    progress: 0,
     completedLessons: [],
   };
 

@@ -41,7 +41,7 @@ function Login() {
       const response = userLogin({ email, password });
       if (response.status === 1) {
         dispatch(login(response.data)); // login action creator
-        console.log(currentRoute);
+        // console.log(currentRoute);
 
         if (
           currentRoute.pathname.includes("/admin") &&
