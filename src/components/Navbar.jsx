@@ -133,7 +133,7 @@ function Navbar() {
                     )}&background=161b22&color=0d9488&bold=true`
                   }
                   alt="Profile"
-                  className="w-9 h-9 rounded-full object-cover"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-[#0d9488]"
                 />
               </button>
 
@@ -214,7 +214,7 @@ function Navbar() {
                     )}&background=161b22&color=0d9488&bold=true`
                   }
                   alt="Profile"
-                  className="w-9 h-9 rounded-full object-cover"
+                  className="w-9 h-9 rounded-full object-cover border-2 border-[#0d9488]"
                 />
                 <span className="text-sm font-semibold text-text truncate max-w-[120px]">
                   {user?.name || "User"}

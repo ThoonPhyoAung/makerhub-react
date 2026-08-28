@@ -18,7 +18,7 @@ function SignUp() {
   const [errors, setErrors] = useState({});
   const [signUpError, setSignUpError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true); 
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const showAlert = useAlert();
@@ -39,7 +39,7 @@ function SignUp() {
       if (response.status === 1) {
         dispatch(login(response.data));
         showAlert(response.message); // "signup sucess"
-        // navigate("/login"); 
+        // navigate("/login");
         navigate("/");
       } else {
         setIsSubmitting(false);
@@ -118,7 +118,7 @@ function SignUp() {
                     id="name"
                     type="text"
                     ref={nameRef}
-                    autoComplete="off"
+                    autoComplete="name"
                     placeholder="e.g. Aung Aung"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
@@ -141,7 +141,7 @@ function SignUp() {
                     id="email"
                     type="email"
                     ref={emailRef}
-                    autoComplete="off"
+                    autoComplete="email"
                     // onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
@@ -166,7 +166,7 @@ function SignUp() {
                     type="password"
                     minLength={6}
                     ref={passwordRef}
-                    autoComplete="off"
+                    autoComplete="new-password"
                     placeholder="Minimum 6 characters"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />

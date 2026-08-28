@@ -134,7 +134,7 @@ function Login() {
                     type="email"
                     // required
                     ref={emailRef}
-                    autoComplete="off"
+                    autoComplete="username"
                     placeholder="name@example.com"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
@@ -167,7 +167,7 @@ function Login() {
                     type="password"
                     // required
                     ref={passwordRef}
-                    autoComplete="off"
+                    autoComplete="current-password"
                     placeholder="••••••••"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
