@@ -1,3 +1,17 @@
+here is api links
+1 - https://6a96c22a0e3240db90615a8a.mockapi.io/api/v1/  ( journeys, lessons)
+2 - https://6a96c5ef0e3240db90615d5f.mockapi.io/api/v1/  ( posts, marketplace)
+
 1. Login > done
 2. Sign Up > done
-3. have to make protected route
+3. create mock api 2 accounts
+4. updated api.js and created .env
+5. Component တွေထဲမှာ loading, error, data state တွေကို ထပ်ခါထပ်ခါ လိုက်မရေးရအောင် Reusable Custom Hook တစ်ခု အရင်ဆောက်
+6. create at // src/utils/iconMap.jsx and // src/api/postsApi.jsx 
+--- API ကနေ "arduino" ဆိုတဲ့ စာသား ရလာတဲ့အခါ UI ပေါ်မှာ Icon အဖြစ် ပြသနိုင်အောင် iconMap.jsx က ကြားခံ Lookup Table အဖြစ် အလုပ်လုပ်ပေးတာပါ။
+
+7. community.jsx updated
+8. 
+
+3. admin panel dashboard
+4. have to make protected route

@@ -15,12 +15,15 @@ import {
   User,
   Settings,
   LogOut,
+  Bell,
 } from "lucide-react";
 
 function Navbar() {
-  const dropdownRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+  const notifDropdownRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false); //for notification
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [searchValue, setSearchValue] = useState("");
 
@@ -34,8 +37,18 @@ function Navbar() {
   // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(event.target)
+      ) {
         setIsDropdownOpen(false);
+      }
+
+      if (
+        notifDropdownRef.current &&
+        !notifDropdownRef.current.contains(event.target)
+      ) {
+        setIsNotifOpen(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
@@ -60,7 +73,15 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    console.log("Searching:", searchValue);
+    if (searchValue.trim()) {
+      console.log("Searching for:", searchValue);
+      // TODO: Add actual search logic here
+
+      // Search ပြီးရင် Mobile Menu ကို ပိတ်ချလိုက်ရန်
+      if (isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    }
   };
 
   return (
@@ -119,8 +140,32 @@ function Navbar() {
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
+          {/* notification bell icon (desktop — absolute floating dropdown is fine here, no overflow-hidden parent) */}
+          {isLogin && (
+            <div className="relative" ref={notifDropdownRef}>
+              <button
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                className="relative p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
+              >
+                <Bell size={18} />
+                {/* placeholder dot — real unread count backend ရမှ */}
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+              </button>
+              {isNotifOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-bg-elevated border border-border rounded-lg shadow-lg py-2 z-20">
+                  <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border truncate">
+                    Notifications
+                  </p>
+                  <div>
+                    <p className="px-4 py-2 text-sm text-text-muted">Not yet</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {isLogin ? (
-            <div className="relative" ref={dropdownRef}>
+            <div className="relative" ref={profileDropdownRef}>
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
                 className="cursor-pointer flex items-center"
@@ -239,13 +284,39 @@ function Navbar() {
               </div>
             )}
 
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
-            >
-              {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setIsDarkMode(!isDarkMode)}
+                className="p-2 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
+              >
+                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+              </button>
+
+              {isLogin && (
+                <button
+                  onClick={() => setIsNotifOpen(!isNotifOpen)}
+                  className="relative p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
+                >
+                  <Bell size={18} />
+                  {/* placeholder dot — real unread count backend ရမှ */}
+                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                </button>
+              )}
+            </div>
           </div>
+
+          {/* Mobile Notification Panel — absolute မဟုတ်ဘဲ document flow ထဲမှာပဲ
+              conditional render လုပ်ထားတယ်, ဒါမှ mobile menu ရဲ့ overflow-hidden
+              parent ကြောင့် ဖျောက်ခံရမှာ မဟုတ်ဘူး (desktop dropdown ကို copy
+              လုပ်ရင် ဒီပြသနာ တက်နိုင်တယ်) */}
+          {isNotifOpen && (
+            <div className="bg-bg-elevated border border-border rounded-lg my-3">
+              <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border">
+                Notifications
+              </p>
+              <p className="px-4 py-2 text-sm text-text-muted">Not yet</p>
+            </div>
+          )}
 
           {/* Mobile Nav Links */}
           <ul className="flex flex-col gap-1 py-3">
