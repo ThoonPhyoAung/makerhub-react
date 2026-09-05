@@ -7,8 +7,7 @@ import CommunityCategoryNav from "./CommunityCategoryNav";
 // API & Custom Hooks
 import { useFetch } from "../../hooks/useFetch";
 import { getPosts } from "../../api/postsApi";
-import { communityCategories } from "../../data/communityCategories";
-import { postCategoryIcons } from "../../data/communityCategories";
+import { boardIconMap, postCategoryIcons, RenderIcon } from "../../utils/iconMaps";
 
 function Community() {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -22,8 +21,13 @@ function Community() {
       return posts.filter((post) => post.category === "Help & Troubleshooting");
     }
 
+    // ကျန်တဲ့ nav item အားလုံး (arduino, power-solar, robotics...) ဟာ
+    // Project Showcase post ထဲမှာပဲ ရှိတဲ့ pjType field ကို filter လုပ်တယ်
+    // (boardTag နဲ့ မတူဘူး — boardTag က title span display ချည်းသက်သက်)
     return posts.filter(
-      (post) => post.boardTag?.toLowerCase().trim() === activeCategory,
+      (post) =>
+        post.category === "Project Showcase" &&
+        post.pjType?.toLowerCase().trim() === activeCategory,
     );
   }
 
@@ -65,11 +69,9 @@ function Community() {
           /* Data List Display Grid */
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPosts.map((post) => {
-              const Icon = postCategoryIcons[post.category];
-              const boardTagIcon = communityCategories.find(
-                (category) => category.id === post.boardTag?.toLowerCase(),
-              )?.icon;
-              const BoardTagIcon = boardTagIcon || null;
+              const CategoryIcon = postCategoryIcons[post.category];
+              const BoardTagIcon = boardIconMap[post.boardTag?.toLowerCase()];
+              // console.log("BoardTagIcon:", BoardTagIcon, "for boardTag:", post.boardTag);
               const isHelp = post.category === "Help & Troubleshooting";
 
               return (
@@ -90,7 +92,7 @@ function Community() {
                         className="w-full h-[200px] rounded-2xl object-cover transition-transform duration-500 hover:scale-[1.01]"
                       />
 
-                      {/* premium glass-style category badge */}
+                      {/* premium glass-style category badge — Help/Showcase ၂ မျိုးပဲ ပြ */}
                       <span
                         className={`absolute top-3 right-3 z-10 inline-flex items-center gap-1.5 text-[11px] font-semibold px-3 py-1.5 rounded-full backdrop-blur-md border shadow-sm ${
                           isHelp
@@ -98,7 +100,7 @@ function Community() {
                             : "bg-black/40 border-white/15 text-white"
                         }`}
                       >
-                        {Icon && <Icon size={12} />}
+                        {CategoryIcon && <CategoryIcon size={12} />}
                         {post.category}
                       </span>
                     </div>
@@ -107,11 +109,14 @@ function Community() {
                     <div className="p-3 flex flex-col flex-1">
                       {post.boardTag && (
                         <span className="text-text-subtle text-xs font-medium mb-1 inline-block border-b border-border-muted pb-0.5">
-                          {/* icon */}
                           <span className="inline-flex items-center gap-1 mr-1">
-                            {BoardTagIcon && <BoardTagIcon size={12} />}
+                            <RenderIcon
+                              iconKey={post.boardTag}
+                              map={boardIconMap}
+                              size={12}
+                            />
                           </span>
-                          {post.boardTag}
+                          {post.boardTag.toUpperCase()}
                         </span>
                       )}
                       <h3 className="text-text text-base font-bold mb-1 line-clamp-1">
@@ -126,7 +131,8 @@ function Community() {
                         <div className="flex items-center gap-2">
                           <img
                             src={
-                              post.avatarUrl || "https://via.placeholder.com/40"
+                              post.avatarUrl ||
+                              "https://placehold.co/40x40/1c2128/64748b?text=U"
                             }
                             alt={post.authorName}
                             className="w-6 h-6 rounded-full border border-border-muted p-px"

@@ -7,12 +7,15 @@ import JourneyDetail from "./pages/learning/JourneyDetail";
 import LessonDetail from "./pages/learning/LessonDetail";
 import Community from "./pages/community/Community";
 import Marketplace from "./pages/marketplace/Marketplace";
-import CreatePost from "./pages/community/CreatePost";
+
 // Auth Pages Import
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 // Alert
-import { AlertProvider } from "./context/AlertContext";  // ✅ named import — curly braces ပါရမယ်
+import { AlertProvider } from "./context/AlertContext"; // named import — curly braces ပါရမယ်
+//community post create form
+import CreatePost from "./pages/community/CreatePost";
+import EditPost from "./pages/community/EditPost";
 
 function App() {
   return (
@@ -40,7 +43,9 @@ function App() {
               element={<LessonDetail />}
             />
             <Route path="/community" element={<Community />} />
-            <Route path="/community/create-post" element={<CreatePost />} />
+
+            <Route path="/community/create-post" element={<CreatePost/>} />
+            <Route path="/community/edit/:id" element={<EditPost />} />
             <Route path="/marketplace" element={<Marketplace />} />
           </Route>
         </Routes>

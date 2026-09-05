@@ -11,7 +11,5 @@ here is api links
 --- API ကနေ "arduino" ဆိုတဲ့ စာသား ရလာတဲ့အခါ UI ပေါ်မှာ Icon အဖြစ် ပြသနိုင်အောင် iconMap.jsx က ကြားခံ Lookup Table အဖြစ် အလုပ်လုပ်ပေးတာပါ။
 
 7. community.jsx updated
-8. 
+8. community createpost.jsx and editpost.jsx created
 
-3. admin panel dashboard
-4. have to make protected route
