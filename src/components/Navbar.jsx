@@ -3,7 +3,6 @@ import { NavLink, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
 import { userLogout } from "../api/userService";
-// for alert
 import { useAlert } from "../context/AlertContext";
 import {
   Search,
@@ -16,6 +15,7 @@ import {
   Settings,
   LogOut,
   Bell,
+  Plus,
 } from "lucide-react";
 
 function Navbar() {
@@ -23,16 +23,22 @@ function Navbar() {
   const notifDropdownRef = useRef(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isNotifOpen, setIsNotifOpen] = useState(false); //for notification
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [searchValue, setSearchValue] = useState("");
 
-  // show alert
   const showAlert = useAlert();
-
-  // Redux Auth State
   const { user, isLogin } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+
+  // Dark Mode DOM Sync
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [isDarkMode]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -55,13 +61,13 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Logout
   const handleLogout = () => {
-    const response = userLogout(); // LocalStorage ရှင်းထုတ်ခြင်း
-    dispatch(logout()); // Redux State ရှင်းထုတ်ခြင်း
+    const response = userLogout();
+    dispatch(logout());
     showAlert(response.message);
     setIsDropdownOpen(false);
     setIsMenuOpen(false);
+    navigate("/"); // 3. Redirect to home page on logout
   };
 
   const navLinks = [
@@ -73,15 +79,8 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    if (searchValue.trim()) {
-      console.log("Searching for:", searchValue);
-      // TODO: Add actual search logic here
-
-      // Search ပြီးရင် Mobile Menu ကို ပိတ်ချလိုက်ရန်
-      if (isMenuOpen) {
-        setIsMenuOpen(false);
-      }
-    }
+    console.log("Searching:", searchValue);
+    setIsMenuOpen(false);
   };
 
   return (
@@ -140,7 +139,19 @@ function Navbar() {
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* notification bell icon (desktop — absolute floating dropdown is fine here, no overflow-hidden parent) */}
+          {/* New Post Button (Pill Style) */}
+          {isLogin && (
+            <Link
+              to="/community/create-post"
+              className="inline-flex items-center gap-1.5 bg-primary hover:brightness-110 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition-all active:scale-95 shrink-0"
+            >
+              <Plus size={16} strokeWidth={2.5} />
+
+              <span>New Post</span>
+            </Link>
+          )}
+
+          {/* Notification Bell */}
           {isLogin && (
             <div className="relative" ref={notifDropdownRef}>
               <button
@@ -148,7 +159,6 @@ function Navbar() {
                 className="relative p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
               >
                 <Bell size={18} />
-                {/* placeholder dot — real unread count backend ရမှ */}
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
               </button>
               {isNotifOpen && (
@@ -164,6 +174,7 @@ function Navbar() {
             </div>
           )}
 
+          {/* Profile Dropdown */}
           {isLogin ? (
             <div className="relative" ref={profileDropdownRef}>
               <button
@@ -248,9 +259,9 @@ function Navbar() {
       >
         <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-4 overflow-y-auto max-h-[80vh]">
           {/* Mobile top strip */}
-          <div className="flex items-center justify-between pb-3 border-b border-border-muted">
+          <div className="flex items-center justify-between pb-3 border-b border-border-muted gap-2">
             {isLogin ? (
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 min-w-0">
                 <img
                   src={
                     user?.avatar ||
@@ -259,9 +270,9 @@ function Navbar() {
                     )}&background=161b22&color=0d9488&bold=true`
                   }
                   alt="Profile"
-                  className="w-9 h-9 rounded-full object-cover border-2 border-[#0d9488]"
+                  className="w-8 h-8 rounded-full object-cover border-2 border-[#0d9488] shrink-0"
                 />
-                <span className="text-sm font-semibold text-text truncate max-w-[120px]">
+                <span className="text-sm font-semibold text-text truncate">
                   {user?.name || "User"}
                 </span>
               </div>
@@ -270,45 +281,54 @@ function Navbar() {
                 <Link
                   to="/login"
                   onClick={() => setIsMenuOpen(false)}
-                  className="px-3 py-1 rounded-full text-sm bg-bg-subtle text-text"
+                  className="px-3 py-1 rounded-full text-xs bg-bg-subtle text-text"
                 >
                   Log in
                 </Link>
                 <Link
                   to="/signup"
                   onClick={() => setIsMenuOpen(false)}
-                  className="px-3 py-1 rounded-full text-sm bg-primary text-white"
+                  className="px-3 py-1 rounded-full text-xs bg-primary text-white"
                 >
                   Sign up
                 </Link>
               </div>
             )}
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 shrink-0">
               <button
                 onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-2 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
+                className="p-1.5 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
               >
-                {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
               </button>
+
+              {/* Mobile New Post Button: Icon-only on mobile, text on sm screens */}
+              {isLogin && (
+                <Link
+                  to="/community/create-post"
+                  onClick={() => setIsMenuOpen(false)}
+                  aria-label="Create new post"
+                  className="p-1.5 sm:px-3 sm:py-1.5 rounded-full bg-primary hover:brightness-110 text-white flex items-center gap-1 text-xs font-semibold shadow-sm transition-all active:scale-95"
+                >
+                  <Plus size={16} strokeWidth={2.5} />
+                  <span className="hidden sm:inline">New Post</span>
+                </Link>
+              )}
 
               {isLogin && (
                 <button
                   onClick={() => setIsNotifOpen(!isNotifOpen)}
-                  className="relative p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
+                  className="relative p-1.5 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
                 >
-                  <Bell size={18} />
-                  {/* placeholder dot — real unread count backend ရမှ */}
-                  <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full" />
+                  <Bell size={16} />
+                  <span className="absolute top-0.5 right-0.5 w-2 h-2 bg-red-500 rounded-full" />
                 </button>
               )}
             </div>
           </div>
 
-          {/* Mobile Notification Panel — absolute မဟုတ်ဘဲ document flow ထဲမှာပဲ
-              conditional render လုပ်ထားတယ်, ဒါမှ mobile menu ရဲ့ overflow-hidden
-              parent ကြောင့် ဖျောက်ခံရမှာ မဟုတ်ဘူး (desktop dropdown ကို copy
-              လုပ်ရင် ဒီပြသနာ တက်နိုင်တယ်) */}
+          {/* Mobile Notification Panel */}
           {isNotifOpen && (
             <div className="bg-bg-elevated border border-border rounded-lg my-3">
               <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border">
@@ -362,6 +382,18 @@ function Navbar() {
               </button>
             </div>
           )}
+
+          {/* new post btn*/}
+          {/* {isLogin && (
+            <Link
+              to="/community/create-post"
+              onClick={() => setIsMenuOpen(false)}
+              className="w-full flex items-center justify-center gap-2 bg-primary hover:brightness-110 text-white py-2.5 px-4 rounded-xl text-sm font-semibold shadow-sm my-2 transition-all active:scale-[0.98]"
+            >
+              <Plus size={18} strokeWidth={2.5} />
+              <span>Create New Post</span>
+            </Link>
+          )} */}
 
           {/* Mobile Search */}
           <form onSubmit={handleSearchSubmit} className="relative">
