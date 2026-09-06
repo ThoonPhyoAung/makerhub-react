@@ -35,7 +35,7 @@ const slides = [
     lead: "Join fellow developers in mastering embedded systems. Showcase your electronics and code.",
     buttonText: "Share Your Project",
     buttonIcon: <PlusCircle className="w-3.5 h-3.5 md:w-4 md:h-4" />,
-    to: "/create-post",
+    to: "/community/create-post",
   },
 ];
 
