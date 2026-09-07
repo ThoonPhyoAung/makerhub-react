@@ -1,4 +1,4 @@
-// useFetch.js is using for fetching data from the API and handling loading and error states. 
+// useFetch.js is using for fetching data from the API and handling loading and error states.
 // can help to reduce the code duplication and make the code more readable and maintainable at every component that needs to fetch data from the API.
 
 import { useState, useEffect } from "react";

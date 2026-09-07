@@ -7,7 +7,11 @@ import CommunityCategoryNav from "./CommunityCategoryNav";
 // API & Custom Hooks
 import { useFetch } from "../../hooks/useFetch";
 import { getPosts } from "../../api/postsApi";
-import { boardIconMap, postCategoryIcons, RenderIcon } from "../../utils/iconMaps";
+import {
+  boardIconMap,
+  postCategoryIcons,
+  RenderIcon,
+} from "../../utils/iconMaps";
 
 function Community() {
   const [activeCategory, setActiveCategory] = useState("all");
@@ -147,7 +151,8 @@ function Community() {
                             {post.likes || 0}
                           </span>
                           <span className="flex items-center gap-1">
-                            <MessageCircle size={13} /> {post.comments || 0}
+                            <MessageCircle size={13} />{" "}
+                            {post.commentsList?.length || 0}
                           </span>
                         </div>
                       </div>

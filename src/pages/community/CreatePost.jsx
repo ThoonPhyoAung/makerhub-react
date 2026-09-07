@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react"; // ★ useEffect ထပ်ထည့်ထားသည်
 import { useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 
@@ -16,6 +16,7 @@ import {
   Download,
   CloudUpload,
   AlertTriangle,
+  Save, // ★ draft indicator icon အတွက် ထပ်ထည့်ထားသည်
 } from "lucide-react";
 
 // project type input options
@@ -23,6 +24,9 @@ import { communityCategories } from "../../data/communityCategories";
 
 // api post request
 import { createPost } from "../../api/postsApi";
+
+// show alert
+import { useAlert } from "../../context/AlertContext";
 
 // post type and board type options
 const CATEGORY_SHOWCASE = "Project Showcase";
@@ -33,6 +37,9 @@ const boardTagOptions = ["arduino", "esp32", "esp8266", "raspberry-pi"];
 const pjTypeOptions = communityCategories.filter(
   (c) => c.id !== "all" && c.id !== "help",
 );
+
+// ★ Part 1: localStorage draft key
+const DRAFT_KEY = "createPost_draft";
 
 //   Create Post Form input values as initial state empty
 const initialForm = {
@@ -53,12 +60,31 @@ const initialForm = {
   sourceCodeLink: "",
 };
 
+// ★ Part 1: localStorage ထဲက draft ရှိရင် ပြန်ယူ, မရှိရင် initialForm သုံး
+const getInitialForm = () => {
+  try {
+    const saved = localStorage.getItem(DRAFT_KEY);
+    return saved ? JSON.parse(saved) : initialForm;
+  } catch {
+    // JSON.parse failed (corrupted data) ဖြစ်ရင် initialForm ကို fallback အနေနဲ့ သုံး
+    return initialForm;
+  }
+};
+
+// ★ Part 3: base64 data URL ဖြစ်မဖြစ် စစ်ဆေးတဲ့ reusable helper function
+// image/link/url field တွေမှာ user က URL အစား image file ကို paste လုပ်မိရင်
+// "data:image/jpeg;base64,....." ပုံစံနဲ့ string ရှည်ကြီး ဝင်လာနိုင်လို့ ဒါကို block လုပ်ဖို့ သုံးမယ်
+const isBase64DataUrl = (value) => {
+  return typeof value === "string" && value.startsWith("data:");
+};
+
 function CreatePost() {
   // to handle the form data
-  const [form, setForm] = useState(initialForm);
+  const [form, setForm] = useState(getInitialForm); // ★ getInitialForm ပြောင်းထားသည် (lazy init)
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const navigate = useNavigate();
+  const showAlert = useAlert();
 
   // get current user from redux store
   const user = useSelector((state) => state.auth.user);
@@ -69,9 +95,23 @@ function CreatePost() {
       user?.name || "User",
     )}&background=161b22&color=0d9488&bold=true`;
 
+  // ★ Part 1: form ပြောင်းတိုင်း localStorage ထဲ auto-save
+  useEffect(() => {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+  }, [form]);
+
   //   to handle the input change
   const changeInput = (e) => {
     const { id, value } = e.target; // when input change, get the name and value of the input
+
+    // ★ Part 3: cover image field ကို base64 check (id === "image" ဖြစ်တဲ့အခါပဲ)
+    if (id === "image" && isBase64DataUrl(value)) {
+      alert(
+        "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
+      );
+      return; // setForm ကို မခေါ်ဘဲ ရပ်လိုက်မယ်
+    }
+
     setForm((preData) => ({ ...preData, [id]: value })); // set the form data with the new value, id: value
   };
 
@@ -91,6 +131,16 @@ function CreatePost() {
 
   //   to update an array item of hardware input
   const updateArrayItem = (fieldName, index, key, value) => {
+    // ★ Part 3: image/link/url field တွေအတွက်ပဲ base64 check လုပ်မယ်
+    // (name, quantity စတဲ့ text field တွေမှာ ဒီ check မလို)
+    const urlLikeKeys = ["image", "link", "url"];
+    if (urlLikeKeys.includes(key) && isBase64DataUrl(value)) {
+      showAlert(
+        "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
+      );
+      return;
+    }
+
     setForm((prev) => ({
       ...prev,
       [fieldName]: prev[fieldName].map((item, i) =>
@@ -112,6 +162,8 @@ function CreatePost() {
     addArrayItem("descriptionBlocks", { type: "text", value: "" });
   const addImageBlock = () =>
     addArrayItem("descriptionBlocks", { type: "image", url: "" });
+  // updateBlock ဟာ updateArrayItem ကိုပဲ ခေါ်ထားလို့ base64 check ကို
+  // automatically ရလိုက်ပါပြီ (Part 3.2 fix ကနေတဆင့်)
   const updateBlock = (index, key, value) =>
     updateArrayItem("descriptionBlocks", index, key, value);
   const removeBlock = (index) => removeArrayItem("descriptionBlocks", index);
@@ -156,6 +208,8 @@ function CreatePost() {
 
     try {
       await createPost(payload);
+      localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
+      showAlert("Post created Successfully");
       navigate("/community");
     } catch (err) {
       console.error("Failed to create post:", err);
@@ -163,6 +217,24 @@ function CreatePost() {
       setIsSubmitting(false);
     }
   };
+
+  // ★ Part 2: Cancel button handler — content ရှိရင် confirm dialog ပြပြီးမှ ဖျက်
+  const handleCancel = () => {
+    const hasContent = form.title || form.description || form.image;
+
+    if (hasContent) {
+      const confirmLeave = window.confirm(
+        "ဒီ post ကို ဖျက်ပစ်မှာလား? ရေးထားတာတွေ ပျက်သွားပါမယ်။",
+      );
+      if (!confirmLeave) return; // user က "Cancel" (dialog ရဲ့) နှိပ်ရင် ဒီမှာပဲ ရပ်
+    }
+
+    localStorage.removeItem(DRAFT_KEY);
+    navigate("/community");
+  };
+
+  // ★ draft indicator ပြဖို့ (form ထဲမှာ content တစ်ခုခု ရှိမရှိ check)
+  const hasDraftContent = Boolean(form.title || form.description || form.image);
 
   // return
   return (
@@ -177,6 +249,12 @@ function CreatePost() {
           Share your hardware project, or ask the community for help
           troubleshooting an issue.
         </p>
+        {/* ★ Part 1: draft auto-saved indicator */}
+        {hasDraftContent && (
+          <p className="flex items-center gap-1.5 text-xs text-text-subtle mt-2">
+            <Save size={12} /> Draft auto-saved
+          </p>
+        )}
       </div>
 
       {/* input form */}
@@ -216,7 +294,7 @@ function CreatePost() {
           <span className="text-red-500 text-xs">{errors.title}</span>
         </div>
 
-        {/* post category and board type */}
+        {/* post type and board type */}
         <div className="grid md:grid-cols-2 gap-4">
           {/* post category option */}
           <div>
@@ -224,7 +302,7 @@ function CreatePost() {
               htmlFor="category"
               className="block text-text-muted text-sm font-medium mb-2"
             >
-              Post Category *
+              Post Type *
             </label>
             <select
               id="category"
@@ -754,13 +832,14 @@ function CreatePost() {
           {isSubmitting ? "Publishing..." : "Publish to Community"}
         </button>
 
-        {/* Cancel Button */}
-        <Link
-          to="/community"
+        {/* Cancel Button ★ Part 2: Link -> button + handleCancel ပြောင်းထားသည် */}
+        <button
+          type="button"
+          onClick={handleCancel}
           className="w-full inline-flex items-center justify-center gap-2 bg-surface hover:bg-surface-2 text-text-muted hover:text-text border border-border rounded-xl py-3 font-semibold transition-all duration-200 active:scale-[0.99]"
         >
           <ArrowLeft size={15} /> Cancel & Back
-        </Link>
+        </button>
       </form>
     </div>
   );

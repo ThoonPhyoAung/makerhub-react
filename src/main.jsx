@@ -6,6 +6,8 @@ import { BrowserRouter } from "react-router-dom";
 // react-redux
 import store from "./app/store.js";
 import { Provider } from "react-redux";
+// for animated icons
+import "@lottiefiles/dotlottie-wc";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>

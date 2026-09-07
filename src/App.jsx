@@ -15,6 +15,7 @@ import SignUp from "./pages/auth/SignUp";
 import { AlertProvider } from "./context/AlertContext"; // named import — curly braces ပါရမယ်
 //community post create form
 import CreatePost from "./pages/community/CreatePost";
+import PostDetails from "./pages/community/PostDetails";
 import EditPost from "./pages/community/EditPost";
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
             <Route path="/community" element={<Community />} />
 
             <Route path="/community/create-post" element={<CreatePost/>} />
+            <Route path="/community/project/:id" element={<PostDetails />} />
             <Route path="/community/edit/:id" element={<EditPost />} />
             <Route path="/marketplace" element={<Marketplace />} />
           </Route>

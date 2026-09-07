@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+
 import {
   Rocket,
   ArrowRight,
@@ -91,7 +93,14 @@ function HeroSection() {
             {/* XP Card */}
             <div className="bg-bg-elevated border border-border rounded-2xl p-4 min-h-[150px] hover:border-surface-2 transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <Star size={16} className="text-amber-400" />
+                {/* <Star size={16} className="text-amber-400" />
+                 */}
+                <DotLottieReact
+                  src="https://lottie.host/e36de726-6eed-46d8-8d7c-7f510b82d70b/fEmr1CZdlB.lottie"
+                  loop
+                  autoplay
+                  style={{ width: "28px", height: "28px" }}
+                />
                 <span className="text-text-muted text-[11px] font-bold tracking-wider uppercase">
                   XP Points
                 </span>
@@ -118,7 +127,15 @@ function HeroSection() {
             {/* Streak Card */}
             <div className="bg-bg-elevated border border-border rounded-2xl p-4 min-h-[150px] hover:border-surface-2 transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <Flame size={16} className="text-amber-400" />
+                {/* <Flame size={16} className="text-amber-400" />
+                 */}
+                <DotLottieReact
+                  src="https://lottie.host/5aabccd7-7f7d-4263-8047-4df37882a0d1/GMt3jvcjV7.lottie"
+                  loop
+                  autoplay
+                  renderMode="svg"
+                  style={{ width: "28px", height: "28px" }}
+                />
                 <span className="text-text-muted text-[11px] font-bold tracking-wider uppercase">
                   Daily Streak
                 </span>
@@ -137,7 +154,7 @@ function HeroSection() {
                         key={index}
                         className={`w-[13px] h-[13px] rounded-sm transition-colors ${
                           isToday
-                            ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" // if today, Fade In/Out 
+                            ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" // if today, Fade In/Out
                             : "bg-surface border border-border" // other days
                         }`}
                       />
