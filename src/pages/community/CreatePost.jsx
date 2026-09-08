@@ -88,6 +88,7 @@ function CreatePost() {
 
   // get current user from redux store
   const user = useSelector((state) => state.auth.user);
+  const userId = user?.id;
   const userName = user?.name; // user ရှိရင် name ကိုယူမယ်, null ဆိုရင် undefined
   const userAvatar =
     user?.avatar ||
@@ -106,7 +107,7 @@ function CreatePost() {
 
     // ★ Part 3: cover image field ကို base64 check (id === "image" ဖြစ်တဲ့အခါပဲ)
     if (id === "image" && isBase64DataUrl(value)) {
-      alert(
+      showAlert(
         "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
       );
       return; // setForm ကို မခေါ်ဘဲ ရပ်လိုက်မယ်
@@ -193,16 +194,18 @@ function CreatePost() {
 
     const payload = {
       ...form,
+
       pjType: isShowcase ? form.pjType : "",
       hardware: isShowcase ? form.hardware : [],
       software: isShowcase ? form.software : [],
       downloads: isShowcase ? form.downloads : [],
       errorSymptom: isHelp ? form.errorSymptom : "",
       triedSolutions: isHelp ? form.triedSolutions : "",
+      authorId: userId,
       authorName: userName,
       avatarUrl: userAvatar,
       likes: 0,
-      comments: 0,
+      commentsList: [],
       createdAt: new Date().toISOString(),
     };
 

@@ -99,7 +99,8 @@ function CommunityShowcase() {
                           {post.likes || 0}
                         </span>
                         <span className="flex items-center gap-1">
-                          <MessageCircle size={13} /> {post.comments || 0}
+                          <MessageCircle size={13} />{" "}
+                          {post.commentsList?.length || 0}
                         </span>
                       </div>
                     </div>

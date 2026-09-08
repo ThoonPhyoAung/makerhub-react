@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useSelector } from "react-redux";
+
 import {
   ArrowLeft,
   Loader2,
@@ -58,14 +60,10 @@ function getTocSections(post) {
 function PostDetails() {
   const { id } = useParams();
 
-  // fetching data from api
-  // useCallback သုံးပြီး Function ကို မှတ်ထားပါ (id ပြောင်းမှသာ အသစ်ဖြစ်မည်)
-  const fetchFn = useCallback(() => getPostById(id), [id]);
+  const activeUser = useSelector((state) => state.auth.user);
 
+  const fetchFn = useCallback(() => getPostById(id), [id]);
   const { data: post, loading, error } = useFetch(fetchFn, [fetchFn]);
-  // const [post, setPost] = useState(null);
-  // const [loading, setLoading] = useState(true);
-  // const [error, setError] = useState(null);
 
   const [activeSection, setActiveSection] = useState("intro");
 
@@ -76,70 +74,72 @@ function PostDetails() {
   const [commentText, setCommentText] = useState("");
   const [commentsList, setCommentsList] = useState([]);
 
-  // --- 1. INITIAL FETCH & LOCAL STORAGE CHECK ---
+  // ★ 1. API ကနေ POST DATA ရလာရင် LIKES နဲ့ COMMENTS ကို LOCAL STATE ထဲ SYNC လုပ်ခြင်း
   useEffect(() => {
-    // setLoading(true);
-    // setError(null);
-    // getPostById(id)
-    //   .then((data) => {
-    //     setPost(data);
-    //     setLikesCount(data.likes || 0);
-    //     setCommentsList(data.commentsList || []);
-    //   })
-    //   .catch((err) => setError(err.message))
-    //   .finally(() => setLoading(false));
+    if (post) {
+      setLikesCount(post.likes || 0);
+      setCommentsList(post.commentsList || []);
+    }
+  }, [post]);
 
-    const activeUser = JSON.parse(
+  // --- 2. LOCAL STORAGE CHECK FOR USER LIKED/SAVED POSTS ---
+  useEffect(() => {
+    const activeUserStorage = JSON.parse(
       localStorage.getItem("makerhub_active_user") || "{}",
     );
 
-    const likedPosts = activeUser.likedPosts || [];
+    const likedPosts = activeUserStorage.likedPosts || [];
     if (likedPosts.includes(id)) {
       setIsLiked(true);
     }
 
-    const savedPosts = activeUser.savedPosts || [];
+    const savedPosts = activeUserStorage.savedPosts || [];
     if (savedPosts.includes(id)) {
       setIsSaved(true);
     }
   }, [id]);
 
-  // --- 2. INTERSECTION OBSERVER (ScrollSpy Logic) ---
+  // --- 3. SCROLLSPY LOGIC ---
   useEffect(() => {
     if (!post) return;
 
-    if (post) {
-      setLikesCount(post.likes || 0);
-      setCommentsList(post.commentsList || []);
-    }
+    const handleScroll = () => {
+      const sectionElements = document.querySelectorAll("section[id]");
+      const scrollPosition = window.scrollY + 200;
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setActiveSection(entry.target.id);
-          }
-        });
-      },
-      {
-        rootMargin: "-80px 0px -65% 0px",
-        threshold: 0.1,
-      },
-    );
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 100;
 
-    const sectionElements = document.querySelectorAll("section[id]");
-    sectionElements.forEach((el) => observer.observe(el));
+      if (isAtBottom) {
+        const lastSection = sectionElements[sectionElements.length - 1];
+        if (lastSection) {
+          setActiveSection(lastSection.id);
+          return;
+        }
+      }
 
-    return () => observer.disconnect();
+      sectionElements.forEach((el) => {
+        const top = el.offsetTop;
+        const height = el.offsetHeight;
+
+        if (scrollPosition >= top && scrollPosition < top + height) {
+          setActiveSection(el.id);
+        }
+      });
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, [post]);
 
-  // --- 3. HANDLE LIKE TOGGLE ---
+  // --- 4. HANDLE LIKE TOGGLE ---
   const handleLikeToggle = async () => {
-    let activeUser = JSON.parse(
+    let activeUserStorage = JSON.parse(
       localStorage.getItem("makerhub_active_user") || "{}",
     );
     let allUsers = JSON.parse(localStorage.getItem("makerhub_users") || "[]");
-    let likedPosts = activeUser.likedPosts || [];
+    let likedPosts = activeUserStorage.likedPosts || [];
 
     let newLikesCount;
     let nextIsLiked = !isLiked;
@@ -155,11 +155,16 @@ function PostDetails() {
     setLikesCount(newLikesCount);
     setIsLiked(nextIsLiked);
 
-    activeUser.likedPosts = likedPosts;
-    localStorage.setItem("makerhub_active_user", JSON.stringify(activeUser));
+    activeUserStorage.likedPosts = likedPosts;
+    localStorage.setItem(
+      "makerhub_active_user",
+      JSON.stringify(activeUserStorage),
+    );
 
     const updatedAllUsers = allUsers.map((user) =>
-      user.id === activeUser.id ? { ...user, likedPosts: likedPosts } : user,
+      user.id === activeUserStorage.id
+        ? { ...user, likedPosts: likedPosts }
+        : user,
     );
     localStorage.setItem("makerhub_users", JSON.stringify(updatedAllUsers));
 
@@ -170,20 +175,18 @@ function PostDetails() {
       });
     } catch (err) {
       console.error("Failed to update like:", err);
-      setLikesCount(isLiked ? likesCount + 1 : likesCount - 1);
+      setLikesCount(likesCount);
       setIsLiked(isLiked);
     }
   };
 
-  // --- 4. HANDLE SAVE TOGGLE ---
+  // --- 5. HANDLE SAVE TOGGLE ---
   const handleSaveToggle = () => {
-    let activeUser = JSON.parse(
+    let activeUserStorage = JSON.parse(
       localStorage.getItem("makerhub_active_user") || "{}",
     );
     let allUsers = JSON.parse(localStorage.getItem("makerhub_users") || "[]");
-    let savedPosts = activeUser.savedPosts || [];
-
-    let nextIsSaved = !isSaved;
+    let savedPosts = activeUserStorage.savedPosts || [];
 
     if (isSaved) {
       savedPosts = savedPosts.filter((postId) => postId !== id);
@@ -193,28 +196,29 @@ function PostDetails() {
       setIsSaved(true);
     }
 
-    activeUser.savedPosts = savedPosts;
-    localStorage.setItem("makerhub_active_user", JSON.stringify(activeUser));
+    activeUserStorage.savedPosts = savedPosts;
+    localStorage.setItem(
+      "makerhub_active_user",
+      JSON.stringify(activeUserStorage),
+    );
 
     const updatedAllUsers = allUsers.map((user) =>
-      user.id === activeUser.id ? { ...user, savedPosts: savedPosts } : user,
+      user.id === activeUserStorage.id
+        ? { ...user, savedPosts: savedPosts }
+        : user,
     );
     localStorage.setItem("makerhub_users", JSON.stringify(updatedAllUsers));
   };
 
-  // --- 5. HANDLE ADD COMMENT ---
+  // --- 6. HANDLE ADD COMMENT ---
   const handleAddComment = async (e) => {
     e.preventDefault();
     if (!commentText.trim()) return;
 
-    const activeUser = JSON.parse(
-      localStorage.getItem("makerhub_active_user") || "{}",
-    );
-
     const newComment = {
       id: Date.now().toString(),
-      userId: activeUser.id || "unknown",
-      authorName: activeUser.name || "Anonymous",
+      userId: activeUser?.id || "unknown",
+      authorName: activeUser?.name || "Anonymous",
       text: commentText.trim(),
       createdAt: new Date().toISOString(),
     };
@@ -230,11 +234,9 @@ function PostDetails() {
     }
   };
 
-  // code color
   const codeRef = useRef(null);
 
   useEffect(() => {
-    // window.hljs ရှိမရှိ စစ်ပြီး Auto Highlight လုပ်ပေးမည်
     if (window.hljs && codeRef.current && post?.sourceCode) {
       const result = window.hljs.highlightAuto(post.sourceCode);
       codeRef.current.innerHTML = result.value;
@@ -243,6 +245,8 @@ function PostDetails() {
 
   const handleSmoothScroll = (e, sectionId) => {
     e.preventDefault();
+    setActiveSection(sectionId);
+
     const targetElement = document.getElementById(sectionId);
     if (targetElement) {
       targetElement.scrollIntoView({ behavior: "smooth" });
@@ -287,6 +291,7 @@ function PostDetails() {
     <div className="max-w-6xl mx-auto px-4 py-8 md:py-12">
       <div className="grid lg:grid-cols-[1fr_260px] gap-6 items-start">
         <div className="flex flex-col gap-6 min-w-0">
+          {/* Intro Section */}
           <section
             id="intro"
             className="scroll-mt-24 bg-bg-elevated border border-border rounded-2xl overflow-hidden p-5 md:p-6 flex flex-col gap-5"
@@ -315,7 +320,11 @@ function PostDetails() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={handleLikeToggle}
-                  className={`p-2 rounded-lg border transition-colors flex items-center gap-1 rounded-lg ${isLiked ? "text-red-500 border-text-red-500 " : "text-text-muted border-border-muted hover:text-red-500"}`}
+                  className={`p-2 rounded-lg border transition-colors flex items-center gap-1 ${
+                    isLiked
+                      ? "text-red-500 border-red-500"
+                      : "text-text-muted border-border-muted hover:text-red-500"
+                  }`}
                 >
                   <Heart size={18} className={isLiked ? "fill-red-500" : ""} />
                 </button>
@@ -367,6 +376,7 @@ function PostDetails() {
             )}
           </section>
 
+          {/* Devices Section */}
           {isShowcase && post.hardware?.length > 0 && (
             <section
               id="devices"
@@ -380,7 +390,7 @@ function PostDetails() {
                 {post.hardware.map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-3 bg-bg-subtle border border-border-muted rounded-xl p-3"
+                    className="flex items-center gap-3 bg-bg-subtle border border-border-muted rounded-xl p-3 min-w-0"
                   >
                     {item.image ? (
                       <img
@@ -407,6 +417,7 @@ function PostDetails() {
             </section>
           )}
 
+          {/* Software Section */}
           {isShowcase && post.software?.length > 0 && (
             <section
               id="software"
@@ -440,6 +451,7 @@ function PostDetails() {
             </section>
           )}
 
+          {/* Troubleshooting Section */}
           {isHelp && (
             <section
               id="troubleshooting"
@@ -471,6 +483,7 @@ function PostDetails() {
             </section>
           )}
 
+          {/* Description Section */}
           <section
             id="description"
             className="scroll-mt-24 bg-bg-elevated border border-border rounded-2xl p-5 md:p-6"
@@ -480,7 +493,7 @@ function PostDetails() {
             </h2>
 
             {post.longDescription && (
-              <p className="text-text-muted text-sm leading-relaxed mb-4 whitespace-pre-line">
+              <p className="text-text-muted text-sm leading-relaxed whitespace-pre-line break-words">
                 {post.longDescription}
               </p>
             )}
@@ -491,7 +504,7 @@ function PostDetails() {
                   block.type === "text" ? (
                     <p
                       key={i}
-                      className="text-text-muted text-sm leading-relaxed whitespace-pre-line"
+                      className="text-text-muted text-sm leading-relaxed whitespace-pre-line break-words"
                     >
                       {block.value}
                     </p>
@@ -508,6 +521,7 @@ function PostDetails() {
             )}
           </section>
 
+          {/* Code Section */}
           {(post.sourceCode || post.sourceCodeLink) && (
             <section
               id="code"
@@ -517,7 +531,7 @@ function PostDetails() {
                 <Code2 size={18} className="text-primary" /> Code
               </h2>
               {post.sourceCode && (
-                <pre className="bg-bg-subtle border border-border-muted rounded-xl p-4 overflow-x-auto text-sm font-mono text-text-muted mb-4 whitespace-pre-wrap">
+                <pre className="max-h-[400px] overflow-x-auto bg-bg-subtle border border-border-muted rounded-xl p-4 overflow-x-auto text-sm font-mono text-text-muted mb-4 whitespace-pre-wrap">
                   <code ref={codeRef} className="hljs" />
                 </pre>
               )}
@@ -534,6 +548,7 @@ function PostDetails() {
             </section>
           )}
 
+          {/* Downloads Section */}
           {isShowcase && post.downloads?.length > 0 && (
             <section
               id="downloads"
@@ -561,6 +576,7 @@ function PostDetails() {
             </section>
           )}
 
+          {/* Comments Section */}
           <section
             id="comments"
             className="scroll-mt-24 bg-bg-elevated border border-border rounded-2xl p-5 md:p-6 flex flex-col gap-6"
@@ -633,6 +649,7 @@ function PostDetails() {
           </section>
         </div>
 
+        {/* Sidebar Section */}
         <aside className="hidden lg:flex flex-col gap-4 sticky top-24">
           <div className="bg-bg-elevated border border-border rounded-2xl p-4 flex items-center gap-3">
             <img
@@ -651,6 +668,16 @@ function PostDetails() {
                 Posted by {post.authorName}
               </p>
             </div>
+
+            {(activeUser?.id === post.authorId ||
+              activeUser?.role === "admin") && (
+              <Link
+                to={`/community/edit/${post.id}`}
+                className="ml-auto text-primary text-sm font-semibold hover:underline"
+              >
+                Edit
+              </Link>
+            )}
           </div>
 
           <div className="bg-bg-elevated border border-border rounded-2xl p-4">
@@ -679,14 +706,19 @@ function PostDetails() {
             </ul>
           </div>
 
-          <div className="bg-bg-elevated border border-border rounded-2xl p-3 flex justify-around">
+          <div className="bg-bg-elevated border border-border rounded-2xl p-3 flex items-center justify-around">
             <button
               onClick={handleLikeToggle}
-              className={`flex items-center gap-1 p-2 rounded-lg ${isLiked ? "text-red-500" : "text-text-muted"}`}
+              className={`flex items-center gap-1 p-2 rounded-lg ${
+                isLiked ? "text-red-500" : "text-text-muted"
+              }`}
             >
               <Heart size={18} className={isLiked ? "fill-red-500" : ""} />{" "}
               {likesCount}
             </button>
+
+            {/* Vertical Divider */}
+            <div className="h-5 w-[1px] bg-border-muted" />
 
             <button
               onClick={(e) => handleSmoothScroll(e, "comments")}
@@ -695,9 +727,14 @@ function PostDetails() {
               <MessageCircle size={18} /> {commentsList.length}
             </button>
 
+            {/* Vertical Divider */}
+            <div className="h-5 w-[1px] bg-border-muted" />
+
             <button
               onClick={handleSaveToggle}
-              className={`p-2 rounded-lg ${isSaved ? "text-primary" : "text-text-muted"}`}
+              className={`p-2 rounded-lg ${
+                isSaved ? "text-primary" : "text-text-muted"
+              }`}
             >
               <Bookmark size={18} className={isSaved ? "fill-primary" : ""} />
             </button>
