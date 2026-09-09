@@ -14,7 +14,7 @@ import {
   ImagePlus,
   Code2,
   Download,
-  CloudUpload,
+  Save,
   AlertTriangle,
   Loader2,
 } from "lucide-react";
@@ -41,6 +41,9 @@ const pjTypeOptions = communityCategories.filter(
   (c) => c.id !== "all" && c.id !== "help",
 );
 
+// ★localStorage draft key to auto save
+const DRAFT_KEY = "createPost_draft";
+
 // Base64 validation helper
 const isBase64DataUrl = (value) => {
   return typeof value === "string" && value.startsWith("data:");
@@ -52,43 +55,51 @@ function EditPost() {
   const showAlert = useAlert();
 
   // Get current active user
-  const user = useSelector((state) => state.auth.user);
+  const activeUser = useSelector((state) => state.auth.user);
 
   // Fetch post data by ID
   const fetchFn = useCallback(() => getPostById(id), [id]);
-  const {
-    data: initialPostData,
-    loading,
-    error,
-  } = useFetch(fetchFn, [fetchFn]);
+  const { data: editPostData, loading, error } = useFetch(fetchFn, [fetchFn]);
 
-  // Form states
+  // Form ထဲမှာပါမယ့် Data အားလုံးကို Object အဖြစ် သတ်မှတ်လိုက်တယ်
   const [form, setForm] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
 
   // Sync state when fetched data arrives
   useEffect(() => {
-    if (initialPostData) {
+    if (editPostData && activeUser) {
+      if (editPostData.authorId !== activeUser.id) {
+        showAlert("You do not have permission to edit this post.");
+        navigate("/community");
+        return;
+      }
       setForm({
-        title: initialPostData.title || "",
-        category: initialPostData.category || "",
-        boardTag: initialPostData.boardTag || "",
-        image: initialPostData.image || "",
-        description: initialPostData.description || "",
-        pjType: initialPostData.pjType || "",
-        hardware: initialPostData.hardware || [],
-        software: initialPostData.software || [],
-        downloads: initialPostData.downloads || [],
-        errorSymptom: initialPostData.errorSymptom || "",
-        triedSolutions: initialPostData.triedSolutions || "",
-        longDescription: initialPostData.longDescription || "",
-        descriptionBlocks: initialPostData.descriptionBlocks || [],
-        sourceCode: initialPostData.sourceCode || "",
-        sourceCodeLink: initialPostData.sourceCodeLink || "",
+        title: editPostData.title || "",
+        category: editPostData.category || "",
+        boardTag: editPostData.boardTag || "",
+        image: editPostData.image || "",
+        description: editPostData.description || "",
+        pjType: editPostData.pjType || "",
+        hardware: editPostData.hardware || [],
+        software: editPostData.software || [],
+        downloads: editPostData.downloads || [],
+        errorSymptom: editPostData.errorSymptom || "",
+        triedSolutions: editPostData.triedSolutions || "",
+        longDescription: editPostData.longDescription || "",
+        descriptionBlocks: editPostData.descriptionBlocks || [],
+        sourceCode: editPostData.sourceCode || "",
+        sourceCodeLink: editPostData.sourceCodeLink || "",
       });
     }
-  }, [initialPostData]);
+  }, [editPostData, activeUser, navigate, showAlert]);
+
+  // form ပြောင်းတိုင်း localStorage ထဲ auto-save
+  useEffect(() => {
+    if (form) {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
+    }
+  }, [form]);
 
   if (loading) {
     return (
@@ -113,6 +124,9 @@ function EditPost() {
     );
   }
 
+  // Derived indicator state
+  const hasDraftContent = Boolean(form);
+
   // Handle single input changes
   const changeInput = (e) => {
     const { id, value } = e.target;
@@ -127,10 +141,12 @@ function EditPost() {
     setForm((prev) => ({ ...prev, [id]: value }));
   };
 
+  // Derived booleans (isShowcase / isHelp)
   const isShowcase = form.category === CATEGORY_SHOWCASE;
   const isHelp = form.category === CATEGORY_HELP;
 
-  // Array handlers (Hardware / Software / Downloads)
+  //  [----------hardware input array --------------]
+
   const addArrayItem = (fieldName, emptyItem) => {
     setForm((prev) => ({
       ...prev,
@@ -162,7 +178,7 @@ function EditPost() {
     }));
   };
 
-  // Description block handlers
+  //[--------- Project description block inputs (text + image) --------------]
   const addTextBlock = () =>
     addArrayItem("descriptionBlocks", { type: "text", value: "" });
   const addImageBlock = () =>
@@ -195,7 +211,7 @@ function EditPost() {
     setIsSubmitting(true);
 
     const payload = {
-      ...initialPostData, // Retain unchanged post metadata (authorId, likes, commentsList, createdAt, etc.)
+      ...editPostData,
       ...form,
       pjType: isShowcase ? form.pjType : "",
       hardware: isShowcase ? form.hardware : [],
@@ -208,6 +224,7 @@ function EditPost() {
 
     try {
       await updatePost(id, payload);
+      localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
       showAlert("Post updated successfully!");
       navigate(`/community/project/${id}`);
     } catch (err) {
@@ -218,12 +235,40 @@ function EditPost() {
     }
   };
 
+  // Cancel button handler — content ရှိရင် confirm dialog ပြပြီးမှ ဖျက်
+  const handleCancel = () => {
+    // const hasContent = form.title || form.description || form.image;
+
+    // if (hasContent) {
+    //   const confirmLeave = window.confirm(
+    //     "ဒီ post ကို ဖျက်ပစ်မှာလား? ရေးထားတာတွေ ပျက်သွားပါမယ်။",
+    //   );
+    //   if (!confirmLeave) return; // user က "Cancel" (dialog ရဲ့) နှိပ်ရင် ဒီမှာပဲ ရပ်
+    // }
+
+    localStorage.removeItem(DRAFT_KEY);
+    navigate(`/community/project/${id}`);
+  };
+
   // handle delete post
   const handleDeletePost = async (e) => {
     e.preventDefault();
-    await deletePost(id);
-    showAlert("Post deleted Successfully !");
-    navigate("/community");
+
+    const isConfirmed = window.confirm(
+      "Are you sure you want to delete this post? This action cannot be undone.",
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      await deletePost(id);
+      localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
+      showAlert("Post deleted Successfully !");
+      navigate("/community");
+    } catch (error) {
+      console.error("Failed to delete post:", error);
+      showAlert("Failed to delete post. Please try again.");
+    }
   };
 
   return (
@@ -237,6 +282,12 @@ function EditPost() {
         <p className="text-text-muted text-sm">
           Update details for your post details or troubleshooting progress.
         </p>
+        {/* ★ draft auto-saved indicator */}
+        {hasDraftContent && (
+          <p className="flex items-center gap-1.5 text-xs text-text-subtle mt-2">
+            <Save size={12} /> Draft auto-saved
+          </p>
+        )}
       </div>
 
       {/* Main Form */}
@@ -261,6 +312,7 @@ function EditPost() {
           />
           <span className="text-red-500 text-xs">{errors.title}</span>
         </div>
+
         {/* Category & Board */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
@@ -310,6 +362,7 @@ function EditPost() {
             <span className="text-red-500 text-xs">{errors.boardTag}</span>
           </div>
         </div>
+
         {/* Cover Image */}
         <div className="space-y-3">
           <label
@@ -324,6 +377,12 @@ function EditPost() {
                 src={form.image}
                 alt="Cover Preview"
                 className="w-full h-full object-cover object-center"
+                onError={(e) => {
+                  e.currentTarget.parentElement.style.display = "none";
+                }}
+                onLoad={(e) => {
+                  e.currentTarget.parentElement.style.display = "flex";
+                }}
               />
             </div>
           )}
@@ -338,6 +397,7 @@ function EditPost() {
             <span className="text-red-500 text-xs">{errors.image}</span>
           )}
         </div>
+
         {/* Short Description */}
         <div>
           <label
@@ -356,11 +416,13 @@ function EditPost() {
           />
           <span className="text-red-500 text-xs">{errors.description}</span>
         </div>
-        {/* Showcase Options */}
+
+        {/* isShowcase inputs */}
         {isShowcase && (
           <>
             <hr className="border-border-muted" />
 
+            {/* pjType input options */}
             <div>
               <label
                 htmlFor="pjType"
@@ -386,7 +448,7 @@ function EditPost() {
               <span className="text-red-500 text-xs">{errors.pjType}</span>
             </div>
 
-            {/* Devices (BOM) */}
+            {/* Devices & Components inputs */}
             <RepeatableSection
               title="Devices & Components (BOM)"
               icon={Wrench}
@@ -397,8 +459,24 @@ function EditPost() {
               onRemove={(i) => removeArrayItem("hardware", i)}
               renderFields={(item, i, handleRemove) => {
                 const currentQty = parseInt(item.quantity) || 1;
+
                 return (
                   <div className="bg-surface/60 border border-border-muted p-3.5 rounded-xl flex flex-col md:flex-row md:items-center gap-3">
+                    <div className="w-11 h-11 shrink-0 rounded-xl bg-bg-subtle border border-border flex items-center justify-center overflow-hidden text-text-subtle shadow-xs">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name || "Preview"}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
+                      ) : (
+                        <Wrench size={18} className="text-text-subtle" />
+                      )}
+                    </div>
+
                     <div className="flex items-center gap-2.5 flex-1 min-w-0">
                       <input
                         type="text"
@@ -409,6 +487,7 @@ function EditPost() {
                         placeholder="Component name"
                         className="flex-1 min-w-0 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                       />
+
                       <div className="flex items-center border border-border rounded-xl bg-surface h-[38px]">
                         <button
                           type="button"
@@ -444,6 +523,7 @@ function EditPost() {
                         </button>
                       </div>
                     </div>
+
                     <input
                       type="url"
                       value={item.image}
@@ -453,6 +533,7 @@ function EditPost() {
                       placeholder="Photo link (optional)"
                       className="w-full md:w-48 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                     />
+
                     <button
                       type="button"
                       onClick={handleRemove}
@@ -482,9 +563,10 @@ function EditPost() {
                     onChange={(e) =>
                       updateArrayItem("software", i, "name", e.target.value)
                     }
-                    placeholder="Tool name"
+                    placeholder="Tool name (e.g., Arduino IDE)"
                     className="flex-1 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   />
+
                   <input
                     type="url"
                     value={item.link}
@@ -494,6 +576,7 @@ function EditPost() {
                     placeholder="Link (optional)"
                     className="w-full md:w-52 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   />
+
                   <button
                     type="button"
                     onClick={handleRemove}
@@ -523,6 +606,7 @@ function EditPost() {
                     placeholder="File name"
                     className="flex-1 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   />
+
                   <input
                     type="url"
                     value={item.url}
@@ -532,6 +616,7 @@ function EditPost() {
                     placeholder="Download URL"
                     className="w-full md:w-52 bg-surface border border-border text-text rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary"
                   />
+
                   <button
                     type="button"
                     onClick={handleRemove}
@@ -544,6 +629,7 @@ function EditPost() {
             />
           </>
         )}
+
         {/* Troubleshooting Options */}
         {isHelp && (
           <>
@@ -588,7 +674,9 @@ function EditPost() {
             </div>
           </>
         )}
+
         <hr className="border-border-muted" />
+
         {/* Full Long Description */}
         <div>
           <label
@@ -605,7 +693,8 @@ function EditPost() {
             className="w-full bg-surface border border-border text-text rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary resize-y"
           />
         </div>
-        {/* Description Blocks (Text/Image) */}
+
+        {/* Project description block inputs (text + image)*/}
         <div>
           <label className="block text-text-muted text-sm font-medium mb-2">
             {isHelp ? "Describe the Problem" : "Project Description"}
@@ -618,7 +707,8 @@ function EditPost() {
                     rows={3}
                     value={block.value}
                     onChange={(e) => updateBlock(i, "value", e.target.value)}
-                    className="flex-1 bg-surface border border-border text-text rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary resize-y"
+                    placeholder="Write a paragraph..."
+                    className="flex-1 bg-surface border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm leading-relaxed focus:outline-none focus:border-primary transition-all resize-y"
                   />
                 ) : (
                   <div className="flex-1 flex flex-col gap-2 bg-surface/50 p-3 rounded-2xl border border-border/60">
@@ -628,22 +718,31 @@ function EditPost() {
                           src={block.url}
                           alt="Preview"
                           className="max-h-52 w-auto rounded-lg object-contain"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                          onLoad={(e) => {
+                            e.currentTarget.style.display = "block";
+                          }}
                         />
                       </div>
                     )}
-                    <input
-                      type="url"
-                      value={block.url}
-                      onChange={(e) => updateBlock(i, "url", e.target.value)}
-                      placeholder="Image URL..."
-                      className="w-full bg-surface border border-border text-text rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary"
-                    />
+
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="url"
+                        value={block.url}
+                        onChange={(e) => updateBlock(i, "url", e.target.value)}
+                        placeholder="Image URL..."
+                        className="flex-1 bg-surface border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+                      />
+                    </div>
                   </div>
                 )}
                 <button
                   type="button"
                   onClick={() => removeBlock(i)}
-                  className="p-3 rounded-xl bg-bg-subtle border border-border-muted text-text-subtle hover:text-red-400"
+                  className="shrink-0 p-3 rounded-xl bg-bg-subtle border border-border-muted text-text-subtle hover:text-red-400 hover:border-red-500/30 transition-colors"
                 >
                   <Trash2 size={15} />
                 </button>
@@ -653,21 +752,22 @@ function EditPost() {
               <button
                 type="button"
                 onClick={addTextBlock}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-bg-subtle border border-border-muted text-text-muted hover:text-primary"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-bg-subtle border border-border-muted text-text-muted hover:text-primary hover:border-primary transition-colors"
               >
                 <Type size={13} /> Add Text
               </button>
               <button
                 type="button"
                 onClick={addImageBlock}
-                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-bg-subtle border border-border-muted text-text-muted hover:text-primary"
+                className="flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-bg-subtle border border-border-muted text-text-muted hover:text-primary hover:border-primary transition-colors"
               >
                 <ImagePlus size={13} /> Add Image
               </button>
             </div>
           </div>
         </div>
-        {/* Source Code */}
+
+        {/* Code Snippet / GitHub Link */}
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <label
@@ -701,9 +801,8 @@ function EditPost() {
           </div>
         </div>
 
-        {/* // EditPost.jsx ရဲ့ Bottom Action Area */}
+        {/* EditPost.jsx Bottom Action Area */}
         <div className="mt-8 pt-6 border-t border-border flex flex-col gap-4">
-          {/* Submit & Cancel Buttons */}
           <div className="flex gap-3">
             <button
               type="submit"
@@ -712,15 +811,16 @@ function EditPost() {
             >
               {isSubmitting ? "Updating..." : "Update Post"}
             </button>
-            <Link
+            <button
+              type="button"
+              onClick={handleCancel}
               to={`/community/post/${id}`}
-              className="px-6 py-3 bg-surface border border-border text-text-muted rounded-xl font-semibold"
+              className="px-6 py-3 bg-surface border border-border bg-surface hover:bg-surface-2 text-text-muted rounded-xl font-semibold"
             >
               Cancel
-            </Link>
+            </button>
           </div>
 
-          {/* Arduino Project Hub Style - Danger Zone */}
           <div className="p-4 bg-red-500/5 border border-red-500/20 rounded-xl flex items-center justify-between">
             <div>
               <p className="text-sm font-semibold text-red-400">
@@ -744,7 +844,6 @@ function EditPost() {
   );
 }
 
-// Sub-component for repeatable form blocks
 function RepeatableSection({
   title,
   icon: Icon,

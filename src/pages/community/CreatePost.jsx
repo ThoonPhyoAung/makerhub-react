@@ -213,6 +213,7 @@ function CreatePost() {
       await createPost(payload);
       localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
       showAlert("Post created Successfully");
+
       navigate("/community");
     } catch (err) {
       console.error("Failed to create post:", err);

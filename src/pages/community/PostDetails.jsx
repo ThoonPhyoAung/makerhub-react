@@ -330,7 +330,7 @@ function PostDetails() {
                 {post.description}
               </p>
             </div>
-
+            
             <div className="flex flex-wrap items-center justify-between gap-4 py-3 border-y border-border-muted text-xs md:text-sm text-text-subtle">
               <div className="flex flex-wrap items-center gap-3">
                 <span>
@@ -344,6 +344,16 @@ function PostDetails() {
               </div>
 
               <div className="flex items-center gap-2">
+                {/* ★ ADD MOBILE & DESKTOP VISIBLE EDIT BUTTON HERE ★ */}
+                {activeUser?.id === post.authorId && (
+                  <Link
+                    to={`/community/edit/${post.id}`}
+                    className="p-2 px-3 rounded-lg border border-primary/30 bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20 transition-colors"
+                  >
+                    Edit
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLikeToggle}
                   className={`p-2 rounded-lg border transition-colors flex items-center gap-1 ${
@@ -729,8 +739,7 @@ function PostDetails() {
               </p>
             </div>
 
-            {(activeUser?.id === post.authorId ||
-              activeUser?.role === "admin") && (
+            {activeUser?.id === post.authorId && (
               <Link
                 to={`/community/edit/${post.id}`}
                 className="ml-auto text-primary text-sm font-semibold hover:underline"
