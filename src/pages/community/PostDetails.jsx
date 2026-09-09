@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 
 import {
@@ -17,6 +17,9 @@ import {
   Bookmark,
   Send,
   User,
+  Copy,
+  Check,
+  ShoppingBag,
 } from "lucide-react";
 import { getPostById, updatePost } from "../../api/postsApi";
 import { postCategoryIcons, boardIconMap } from "../../utils/iconMaps";
@@ -73,6 +76,17 @@ function PostDetails() {
 
   const [commentText, setCommentText] = useState("");
   const [commentsList, setCommentsList] = useState([]);
+
+  //  Code copy state
+  const [isCopied, setIsCopied] = useState(false);
+
+  // shop items
+  const navigate = useNavigate();
+
+  const handleMarketplaceSearch = (itemName) => {
+    // Marketplace Page သို့ Search Query ပါဝင်သော URL ဖြင့် သွားမည်
+    navigate(`/marketplace?search=${encodeURIComponent(itemName)}`);
+  };
 
   // ★ 1. API ကနေ POST DATA ရလာရင် LIKES နဲ့ COMMENTS ကို LOCAL STATE ထဲ SYNC လုပ်ခြင်း
   useEffect(() => {
@@ -243,6 +257,18 @@ function PostDetails() {
     }
   }, [post?.sourceCode]);
 
+  // --- 7. code copy
+  const handleCopyCode = async () => {
+    if (!post?.sourceCode) return;
+    try {
+      await navigator.clipboard.writeText(post.sourceCode);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000); // 2 စက္ကန့်ကြာရင် မူလ icon ပြန်ပြောင်းမည်
+    } catch (err) {
+      console.error("Failed to copy code: ", err);
+    }
+  };
+
   const handleSmoothScroll = (e, sectionId) => {
     e.preventDefault();
     setActiveSection(sectionId);
@@ -411,6 +437,16 @@ function PostDetails() {
                         {item.quantity}
                       </p>
                     </div>
+
+                    {/* Shop Icon / Button ကို ညာဘက်အစွန်းဆုံးသို့ ပို့ရန် ml-auto သုံးထားသည် */}
+                    <button
+                      onClick={() => handleMarketplaceSearch(item.name || item)}
+                      className="ml-auto  flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover bg-primary/10 hover:bg-primary/25 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors shrink-0"
+                      title={`Find ${item.name || item} in Marketplace`}
+                    >
+                      <ShoppingBag size={15} />
+                      <span className="hidden sm:inline">Find</span>
+                    </button>
                   </div>
                 ))}
               </div>
@@ -527,9 +563,33 @@ function PostDetails() {
               id="code"
               className="scroll-mt-24 bg-bg-elevated border border-border rounded-2xl p-5 md:p-6"
             >
-              <h2 className="flex items-center gap-2 text-text font-bold text-lg mb-4">
-                <Code2 size={18} className="text-primary" /> Code
-              </h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="flex items-center gap-2 text-text font-bold text-lg mb-4">
+                  <Code2 size={18} className="text-primary" /> Code
+                </h2>
+
+                {/* Copy Code Button */}
+                {post.sourceCode && (
+                  <button
+                    onClick={handleCopyCode}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-text-muted hover:text-text bg-bg-subtle hover:bg-bg-elevated border border-border-muted px-3 py-1.5 rounded-lg transition-colors"
+                    title="Copy code to clipboard"
+                  >
+                    {isCopied ? (
+                      <>
+                        <Check size={14} className="text-green-500" />
+                        <span className="text-green-500">Copied!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy size={14} />
+                        <span>Copy</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+
               {post.sourceCode && (
                 <pre className="max-h-[400px] overflow-x-auto bg-bg-subtle border border-border-muted rounded-xl p-4 overflow-x-auto text-sm font-mono text-text-muted mb-4 whitespace-pre-wrap">
                   <code ref={codeRef} className="hljs" />
