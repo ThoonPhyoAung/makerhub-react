@@ -125,7 +125,12 @@ function EditPost() {
   }
 
   // Derived indicator state
-  const hasDraftContent = Boolean(form);
+  const hasDraftContent = Boolean(
+    form?.title?.trim() ||
+    form?.description?.trim() ||
+    form?.content?.trim() ||
+    form?.image,
+  );
 
   // Handle single input changes
   const changeInput = (e) => {
@@ -814,7 +819,6 @@ function EditPost() {
             <button
               type="button"
               onClick={handleCancel}
-              to={`/community/post/${id}`}
               className="px-6 py-3 bg-surface border border-border bg-surface hover:bg-surface-2 text-text-muted rounded-xl font-semibold"
             >
               Cancel

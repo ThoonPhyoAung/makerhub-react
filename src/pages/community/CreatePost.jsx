@@ -204,7 +204,7 @@ function CreatePost() {
       authorId: userId,
       authorName: userName,
       avatarUrl: userAvatar,
-      likes: 0,
+      likes: [],
       commentsList: [],
       createdAt: new Date().toISOString(),
     };

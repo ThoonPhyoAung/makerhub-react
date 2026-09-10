@@ -133,7 +133,6 @@ function HeroSection() {
                   src="https://lottie.host/5aabccd7-7f7d-4263-8047-4df37882a0d1/GMt3jvcjV7.lottie"
                   loop
                   autoplay
-                  renderMode="svg"
                   style={{ width: "28px", height: "28px" }}
                 />
                 <span className="text-text-muted text-[11px] font-bold tracking-wider uppercase">

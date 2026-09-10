@@ -24,6 +24,8 @@ import {
 import { getPostById, updatePost } from "../../api/postsApi";
 import { postCategoryIcons, boardIconMap } from "../../utils/iconMaps";
 import { useFetch } from "../../hooks/useFetch";
+// show alert
+import { useAlert } from "../../context/AlertContext";
 
 const CATEGORY_SHOWCASE = "Project Showcase";
 const CATEGORY_HELP = "Help & Troubleshooting";
@@ -88,13 +90,36 @@ function PostDetails() {
     navigate(`/marketplace?search=${encodeURIComponent(itemName)}`);
   };
 
+  // check login user for comment , like and save
+  const showAlert = useAlert();
+  const checkAuth = () => {
+    if (!activeUser) {
+      showAlert({
+        message: "ဒီ action ပြုလုပ်ရန် Login ဝင်ပေးပါ။",
+        actionText: "Go to Login",
+        onAction: () => navigate("/login"),
+      });
+      return false;
+    }
+    return true;
+  };
+
   // ★ 1. API ကနေ POST DATA ရလာရင် LIKES နဲ့ COMMENTS ကို LOCAL STATE ထဲ SYNC လုပ်ခြင်း
+  // Post Data ရလာတာနဲ့ Like State နဲ့ Count ကို ရယူမည်
   useEffect(() => {
     if (post) {
-      setLikesCount(post.likes || 0);
+      const likedByList = post.likedBy || [];
+
+      // Active User ရဲ့ ID က likedBy Array ထဲမှာ ပါမပါ စစ်မည်
+      const userHasLiked = activeUser?.id
+        ? likedByList.includes(activeUser.id)
+        : false;
+
+      setIsLiked(userHasLiked);
+      setLikesCount(likedByList.length); // Array ရဲ့ length က Total Likes Count ဖြစ်သည်
       setCommentsList(post.commentsList || []);
     }
-  }, [post]);
+  }, [post, activeUser]);
 
   // --- 2. LOCAL STORAGE CHECK FOR USER LIKED/SAVED POSTS ---
   useEffect(() => {
@@ -147,55 +172,42 @@ function PostDetails() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [post]);
 
-  // --- 4. HANDLE LIKE TOGGLE ---
+  // --- 4. HANDLE LIKE TOGGLE (API-BASED) ---
   const handleLikeToggle = async () => {
-    let activeUserStorage = JSON.parse(
-      localStorage.getItem("makerhub_active_user") || "{}",
-    );
-    let allUsers = JSON.parse(localStorage.getItem("makerhub_users") || "[]");
-    let likedPosts = activeUserStorage.likedPosts || [];
+    if (!checkAuth()) return;
 
-    let newLikesCount;
-    let nextIsLiked = !isLiked;
+    const currentLikedBy = post.likedBy || [];
+    const userId = activeUser.id;
 
-    if (isLiked) {
-      newLikesCount = likesCount !== 0 ? likesCount - 1 : 0;
-      likedPosts = likedPosts.filter((postId) => postId !== id);
-    } else {
-      newLikesCount = likesCount + 1;
-      likedPosts.push(id);
-    }
+    // Active User ID ကို ထည့်မည် သို့မဟုတ် ဖယ်ထုတ်မည်
+    const updatedLikedBy = isLiked
+      ? currentLikedBy.filter((id) => id !== userId) // Unlike
+      : [...currentLikedBy, userId]; // Like
 
-    setLikesCount(newLikesCount);
+    // UI မှာ ချက်ချင်း အရောင်နဲ့ Count ပြောင်းနိုင်ရန် (Optimistic Update)
+    const nextIsLiked = !isLiked;
+    const nextCount = updatedLikedBy.length;
+
     setIsLiked(nextIsLiked);
-
-    activeUserStorage.likedPosts = likedPosts;
-    localStorage.setItem(
-      "makerhub_active_user",
-      JSON.stringify(activeUserStorage),
-    );
-
-    const updatedAllUsers = allUsers.map((user) =>
-      user.id === activeUserStorage.id
-        ? { ...user, likedPosts: likedPosts }
-        : user,
-    );
-    localStorage.setItem("makerhub_users", JSON.stringify(updatedAllUsers));
+    setLikesCount(nextCount);
 
     try {
+      // API ပေါ်က Post Data ကို likedBy Array အသစ်ဖြင့် Update လုပ်မည်
       await updatePost(id, {
         ...post,
-        likes: newLikesCount,
+        likedBy: updatedLikedBy,
       });
     } catch (err) {
       console.error("Failed to update like:", err);
-      setLikesCount(likesCount);
+      // Error တက်ခဲ့ရင် မူလ State သို့ ပြန်ပြောင်းမည်
       setIsLiked(isLiked);
+      setLikesCount(currentLikedBy.length);
     }
   };
 
   // --- 5. HANDLE SAVE TOGGLE ---
   const handleSaveToggle = () => {
+    if (!checkAuth()) return;
     let activeUserStorage = JSON.parse(
       localStorage.getItem("makerhub_active_user") || "{}",
     );
@@ -227,6 +239,7 @@ function PostDetails() {
   // --- 6. HANDLE ADD COMMENT ---
   const handleAddComment = async (e) => {
     e.preventDefault();
+    if (!checkAuth()) return;
     if (!commentText.trim()) return;
 
     const newComment = {
@@ -330,7 +343,7 @@ function PostDetails() {
                 {post.description}
               </p>
             </div>
-            
+
             <div className="flex flex-wrap items-center justify-between gap-4 py-3 border-y border-border-muted text-xs md:text-sm text-text-subtle">
               <div className="flex flex-wrap items-center gap-3">
                 <span>
