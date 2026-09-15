@@ -5,7 +5,7 @@ import Home from "./pages/home/Home";
 import Learning from "./pages/learning/Learning";
 import JourneyDetail from "./pages/learning/JourneyDetail";
 import LessonDetail from "./pages/learning/LessonDetail";
-import Community from "./pages/community/Community";
+import CommunityPage from "./pages/community/index";
 import Marketplace from "./pages/marketplace/Marketplace";
 
 // Auth Pages Import
@@ -17,6 +17,8 @@ import { AlertProvider } from "./context/AlertContext"; // named import — curl
 import CreatePost from "./pages/community/CreatePost";
 import PostDetails from "./pages/community/PostDetails";
 import EditPost from "./pages/community/EditPost";
+// marketplace
+import MarketplacePostForm from "./pages/marketplace/MarketplaceCreatePost";
 
 function App() {
   return (
@@ -43,12 +45,13 @@ function App() {
               path="/learning/:journeyId/:lessonSlug"
               element={<LessonDetail />}
             />
-            <Route path="/community" element={<Community />} />
-
-            <Route path="/community/create-post" element={<CreatePost/>} />
+            <Route path="/community" element={<CommunityPage />} />
+            <Route path="/community/create-post" element={<CreatePost />} />
             <Route path="/community/project/:id" element={<PostDetails />} />
             <Route path="/community/edit/:id" element={<EditPost />} />
+
             <Route path="/marketplace" element={<Marketplace />} />
+            <Route path="/marketplace/sell" element={<MarketplacePostForm />} />
           </Route>
         </Routes>
       </div>

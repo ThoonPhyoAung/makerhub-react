@@ -96,7 +96,7 @@ function CommunityShowcase() {
                       <div className="flex items-center gap-3 text-text-subtle text-sm">
                         <span className="flex items-center gap-1">
                           <Heart size={13} className="text-red-500" />{" "}
-                          {post.likes || 0}
+                          {post.likedBy?.length || 0}
                         </span>
                         <span className="flex items-center gap-1">
                           <MessageCircle size={13} />{" "}

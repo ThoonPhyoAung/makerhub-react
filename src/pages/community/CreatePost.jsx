@@ -204,7 +204,7 @@ function CreatePost() {
       authorId: userId,
       authorName: userName,
       avatarUrl: userAvatar,
-      likes: [],
+      likedBy: [],
       commentsList: [],
       createdAt: new Date().toISOString(),
     };
@@ -224,17 +224,31 @@ function CreatePost() {
 
   // ★ Part 2: Cancel button handler — content ရှိရင် confirm dialog ပြပြီးမှ ဖျက်
   const handleCancel = () => {
-    const hasContent = form.title || form.description || form.image;
+    // 1. Content အမှန်တကယ် ရှိမရှိ စစ်ဆေးခြင်း
+    const hasContent = Boolean(
+      form?.title?.trim() ||
+      form?.description?.trim() ||
+      form?.content?.trim() ||
+      form?.image,
+    );
 
+    // 2. Clear & Navigate လုပ်ပေးမည့် Helper Function
+    const exitPage = () => {
+      localStorage.removeItem(DRAFT_KEY);
+      navigate("/community");
+    };
+
+    // 3. Content ရှိရင် Confirm ပြမယ်၊ မရှိရင် တန်းထွက်မယ်
     if (hasContent) {
-      const confirmLeave = window.confirm(
-        "ဒီ post ကို ဖျက်ပစ်မှာလား? ရေးထားတာတွေ ပျက်သွားပါမယ်။",
-      );
-      if (!confirmLeave) return; // user က "Cancel" (dialog ရဲ့) နှိပ်ရင် ဒီမှာပဲ ရပ်
+      showAlert({
+        message: "Unsaved changes will be lost. Leave this page?",
+        actionText: "Leave",
+        duration: 0,
+        onAction: exitPage,
+      });
+    } else {
+      exitPage();
     }
-
-    localStorage.removeItem(DRAFT_KEY);
-    navigate("/community");
   };
 
   // ★ draft indicator ပြဖို့ (form ထဲမှာ content တစ်ခုခု ရှိမရှိ check)

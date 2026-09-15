@@ -97,6 +97,7 @@ function EditPost() {
   // form ပြောင်းတိုင်း localStorage ထဲ auto-save
   useEffect(() => {
     if (form) {
+      const DRAFT_KEY = `editPost_draft_${id}`;
       localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
     }
   }, [form]);
@@ -240,40 +241,47 @@ function EditPost() {
     }
   };
 
-  // Cancel button handler — content ရှိရင် confirm dialog ပြပြီးမှ ဖျက်
+  // Cancel Handler
   const handleCancel = () => {
-    // const hasContent = form.title || form.description || form.image;
+    const hasContent = form.title || form.description || form.image;
 
-    // if (hasContent) {
-    //   const confirmLeave = window.confirm(
-    //     "ဒီ post ကို ဖျက်ပစ်မှာလား? ရေးထားတာတွေ ပျက်သွားပါမယ်။",
-    //   );
-    //   if (!confirmLeave) return; // user က "Cancel" (dialog ရဲ့) နှိပ်ရင် ဒီမှာပဲ ရပ်
-    // }
-
-    localStorage.removeItem(DRAFT_KEY);
-    navigate(`/community/project/${id}`);
+    if (hasContent) {
+      showAlert({
+        message: "Unsaved changes will be lost. Leave this page?",
+        actionText: "Leave",
+        duration: 0, // ★ auto-dismiss ပိတ် — user click လုပ်မှသာ ပိတ်မယ်
+        onAction: () => {
+          localStorage.removeItem(DRAFT_KEY);
+          navigate(`/community/project/${id}`);
+        },
+      });
+    } else {
+      localStorage.removeItem(DRAFT_KEY);
+      navigate(`/community/project/${id}`);
+    }
   };
 
-  // handle delete post
-  const handleDeletePost = async (e) => {
+  // Delete Handler
+  const handleDeletePost = (e) => {
     e.preventDefault();
 
-    const isConfirmed = window.confirm(
-      "Are you sure you want to delete this post? This action cannot be undone.",
-    );
-
-    if (!isConfirmed) return;
-
-    try {
-      await deletePost(id);
-      localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
-      showAlert("Post deleted Successfully !");
-      navigate("/community");
-    } catch (error) {
-      console.error("Failed to delete post:", error);
-      showAlert("Failed to delete post. Please try again.");
-    }
+    showAlert({
+      message:
+        "Are you sure you want to delete this post? This action cannot be undone.",
+      actionText: "Delete",
+      duration: 0, // ★ delete လို destructive action ဆို ပိုအရေးကြီးတယ်
+      onAction: async () => {
+        try {
+          await deletePost(id);
+          localStorage.removeItem(DRAFT_KEY);
+          showAlert("Post deleted Successfully !");
+          navigate("/community");
+        } catch (error) {
+          console.error("Failed to delete post:", error);
+          showAlert("Failed to delete post. Please try again.");
+        }
+      },
+    });
   };
 
   return (

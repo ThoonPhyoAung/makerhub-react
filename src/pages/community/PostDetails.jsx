@@ -261,6 +261,9 @@ function PostDetails() {
     }
   };
 
+
+
+  // for code color
   const codeRef = useRef(null);
 
   useEffect(() => {

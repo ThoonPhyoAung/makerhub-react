@@ -16,11 +16,11 @@ import {
 } from "lucide-react";
 
 export const marketplaceCategories = [
-  { id: "All", label: "All", icon: Grid3x3 },
-  { id: "Microcontroller", label: "Microcontrollers", icon: Cpu },
-  { id: "Sensor", label: "Sensors", icon: Radio },
-  { id: "Motor", label: "Motors & Servos", icon: Settings2 },
-  { id: "Display", label: "Displays", icon: Tv },
-  { id: "Components", label: "Components & Others", icon: Boxes },
-  { id: "Saved Items", label: "Saved Items", icon: Bookmark },
+  { id: "all", label: "All", icon: Grid3x3 },
+  { id: "microcontrollers", label: "Microcontrollers", icon: Cpu },
+  { id: "sensors", label: "Sensors", icon: Radio },
+  { id: "motors", label: "Motors & Servos", icon: Settings2 },
+  { id: "displays", label: "Displays", icon: Tv },
+  { id: "components", label: "Components & Others", icon: Boxes },
+  { id: "saved Items", label: "Saved Items", icon: Bookmark },
 ];
