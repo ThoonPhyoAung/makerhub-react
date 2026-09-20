@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux"; //for checking current user login
+import { useAlert } from "../../context/AlertContext";
 import { ArrowRight, Images, PlusCircle, Cpu } from "lucide-react";
 
 const slides = [
@@ -40,6 +42,31 @@ const slides = [
 ];
 
 function CommunityHero() {
+  // current login user
+  const activeUser = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+
+  // check login user for sell item create
+  const showAlert = useAlert();
+  const checkAuth = () => {
+    if (!activeUser) {
+      showAlert({
+        message: "Please Login First to create post !",
+        actionText: "Go to Login",
+        onAction: () => navigate("/login"),
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // sell item btn click
+  const handleCreateClick = (e) => {
+    if (!checkAuth()) {
+      e.preventDefault(); // Login မဝင်ထားပါက Link သွားခြင်းကို တားဆီးမည်
+    }
+  };
+
   const [current, setCurrent] = useState(0);
 
   useEffect(() => {
@@ -94,6 +121,7 @@ function CommunityHero() {
                   {slide.to ? (
                     <Link
                       to={slide.to}
+                      onClick={handleCreateClick}
                       className="inline-flex items-center gap-1.5 bg-primary hover:bg-primary/90 text-text font-bold text-xs md:text-base px-3 py-1.5 md:px-6 md:py-3 rounded-lg md:rounded-xl shadow-md transition-all active:scale-95"
                     >
                       <span>{slide.buttonText}</span>

@@ -1,14 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import {
-  Loader2,
-  Eye,
-  Bookmark,
-  BookmarkCheck,
-  Tag,
-  MapPin,
-} from "lucide-react";
+import { Loader2, Eye, Bookmark, Tag, MapPin } from "lucide-react";
 
 // API & Custom Hooks
 import { useFetch } from "../../hooks/useFetch";
@@ -24,6 +17,7 @@ function MarketplaceGrid({ activeCategory }) {
   // useFetch hook
   const { data: items, loading, error } = useFetch(getMarketplaceItems);
 
+  // using usestate to change ui immediately
   const [itemList, setItemList] = useState([]);
   useEffect(() => {
     if (items) {
@@ -49,14 +43,42 @@ function MarketplaceGrid({ activeCategory }) {
         const wishlist = Array.isArray(item.wishlistUsers)
           ? item.wishlistUsers
           : [];
-        return wishlist.includes(String(currentUser.id));
+
+        // condition checking
+        return wishlist.some(
+          (
+            data, //.some => true or false
+          ) =>
+            typeof data === "object"
+              ? String(data.userId) === String(currentUser?.id)
+              : String(data) === String(currentUser?.id),
+        );
       });
+
+      // Sort စီခြင်း (savedAt အသစ်ဆုံးမှ အဟောင်းအတိုင်း)
+      result.sort((a, b) => {
+        const getSavedTime = (item) => {
+          const wishlist = Array.isArray(item.wishlistUsers)
+            ? item.wishlistUsers
+            : [];
+          const entry = wishlist.find((data) =>
+            typeof data === "object"
+              ? String(data.userId) === String(currentUser?.id)
+              : String(data) === String(currentUser?.id),
+          );
+          return typeof entry === "object" && entry?.savedAt
+            ? entry.savedAt
+            : 0;
+        };
+
+        return getSavedTime(b) - getSavedTime(a); // ကြီးရာမှ ငယ်ရာ (Last Saved First) အနှုတ်တန်ဖိုး (< 0) => [a, b]	,အပေါင်းတန်ဖိုး (> 0) => [b, a]
+      });
+
+      return result;
     } else if (activeCategory.toLowerCase() !== "all") {
       result = itemList.filter(
-        (item) => item.category.toLowerCase() === activeCategory,
+        (item) => item.category.toLowerCase() === activeCategory.toLowerCase(),
       );
-
-      console.log("results", result);
     }
 
     return [...result].reverse();
@@ -78,6 +100,7 @@ function MarketplaceGrid({ activeCategory }) {
     }
 
     const userId = String(currentUser.id);
+    const savedAt = Date.now().toString();
 
     // A. မူလ State ကို Backup လုပ်ထားမယ် (Error တက်ရင် ပြန်လှည့်ဖို့)
     const previousItems = [...itemList];
@@ -91,11 +114,19 @@ function MarketplaceGrid({ activeCategory }) {
     const wishlistUsers = Array.isArray(targetItem.wishlistUsers)
       ? targetItem.wishlistUsers
       : [];
-    const alreadySaved = wishlistUsers.includes(userId);
+    const alreadySaved = wishlistUsers.some((data) =>
+      typeof data === "object"
+        ? String(data.userId) === userId
+        : String(data) === userId,
+    );
 
     const updatedWishlist = alreadySaved
-      ? wishlistUsers.filter((id) => id !== userId)
-      : [...wishlistUsers, userId];
+      ? wishlistUsers.filter((data) =>
+          typeof data === "object"
+            ? String(data.userId) !== userId
+            : String(data) !== userId,
+        )
+      : [...wishlistUsers, { userId, savedAt }];
 
     // B. Optimistic UI Update: Local State ကို ချက်ချင်း Update လုပ်လိုက်မယ်
     setItemList((prevItems) =>
@@ -150,7 +181,11 @@ function MarketplaceGrid({ activeCategory }) {
             const isSaved =
               currentUser &&
               Array.isArray(item.wishlistUsers) &&
-              item.wishlistUsers.includes(String(currentUser.id));
+              item.wishlistUsers.some((data) =>
+                typeof data === "object"
+                  ? String(data.userId) === String(currentUser.id)
+                  : String(data) === String(currentUser.id),
+              );
 
             const displayImage =
               Array.isArray(item.images) && item.images.length > 0
@@ -212,7 +247,8 @@ function MarketplaceGrid({ activeCategory }) {
                         : item.price || "0 MMK"}
                     </div>
 
-                    <p className="text-text-muted text-xs leading-relaxed mb-3 line-clamp-2  hidden sm:block">
+                    {/* added break-words to short description */}
+                    <p className="text-text-muted text-[11px] sm:text-xs leading-relaxed mb-2.5 line-clamp-2 break-words overflow-hidden">
                       {item.description || "No description provided."}
                     </p>
 

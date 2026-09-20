@@ -5,7 +5,13 @@ import {
   useCallback,
   useRef,
 } from "react";
-import { CheckCircle2, AlertCircle, X } from "lucide-react";
+import {
+  CheckCircle2,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  X,
+} from "lucide-react";
 
 // this is the context provider , do for all the components
 // this, call AlertProvider * 2
@@ -43,14 +49,21 @@ export function AlertProvider({ children }) {
     if (timerRef.current) clearTimeout(timerRef.current);
 
     // String အဖြစ် ပို့ပါက ရိုးရိုး Toast အဖြစ် ၃ စက္ကန့်ပြသမည်
+    // String အဖြစ် ပို့ပါက အမြဲတမ်း "success" ဖြစ်မည်
     if (typeof options === "string") {
-      setAlertConfig({ message: options, type: "success" });
+      setAlertConfig({
+        message: options,
+        type: "success",
+      });
       timerRef.current = setTimeout(() => setAlertConfig(null), 3000);
       return;
     }
 
-    // if not string , save as an Object
-    setAlertConfig(options);
+    // Object အဖြစ် ပို့ပါက type မပါခဲ့ရင် Default "success" ယူမည်
+    setAlertConfig({
+      type: "success", // <-- Default အဖြစ် "success" ထည့်ထားပြီး
+      ...options, // <-- options ထဲမှာ type ပါလာရင် auto override ဖြစ်သွားပါမည်
+    });
 
     // duration သီးသန့် မပါရင် Default ၅ စက္ကန့်အကြာမှာ အလိုအလျောက် ပျောက်မည်
     const autoDismissTime = options.duration ?? 5000;
@@ -72,11 +85,20 @@ export function AlertProvider({ children }) {
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center justify-between gap-3 bg-bg-elevated border border-border text-text px-3.5 py-3 rounded-2xl shadow-2xl border-primary/30 w-[calc(100%-2rem)] max-w-md sm:w-auto sm:min-w-[360px]">
           {/* Left: Icon & Message */}
           <div className="flex items-center gap-2.5 min-w-0 flex-1">
-            {alertConfig.actionText ? (
-              <AlertCircle size={18} className="text-primary shrink-0" />
-            ) : (
-              <CheckCircle2 size={18} className="text-green-400 shrink-0" />
+            {/* Type အလိုက် Icon နဲ့ Color ခွဲထုတ်ခြင်း */}
+            {alertConfig.type === "warning" && (
+              <AlertTriangle size={18} className="text-amber-400 shrink-0" />
             )}
+            {alertConfig.type === "error" && (
+              <AlertCircle size={18} className="text-red-400 shrink-0" />
+            )}
+            {alertConfig.type === "info" && (
+              <Info size={18} className="text-blue-400 shrink-0" />
+            )}
+            {(alertConfig.type === "success" || !alertConfig.type) && (
+              <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />
+            )}
+
             <span className="text-xs sm:text-sm font-medium leading-tight break-words line-clamp-2">
               {alertConfig.message}
             </span>

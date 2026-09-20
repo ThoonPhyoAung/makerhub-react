@@ -25,7 +25,6 @@ import { communityCategories } from "../../data/communityCategories";
 // api post request
 import { createPost } from "../../api/postsApi";
 
-// show alert
 import { useAlert } from "../../context/AlertContext";
 
 // post type and board type options
@@ -309,7 +308,7 @@ function CreatePost() {
             placeholder="e.g., ESP32 Weather Station Node"
             className="w-full bg-surface border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
           />
-          <span className="text-red-500 text-xs">{errors.title}</span>
+         
         </div>
 
         {/* post type and board type */}

@@ -1,10 +1,37 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, PlusCircle, Cpu, Radio, Settings2 } from "lucide-react";
+import { useSelector } from "react-redux"; //for checking current user login
+import { useAlert } from "../../context/AlertContext";
 
 // Original market.css ရဲ့ .market-hero က theme (dark/light) ကို ဂရုမစိုက်ဘဲ
 // #06090a dark cyber background ကို force ထားတာမို့ ဒီနေရာမှာလည်း
 // bg-bg token မသုံးဘဲ တမင် hardcode ထားတယ်.
 function MarketplaceHero() {
+  // current login user
+  const activeUser = useSelector((state) => state.auth.user);
+  const navigate = useNavigate();
+
+  // check login user for sell item create
+  const showAlert = useAlert();
+  const checkAuth = () => {
+    if (!activeUser) {
+      showAlert({
+        message: "Please Login First to sell item !",
+        actionText: "Go to Login",
+        onAction: () => navigate("/login"),
+      });
+      return false;
+    }
+    return true;
+  };
+
+  // sell item btn click
+  const handleSellClick = (e) => {
+    if (!checkAuth()) {
+      e.preventDefault(); // Login မဝင်ထားပါက Link သွားခြင်းကို တားဆီးမည်
+    }
+  };
+
   return (
     <div className="relative bg-[#06090a] overflow-hidden border-b border-white/5">
       {/* Tech grid lines — market.css: 40px grid, opacity 0.015 */}
@@ -44,6 +71,7 @@ function MarketplaceHero() {
 
           <Link
             to="/marketplace/sell"
+            onClick={handleSellClick}
             className="inline-flex items-center gap-2 bg-primary text-black font-bold px-5 py-3 rounded-[10px] shadow-[0_4px_20px_rgba(34,197,94,0.25)] hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(13,148,136,0.45)] transition-all"
           >
             <PlusCircle size={18} /> Sell an Item
