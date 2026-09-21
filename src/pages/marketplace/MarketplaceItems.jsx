@@ -280,7 +280,7 @@ function MarketplaceGrid({ activeCategory }) {
 
                       <div className="flex gap-2">
                         <Link
-                          to={`/marketplace/${item.id}`}
+                          to={`/marketplace/items/${item.id}`}
                           className="flex-1 flex items-center justify-center gap-1.5 bg-surface hover:bg-bg-elevated text-text text-[11px] sm:text-xs font-semibold py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-border hover:border-primary/40 active:scale-95 transition-all"
                         >
                           <Eye size={12} className="sm:w-[14px] sm:h-[14px]" />{" "}
