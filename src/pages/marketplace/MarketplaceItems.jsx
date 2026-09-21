@@ -40,9 +40,7 @@ function MarketplaceGrid({ activeCategory }) {
     if (activeCategory.toLowerCase() === "saved items") {
       if (!currentUser) return [];
       result = itemList.filter((item) => {
-        const wishlist = Array.isArray(item.wishlistUsers)
-          ? item.wishlistUsers
-          : [];
+        const wishlist = Array.isArray(item.savedUsers) ? item.savedUsers : [];
 
         // condition checking
         return wishlist.some(
@@ -58,8 +56,8 @@ function MarketplaceGrid({ activeCategory }) {
       // Sort စီခြင်း (savedAt အသစ်ဆုံးမှ အဟောင်းအတိုင်း)
       result.sort((a, b) => {
         const getSavedTime = (item) => {
-          const wishlist = Array.isArray(item.wishlistUsers)
-            ? item.wishlistUsers
+          const wishlist = Array.isArray(item.savedUsers)
+            ? item.savedUsers
             : [];
           const entry = wishlist.find((data) =>
             typeof data === "object"
@@ -92,8 +90,10 @@ function MarketplaceGrid({ activeCategory }) {
 
     if (!currentUser) {
       showAlert({
-        message: "Please login first to save items to your watchlist.",
-        actionText: "Login",
+        title: "Authentication Required",
+        message: "You need to log in to access your saved items.",
+        type: "warning",
+        actionText: "Go to Login",
         onAction: () => navigate("/login"),
       });
       return;
@@ -105,34 +105,34 @@ function MarketplaceGrid({ activeCategory }) {
     // A. မူလ State ကို Backup လုပ်ထားမယ် (Error တက်ရင် ပြန်လှည့်ဖို့)
     const previousItems = [...itemList];
 
-    // Target Item နဲ့ Current Wishlist Status ကို ရှာမယ်
+    // Target Item နဲ့ Current savedUsers Status ကို ရှာမယ်
     const targetItem = itemList.find(
       (item) => String(item.id) === String(itemId),
     );
     if (!targetItem) return;
 
-    const wishlistUsers = Array.isArray(targetItem.wishlistUsers)
-      ? targetItem.wishlistUsers
+    const savedUsers = Array.isArray(targetItem.savedUsers)
+      ? targetItem.savedUsers
       : [];
-    const alreadySaved = wishlistUsers.some((data) =>
+    const alreadySaved = savedUsers.some((data) =>
       typeof data === "object"
         ? String(data.userId) === userId
         : String(data) === userId,
     );
 
     const updatedWishlist = alreadySaved
-      ? wishlistUsers.filter((data) =>
+      ? savedUsers.filter((data) =>
           typeof data === "object"
             ? String(data.userId) !== userId
             : String(data) !== userId,
         )
-      : [...wishlistUsers, { userId, savedAt }];
+      : [...savedUsers, { userId, savedAt }];
 
     // B. Optimistic UI Update: Local State ကို ချက်ချင်း Update လုပ်လိုက်မယ်
     setItemList((prevItems) =>
       prevItems.map((item) =>
         String(item.id) === String(itemId)
-          ? { ...item, wishlistUsers: updatedWishlist }
+          ? { ...item, savedUsers: updatedWishlist }
           : item,
       ),
     );
@@ -141,11 +141,9 @@ function MarketplaceGrid({ activeCategory }) {
     try {
       await updateMarketplaceItem(itemId, {
         ...targetItem,
-        wishlistUsers: updatedWishlist,
+        savedUsers: updatedWishlist,
       });
-      showAlert(
-        alreadySaved ? "Removed from watchlist" : "Added to watchlist!",
-      );
+      showAlert(alreadySaved ? "Removed from Saved" : "Added to Saved!");
     } catch (err) {
       console.error("Wishlist Update Error:", err);
       // D. Error တက်ရင် မူလ State သို့ ပြန်လှည့်မယ် (Rollback)
@@ -180,8 +178,8 @@ function MarketplaceGrid({ activeCategory }) {
           {filteredItems.map((item, index) => {
             const isSaved =
               currentUser &&
-              Array.isArray(item.wishlistUsers) &&
-              item.wishlistUsers.some((data) =>
+              Array.isArray(item.savedUsers) &&
+              item.savedUsers.some((data) =>
                 typeof data === "object"
                   ? String(data.userId) === String(currentUser.id)
                   : String(data) === String(currentUser.id),
@@ -228,7 +226,7 @@ function MarketplaceGrid({ activeCategory }) {
                         {item.category || "Others"}
                       </span>
                       {item.boardTag && (
-                        <span className="text-[9px] sm:text-[10px] text-text-muted uppercase">
+                        <span className="hidden sm:inline text-[10px] text-text-muted uppercase">
                           #{item.boardTag}
                         </span>
                       )}
@@ -252,28 +250,32 @@ function MarketplaceGrid({ activeCategory }) {
                       {item.description || "No description provided."}
                     </p>
 
-                    {item.location && (
-                      <div className="flex items-center gap-1 text-[11px] text-text-muted mb-3 hidden md:flex">
-                        <MapPin
-                          size={14}
-                          className="shrink-0 text-text-subtle"
-                        />
-                        <span className="truncate">
-                          {item.location.township}, {item.location.city}
-                        </span>
-                      </div>
-                    )}
-
                     <div className="pt-2 border-t border-border-muted/60 mt-auto">
-                      <div className="flex items-center gap-2 mb-3">
-                        <img
-                          src={displayAvatar}
-                          alt={item.sellerName || "Seller"}
-                          className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border border-border-muted object-cover p-px"
-                        />
-                        <span className="text-text-subtle text-[10px] sm:text-xs max-w-[80px] sm:max-w-[130px] font-medium truncate">
-                          {item.sellerName || "Anonymous"}
-                        </span>
+                      <div className="flex items-center justify-between gap-2 mb-3">
+                        {/* Left: Avatar + Seller Name Group */}
+                        <div className="flex items-center gap-2 min-w-0">
+                          <img
+                            src={displayAvatar}
+                            alt={item.sellerName || "Seller"}
+                            className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border border-border-muted object-cover p-px"
+                          />
+                          <span className="text-text-subtle text-[10px] sm:text-xs max-w-[80px] sm:max-w-[130px] font-medium truncate">
+                            {item.sellerName || "Anonymous"}
+                          </span>
+                        </div>
+
+                        {item.location && (
+                          <div className="hidden md:flex items-center gap-1 text-[11px] text-text-muted shrink-0 min-w-0">
+                            <MapPin
+                              size={14}
+                              className="shrink-0 text-text-subtle"
+                            />
+                            <span className="truncate">
+                              {item.location.township},{" "}
+                              {item.location.state.toUpperCase()}
+                            </span>
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex gap-2">

@@ -95,7 +95,9 @@ function PostDetails() {
   const checkAuth = () => {
     if (!activeUser) {
       showAlert({
-        message: "ဒီ action ပြုလုပ်ရန် Login ဝင်ပေးပါ။",
+        title: "Authentication Required",
+        message: "Please Login First to make this action.",
+        type: "warning",
         actionText: "Go to Login",
         onAction: () => navigate("/login"),
       });
@@ -234,6 +236,7 @@ function PostDetails() {
         : user,
     );
     localStorage.setItem("makerhub_users", JSON.stringify(updatedAllUsers));
+    showAlert(isSaved ? "Removed from Saved" : "Added to Saved!");
   };
 
   // --- 6. HANDLE ADD COMMENT ---
@@ -260,8 +263,6 @@ function PostDetails() {
       console.error("Failed to add comment:", err);
     }
   };
-
-
 
   // for code color
   const codeRef = useRef(null);

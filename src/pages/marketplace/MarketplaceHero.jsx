@@ -16,7 +16,9 @@ function MarketplaceHero() {
   const checkAuth = () => {
     if (!activeUser) {
       showAlert({
-        message: "Please Login First to sell item !",
+        title: "Authentication Required",
+        message: "Please Login First to Sell Your Items.",
+        type: "warning",
         actionText: "Go to Login",
         onAction: () => navigate("/login"),
       });

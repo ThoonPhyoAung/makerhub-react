@@ -51,7 +51,9 @@ function CommunityHero() {
   const checkAuth = () => {
     if (!activeUser) {
       showAlert({
-        message: "Please Login First to create post !",
+        title: "Authentication Required",
+        message: "Please Login First to Create Posts.",
+        type: "warning",
         actionText: "Go to Login",
         onAction: () => navigate("/login"),
       });

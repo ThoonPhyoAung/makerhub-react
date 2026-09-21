@@ -87,6 +87,7 @@ const initialForm = {
   tiktok: "",
 };
 
+// getting saved draft if save data exists
 const getInitialForm = () => {
   try {
     const saved = localStorage.getItem(DRAFT_KEY);
@@ -98,6 +99,7 @@ const getInitialForm = () => {
   }
 };
 
+// checking image link
 const isBase64DataUrl = (value) => {
   return typeof value === "string" && value.startsWith("data:");
 };
@@ -118,13 +120,31 @@ function MarketplacePostForm() {
       user?.name || "User",
     )}&background=161b22&color=0d9488&bold=true`;
 
+  // LocalStorage ထဲတွင် အရင် save ထားဖူးသည့် Draft ရှိမရှိ စစ်ဆေးပြီး initial state ပေးခြင်း
+  const [isDraftSaved, setIsDraftSaved] = useState(() => {
+    return Boolean(localStorage.getItem(DRAFT_KEY));
+  });
+
   // ★ draft ပြန် load ဖြစ်တဲ့အခါ, socail field (telegram/viber...) ထဲ
   // value ရှိနေရင် toggle ကို "active" အနေနဲ့ ပြန်ဖွင့်ပေးဖို့ — lazy
   // initializer function ကို useState ထဲ ပို့ထားတယ် (component ပထမဆုံး
   // render မှာတစ်ခါပဲ run)
   const [activeSocials, setActiveSocials] = useState(() => {
     const restored = getInitialForm();
-    return socialPlatforms.map((p) => p.id).filter((id) => restored[id]);
+
+    // ၁။ ID တွေကိုပဲ သီးသန့် ထုတ်ယူမည်
+    const allIds = socialPlatforms.map((p) => p.id);
+    // ရလဒ်: ["telegram", "messenger", "viber", "tiktok"]
+
+    // ၂။ LocalStorage ထဲမှာ တန်ဖိုးရှိတဲ့ ID များကိုပဲ စစ်ထုတ်မည်
+    const activeIds = allIds.filter((id) => {
+      const value = restored[id]; // restored['telegram']
+      return Boolean(value); // တန်ဖိုးရှိရင် true၊ မရှိရင် false
+      // restored["telegram"] ထဲမှာ "@myhandle" (စာသား/တန်ဖိုး) ရှိနေရင် JavaScript က အဲဒါကို True လို့ သတ်မှတ်ပြီး Array ထဲမှာ ချန်ထား
+    });
+
+    // ၃။ ရလာတဲ့ activeIds array ကို useState ရဲ့ initial value အဖြစ် return ပြန်ပေးမည်
+    return activeIds;
   });
 
   const toggleSocial = (id) => {
@@ -146,6 +166,10 @@ function MarketplacePostForm() {
   const handleChange = (e) => {
     const { id, value } = e.target;
     setForm((prev) => ({ ...prev, [id]: value }));
+
+    if (isDraftSaved) {
+      setIsDraftSaved(false); // စာသားအသစ် ပြန်ရိုက်လျှင် "Draft saved" ကို ခဏပြန်ဖျောက်မည်
+    }
 
     // အကယ်၍ အဲဒီ field မှာ error ရှိနေခဲ့ရင် စာစရိုက်လိုက်တာနဲ့ error ကို ချက်ချင်း ဖျက်ပေးမည်
     if (errors[id]) {
@@ -195,6 +219,7 @@ function MarketplacePostForm() {
     setImageUrlInput("");
   };
 
+  // image remove
   const handleRemove = (indexToRemove) => {
     setForm((prev) => ({
       ...prev,
@@ -202,6 +227,7 @@ function MarketplacePostForm() {
     }));
   };
 
+  // image main
   const handleMakeMain = (indexToMakeMain) => {
     const selectedImage = form.images[indexToMakeMain];
     const remainingImages = form.images.filter(
@@ -290,7 +316,7 @@ function MarketplacePostForm() {
     try {
       // Form ထဲမှာ ရှိသမျှ စာများကို LocalStorage ထဲ သိမ်းမည်
       localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-
+      setIsDraftSaved(true);
       showAlert("Draft saved successfully!");
     } catch (error) {
       showAlert({
@@ -353,7 +379,7 @@ function MarketplacePostForm() {
         createdAt: new Date().toISOString(),
         isSold: false,
         reportCount: 0,
-        wishlistUsers: [],
+        savedUsers: [],
       };
 
       // 3. API သို့ ပို့မည်
@@ -380,558 +406,612 @@ function MarketplacePostForm() {
     }
   };
 
-  // ★ images (array) ကို ပြန်စစ်, .image (singular, Community field) မဟုတ်
-  const hasDraftContent = Boolean(
-    form.title || form.description || form.images?.length > 0,
-  );
+  // ★ Cancel button handler — Form Field အားလုံးကို Dynamic စစ်ဆေးခြင်း
+  const handleCancel = () => {
+    // initialForm ထဲက တန်ဖိုးများအတိုင်း ပြောင်းလဲမှု (Change) ရှိမရှိ စစ်ဆေးခြင်း
+    const hasFormData = Object.keys(initialForm).some((key) => {
+      const currentValue = form[key];
+      const defaultValue = initialForm[key]; //preferredMethod: "any" လို Default Value ရှိသော Field များ
+
+      // Array (images) ဖြစ်ပါက အနည်းဆုံး ၁ ခုရှိမရှိ စစ်မည်
+      if (Array.isArray(currentValue)) {
+        return currentValue.length > 0;
+      }
+
+      // မူလတန်ဖိုး (defaultValue) နှင့် မတူတော့ဘဲ စာသား/တန်ဖိုး ရှိနေပါက Dirty ဟု သတ်မှတ်မည်
+      return (
+        currentValue !== defaultValue &&
+        Boolean(currentValue?.toString().trim())
+      );
+    });
+
+    // မည်သည့် Field မှ ရိုက်ကူးထားခြင်း မရှိပါက တိုက်ရိုက် ထွက်မည်
+    if (!hasFormData) {
+      navigate("/marketplace");
+      return;
+    }
+
+    // ရေးလက်စများ ရှိပါက Alert Modal ပြသမည်
+    showAlert({
+      title: "Discard Post Draft?",
+      message:
+        "ရေးလက်စ အချက်အလက်များ ပျောက်ပျက်သွားပါမည်။ မသိမ်းဆည်းဘဲ ထွက်မှာ သေချာပါသလား။",
+      type: "warning",
+      isModal: true,
+      actionText: "Discard & Exit",
+      cancelText: "Keep Editing",
+      onAction: () => {
+        localStorage.removeItem(DRAFT_KEY);
+        setIsDraftSaved(false);
+        navigate("/marketplace");
+      },
+    });
+  };
 
   return (
-    <div className="max-w-[800px] mx-auto px-4 py-10 md:py-16">
-      {/* ★ Back navigation — form ရဲ့ အပေါ်ဆုံးမှာ */}
-      <Link
-        to="/marketplace"
-        className="inline-flex items-center gap-2 bg-surface border border-border text-text text-sm font-semibold px-4 py-2 rounded-lg mb-6 hover:border-primary hover:text-primary transition-colors"
-      >
-        <ArrowLeft size={15} /> Cancel & Back
-      </Link>
+    <div className="max-w-[800px] mx-auto px-4 py-8 md:py-12">
+      {/* Top Action Bar (Back Link & Draft Tag) - Outside Card */}
+      <div className="flex items-center justify-between gap-3 mb-4 px-1">
+        <Link
+          to="/marketplace"
+          className="group inline-flex items-center gap-1.5 text-xs sm:text-sm font-medium text-text-muted hover:text-primary transition-colors py-1"
+        >
+          <ArrowLeft
+            size={16}
+            className="group-hover:-translate-x-0.5 transition-transform"
+          />
+          <span>Back to Marketplace</span>
+        </Link>
 
-      {/* form header */}
-      <div className="mb-4">
-        <h2 className="flex items-center gap-2 text-text text-2xl font-bold mb-1">
-          <ShoppingBag size={22} className="text-primary" />
-          List an Item for Sale
-        </h2>
-        <p className="text-text-muted text-sm">
-          Sell your spare parts, tools, or boards to the maker community.
-        </p>
-
-        {hasDraftContent && (
-          <p className="flex items-center gap-1.5 text-xs text-text-subtle mt-2">
-            <Save size={12} /> Draft auto-saved
-          </p>
+        {isDraftSaved && (
+          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20 animate-fade-in">
+            <Save size={12} /> Draft saved
+          </span>
         )}
       </div>
 
-      {/* ★ Posting-as seller mini profile */}
-      {user && (
-        <div className="flex items-center gap-2.5 mb-5 px-1">
-          <img
-            src={userAvatar}
-            alt={user.name}
-            className="w-9 h-9 rounded-full object-cover border-2 border-[#0d9488]"
-          />
-          <div>
-            <p className="text-text text-sm font-semibold leading-tight">
-              {user.name}
-            </p>
-            <p className="text-text-subtle text-xs">Posting as seller</p>
-          </div>
-        </div>
-      )}
-
+      {/* Main Form Container - Single Cohesive Card */}
       <form
         onSubmit={handleSubmit}
-        className="bg-bg-elevated border border-border rounded-2xl p-4 md:p-6 shadow-sm flex flex-col gap-5"
+        className="bg-bg-elevated border border-border rounded-2xl shadow-sm overflow-hidden"
       >
-        {/* Item information section */}
-        <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
-          <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
-            <Tag size={14} /> Item Information
-          </label>
-
-          {/* title */}
-          <div>
-            <label
-              htmlFor="title"
-              className="block text-text-muted text-sm font-medium mb-2"
-            >
-              Item Title *
-            </label>
-            <input
-              id="title"
-              type="text"
-              value={form.title}
-              onChange={handleChange}
-              placeholder="e.g., ESP32-S3 Dev Board (Bench Tested)"
-              className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-            />
-            <span className="text-red-500 text-xs">{errors.title}</span>
+        {/* Form Header Section (Card Top Header) */}
+        <div className="p-5 md:p-6 border-b border-border bg-surface/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="space-y-1">
+            <h1 className="flex items-center gap-2 text-text text-xl sm:text-2xl font-bold tracking-tight">
+              <ShoppingBag size={22} className="text-primary shrink-0" />
+              List an Item for Sale
+            </h1>
+            <p className="text-text-muted text-xs sm:text-sm">
+              Sell your spare parts, tools, or boards to the maker community.
+            </p>
           </div>
 
-          {/* Category and board tag */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="category"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Category *
-              </label>
-              <select
-                id="category"
-                value={form.category}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
-              >
-                <option value="" disabled>
-                  Select your item type...
-                </option>
-                {itemCategories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.label}
-                  </option>
-                ))}
-              </select>
-              <span className="text-red-500 text-xs">{errors.category}</span>
-            </div>
-
-            <div>
-              {/* ★ htmlFor ကို id ("boardTag") နဲ့ ထပ်တူညီအောင်ပြင် */}
-              <label
-                htmlFor="boardTag"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Brand / Model
-              </label>
-              <select
-                id="boardTag"
-                value={form.boardTag}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
-              >
-                <option value="" disabled>
-                  Select board type...
-                </option>
-                {boardTagOptions.map((option) => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-        </div>
-
-        {/* Image section */}
-        <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
-              <ImageIcon size={14} /> Item Photos ({form.images.length}/5)*
-            </label>
-            <span className="text-[11px] text-text-muted">
-              First photo is main cover
-            </span>
-          </div>
-
-          <div className="flex gap-2">
-            <input
-              type="url"
-              placeholder={
-                form.images.length >= 5
-                  ? "Maximum 5 images reached"
-                  : "Paste image link (https://...)"
-              }
-              value={imageUrlInput}
-              onChange={(e) => setImageUrlInput(e.target.value)}
-              disabled={form.images.length >= 5}
-              className="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            />
-            <button
-              type="button"
-              onClick={handleAddImage}
-              disabled={form.images.length >= 5}
-              className="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1 shrink-0 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Plus size={16} /> Add
-            </button>
-          </div>
-
-          <div className="flex">
-            <span className="text-red-500 text-xs">{errors.images}</span>
-          </div>
-
-          {form.images.length > 0 && (
-            <div className="flex items-center gap-3 overflow-x-auto pt-2 pb-1 scrollbar-none">
-              {form.images.map((url, index) => {
-                const isMain = index === 0;
-                return (
-                  <div
-                    key={index}
-                    className={`relative w-28 h-28 shrink-0 rounded-xl overflow-hidden border-2 bg-black/40 transition-all ${
-                      isMain
-                        ? "border-primary shadow-lg shadow-primary/10"
-                        : "border-border"
-                    }`}
-                  >
-                    <img
-                      src={url}
-                      alt={`Item photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src =
-                          "https://images.unsplash.com/photo-1588508065123-287b28e013da?w=300";
-                      }}
-                    />
-                    <span className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
-                      #{index + 1}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(index)}
-                      className="absolute top-1.5 right-1.5 bg-black/70 hover:bg-red-500 text-white p-1 rounded-full transition-colors"
-                    >
-                      <X size={12} />
-                    </button>
-                    <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-center">
-                      {isMain ? (
-                        <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow">
-                          <Star size={10} fill="white" /> MAIN PHOTO
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => handleMakeMain(index)}
-                          className="bg-black/80 hover:bg-primary hover:text-white text-white text-[9px] font-bold px-2 py-0.5 rounded-md border border-white/20 transition-all"
-                        >
-                          Make Main
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
+          {/* Seller Mini Profile Pill */}
+          {user && (
+            <div className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-surface border border-border/80 shrink-0 self-start sm:self-auto">
+              <img
+                src={userAvatar}
+                alt={user.name}
+                className="w-7 h-7 rounded-full object-cover border border-primary/40 shrink-0"
+              />
+              <div className="min-w-0">
+                <p className="text-text text-xs font-semibold truncate max-w-[120px] leading-tight">
+                  {user.name}
+                </p>
+                <p className="text-text-subtle text-[10px] leading-none mt-0.5">
+                  Posting as seller
+                </p>
+              </div>
             </div>
           )}
         </div>
 
-        {/* Description & Media */}
-        <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
-          <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
-            <FileText size={14} /> Description & Media
-          </label>
-
-          <div>
-            <label
-              htmlFor="description"
-              className="block text-text-subtle text-sm font-medium mb-2"
-            >
-              Full Description*
+        {/* Form Inputs Body */}
+        <div className="p-5 md:p-6 flex flex-col gap-5">
+          {/* Item information section */}
+          <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
+            <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
+              <Tag size={14} /> Item Information
             </label>
-            <textarea
-              id="description"
-              rows={4}
-              value={form.description}
-              onChange={handleChange}
-              placeholder="Write a longer explanation as one plain paragraph..."
-              className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm leading-relaxed focus:outline-none focus:border-primary transition-all resize-y"
-            />
-            <span className="text-red-500 text-xs">{errors.description}</span>
+
+            {/* title */}
+            <div>
+              <label
+                htmlFor="title"
+                className="block text-text-muted text-sm font-medium mb-2"
+              >
+                Item Title *
+              </label>
+              <input
+                id="title"
+                type="text"
+                value={form.title}
+                onChange={handleChange}
+                placeholder="e.g., ESP32-S3 Dev Board (Bench Tested)"
+                className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+              />
+              <span className="text-red-500 text-xs">{errors.title}</span>
+            </div>
+
+            {/* Category and board tag */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="category"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Category *
+                </label>
+                <select
+                  id="category"
+                  value={form.category}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select your item type...
+                  </option>
+                  {itemCategories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.label}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-red-500 text-xs">{errors.category}</span>
+              </div>
+
+              <div>
+                {/* ★ htmlFor ကို id ("boardTag") နဲ့ ထပ်တူညီအောင်ပြင် */}
+                <label
+                  htmlFor="boardTag"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Brand / Model
+                </label>
+                <select
+                  id="boardTag"
+                  value={form.boardTag}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select board type...
+                  </option>
+                  {boardTagOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-1">
-            <label className="text-sm font-semibold text-text-subtle flex items-center justify-between">
-              <span>Demo / Proof Video URL</span>
-              <span className="text-xs text-text-subtle font-normal">
-                (Optional)
+          {/* Image section */}
+          <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
+                <ImageIcon size={14} /> Item Photos ({form.images.length}/5)*
+              </label>
+              <span className="text-[11px] text-text-muted">
+                First photo is main cover
               </span>
-            </label>
-            <input
-              type="url"
-              id="demoVideoUrl"
-              value={form.demoVideoUrl}
-              onChange={handleChange}
-              placeholder="https://www.youtube.com/watch?v=... သို့မဟုတ် Loom link"
-              className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-            />
-            <p className="text-xs text-text-subtle">
-              * Item ရဲ့ အလုပ်လုပ်ပုံ ပြသထားသည့် YouTube, Google Drive သို့မဟုတ်
-              Loom Video Link ထည့်ပါ။
-            </p>
-          </div>
+            </div>
 
-          {form.demoVideoUrl &&
-            form.demoVideoUrl.includes("youtube.com/watch?v=") && (
-              <div className="mt-2 aspect-video w-full rounded-lg overflow-hidden border border-border">
-                <iframe
-                  src={form.demoVideoUrl.replace("watch?v=", "embed/")}
-                  title="Demo Video Preview"
-                  className="w-full h-full"
-                  allowFullScreen
-                />
+            <div className="flex gap-2">
+              <input
+                type="url"
+                placeholder={
+                  form.images.length >= 5
+                    ? "Maximum 5 images reached"
+                    : "Paste image link (https://...)"
+                }
+                value={imageUrlInput}
+                onChange={(e) => setImageUrlInput(e.target.value)}
+                disabled={form.images.length >= 5}
+                className="flex-1 bg-bg border border-border rounded-xl px-3 py-2.5 text-sm text-text focus:outline-none focus:border-primary transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              />
+              <button
+                type="button"
+                onClick={handleAddImage}
+                disabled={form.images.length >= 5}
+                className="bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-bold flex items-center gap-1 shrink-0 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Plus size={16} /> Add
+              </button>
+            </div>
+
+            <div className="flex">
+              <span className="text-red-500 text-xs">{errors.images}</span>
+            </div>
+
+            {form.images.length > 0 && (
+              <div className="flex items-center gap-3 overflow-x-auto pt-2 pb-1 scrollbar-none">
+                {form.images.map((url, index) => {
+                  const isMain = index === 0;
+                  return (
+                    <div
+                      key={index}
+                      className={`relative w-28 h-28 shrink-0 rounded-xl overflow-hidden border-2 bg-black/40 transition-all ${
+                        isMain
+                          ? "border-primary shadow-lg shadow-primary/10"
+                          : "border-border"
+                      }`}
+                    >
+                      <img
+                        src={url}
+                        alt={`Item photo ${index + 1}`}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.onerror = null;
+                          e.currentTarget.src =
+                            "https://images.unsplash.com/photo-1588508065123-287b28e013da?w=300";
+                        }}
+                      />
+                      <span className="absolute top-1.5 left-1.5 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                        #{index + 1}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(index)}
+                        className="absolute top-1.5 right-1.5 bg-black/70 hover:bg-red-500 text-white p-1 rounded-full transition-colors"
+                      >
+                        <X size={12} />
+                      </button>
+                      <div className="absolute bottom-0 inset-x-0 p-1 bg-gradient-to-t from-black/80 via-black/40 to-transparent flex justify-center">
+                        {isMain ? (
+                          <span className="bg-primary text-white text-[9px] font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow">
+                            <Star size={10} fill="white" /> MAIN PHOTO
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleMakeMain(index)}
+                            className="bg-black/80 hover:bg-primary hover:text-white text-white text-[9px] font-bold px-2 py-0.5 rounded-md border border-white/20 transition-all"
+                          >
+                            Make Main
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
-        </div>
-
-        {/* Pricing & Condition */}
-        <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
-          <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
-            <DollarSign size={14} /> Pricing & Condition
-          </label>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Pricing */}
-            <div>
-              <label
-                htmlFor="price"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Price *
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  id="price"
-                  type="number"
-                  value={form.price}
-                  onChange={handleChange}
-                  placeholder="1000"
-                  className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-                />
-                <span className="text-text-muted text-sm font-medium">MMK</span>
-              </div>
-
-              <span className="text-red-500 text-xs">{errors.price}</span>
-
-              {/* ★ Nego toggle — schema ထဲ isNegotiable ရှိပြီးသား, UI ထဲ
-                  မပါခဲ့တာမို့ ထပ်ထည့်လိုက်တယ် */}
-              <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={form.isNegotiable}
-                  onChange={(e) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      isNegotiable: e.target.checked,
-                    }))
-                  }
-                  className="w-4 h-4 accent-primary rounded"
-                />
-                <span className="text-sm text-text-muted">
-                  Price is negotiable (Nego)
-                </span>
-              </label>
-            </div>
-
-            {/* Condition */}
-            <div>
-              <label
-                htmlFor="condition"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Item Condition *
-              </label>
-              <select
-                id="condition"
-                value={form.condition}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
-              >
-                <option value="" disabled>
-                  Select your item condition...
-                </option>
-                {itemConditions.map((option) => (
-                  <option key={option} value={option}>
-                    {option.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-
-              <span className="text-red-500 text-xs">{errors.condition}</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Location & Contact Info */}
-        <div className="bg-surface p-4 rounded-2xl border border-border space-y-4">
-          <label className="flex items-center gap-1.5 text-xs font-bold text-text-subtle uppercase tracking-wider">
-            <MapPin size={14} /> Location & Contact Info
-          </label>
-
-          {/* location */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label
-                htmlFor="state"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                State / Region *
-              </label>
-              <select
-                id="state"
-                value={form.state}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
-              >
-                <option value="" disabled>
-                  Select your region...
-                </option>
-                {states.map((option) => (
-                  <option key={option} value={option}>
-                    {option.toUpperCase()}
-                  </option>
-                ))}
-              </select>
-              <span className="text-red-500 text-xs">{errors.state}</span>
-            </div>
-
-            <div>
-              <label
-                htmlFor="township"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Township *
-              </label>
-              <input
-                id="township"
-                type="text"
-                value={form.township}
-                onChange={handleChange}
-                placeholder="e.g., Kamayut"
-                className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-              />
-              <span className="text-red-500 text-xs">{errors.township}</span>
-            </div>
           </div>
 
-          {/* contact info */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="md:col-span-2">
-              <label
-                htmlFor="phone"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Phone Number *
-              </label>
-              <input
-                id="phone"
-                type="tel"
-                value={form.phone}
-                onChange={handleChange}
-                placeholder="09xxxxxxxxx"
-                className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
-              />
-              <span className="text-red-500 text-xs">{errors.phone}</span>
-            </div>
-
-            <div className="md:col-span-1">
-              <label
-                htmlFor="preferredMethod"
-                className="block text-text-muted text-sm font-medium mb-2"
-              >
-                Preferred
-              </label>
-              <select
-                id="preferredMethod"
-                value={form.preferredMethod}
-                onChange={handleChange}
-                className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
-              >
-                <option value="any">Anytime</option>
-                <option value="call">Call Only</option>
-                <option value="telegram">Telegram Only</option>
-                <option value="message">Message Only</option>
-              </select>
-            </div>
-          </div>
-
-          {/* ★ Social media — data-driven, 4x duplicate block ဖျက်ပြီး map */}
-          <div className="pt-2 border-t border-border/50 space-y-3">
-            <label className="block text-text-subtle text-xs font-semibold uppercase tracking-wider">
-              Add Social Media (Optional)
+          {/* Description & Media */}
+          <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
+            <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
+              <FileText size={14} /> Description & Media
             </label>
 
-            <div className="flex flex-wrap gap-2">
-              {socialPlatforms.map((platform) => {
-                const isActive = activeSocials.includes(platform.id);
-                return (
-                  <button
-                    key={platform.id}
-                    type="button"
-                    onClick={() => toggleSocial(platform.id)}
-                    style={{
-                      backgroundColor: isActive
-                        ? `${platform.color}15`
-                        : "transparent",
-                      borderColor: isActive
-                        ? platform.color
-                        : "var(--color-border)",
-                      color: isActive
-                        ? platform.color
-                        : "var(--color-text-subtle)",
-                    }}
-                    className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 transition-all active:scale-95"
-                  >
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                      <path d={platform.path} />
-                    </svg>
-                    <span>{platform.label}</span>
-                  </button>
-                );
-              })}
+            <div>
+              <label
+                htmlFor="description"
+                className="block text-text-subtle text-sm font-medium mb-2"
+              >
+                Full Description*
+              </label>
+              <textarea
+                id="description"
+                rows={4}
+                value={form.description}
+                onChange={handleChange}
+                placeholder="Write a longer explanation as one plain paragraph..."
+                className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm leading-relaxed focus:outline-none focus:border-primary transition-all resize-y"
+              />
+              <span className="text-red-500 text-xs">{errors.description}</span>
             </div>
 
-            <div className="space-y-2 pt-2">
-              {socialPlatforms
-                .filter((platform) => activeSocials.includes(platform.id))
-                .map((platform) => (
-                  <div key={platform.id} className="flex flex-col gap-1">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className="text-xs font-semibold w-20 shrink-0"
-                        style={{ color: platform.color }}
-                      >
-                        {platform.label}
-                      </span>
-                      <input
-                        type="text"
-                        id={platform.id}
-                        value={form[platform.id]}
-                        onChange={handleChange}
-                        placeholder={platform.placeholder}
-                        className="flex-1 bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-3 py-2.5 text-sm focus:outline-none transition-all"
-                        style={{ borderColor: "var(--color-border)" }}
-                      />
-                    </div>
-                    {/* ★ Error Message ကို platform.id အလိုက် Dynamic ပြသခြင်း */}
-                    {errors[platform.id] && (
-                      <span className="text-red-500 text-xs font-medium pl-22">
-                        {errors[platform.id]}
-                      </span>
-                    )}
-                  </div>
-                ))}
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-text-subtle flex items-center justify-between">
+                <span>Demo / Proof Video URL</span>
+                <span className="text-xs text-text-subtle font-normal">
+                  (Optional)
+                </span>
+              </label>
+              <input
+                type="url"
+                id="demoVideoUrl"
+                value={form.demoVideoUrl}
+                onChange={handleChange}
+                placeholder="https://www.youtube.com/watch?v=... သို့မဟုတ် Loom link"
+                className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+              />
+              <p className="text-xs text-text-subtle">
+                * Item ရဲ့ အလုပ်လုပ်ပုံ ပြသထားသည့် YouTube, Google Drive
+                သို့မဟုတ် Loom Video Link ထည့်ပါ။
+              </p>
+            </div>
+
+            {form.demoVideoUrl &&
+              form.demoVideoUrl.includes("youtube.com/watch?v=") && (
+                <div className="mt-2 aspect-video w-full rounded-lg overflow-hidden border border-border">
+                  <iframe
+                    src={form.demoVideoUrl.replace("watch?v=", "embed/")}
+                    title="Demo Video Preview"
+                    className="w-full h-full"
+                    allowFullScreen
+                  />
+                </div>
+              )}
+          </div>
+
+          {/* Pricing & Condition */}
+          <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
+            <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
+              <DollarSign size={14} /> Pricing & Condition
+            </label>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {/* Pricing */}
+              <div>
+                <label
+                  htmlFor="price"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Price *
+                </label>
+                <div className="flex items-center gap-2">
+                  <input
+                    id="price"
+                    type="number"
+                    value={form.price}
+                    onChange={handleChange}
+                    placeholder="1000"
+                    className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+                  />
+                  <span className="text-text-muted text-sm font-medium">
+                    MMK
+                  </span>
+                </div>
+
+                <span className="text-red-500 text-xs">{errors.price}</span>
+
+                {/* ★ Nego toggle — schema ထဲ isNegotiable ရှိပြီးသား, UI ထဲ
+                  မပါခဲ့တာမို့ ထပ်ထည့်လိုက်တယ် */}
+                <label className="flex items-center gap-2 mt-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={form.isNegotiable}
+                    onChange={(e) =>
+                      setForm((prev) => ({
+                        ...prev,
+                        isNegotiable: e.target.checked,
+                      }))
+                    }
+                    className="w-4 h-4 accent-primary rounded"
+                  />
+                  <span className="text-sm text-text-muted">
+                    Price is negotiable (Nego)
+                  </span>
+                </label>
+              </div>
+
+              {/* Condition */}
+              <div>
+                <label
+                  htmlFor="condition"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Item Condition *
+                </label>
+                <select
+                  id="condition"
+                  value={form.condition}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select your item condition...
+                  </option>
+                  {itemConditions.map((option) => (
+                    <option key={option} value={option}>
+                      {option.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+
+                <span className="text-red-500 text-xs">{errors.condition}</span>
+              </div>
             </div>
           </div>
-        </div>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
-          {/* save as draft btn */}
-          <button
-            type="button"
-            onClick={handleSaveDraft}
-            disabled={isSubmitting}
-            className="w-full sm:w-auto px-5 py-3 inline-flex items-center justify-center gap-2 bg-surface hover:bg-surface-2 text-text-muted hover:text-text border border-border rounded-xl font-semibold transition-all duration-200 active:scale-[0.99]"
-          >
-            Save as Draft
-          </button>
+          {/* Location & Contact Info */}
+          <div className="bg-surface p-4 rounded-2xl border border-border space-y-4">
+            <label className="flex items-center gap-1.5 text-xs font-bold text-text-subtle uppercase tracking-wider">
+              <MapPin size={14} /> Location & Contact Info
+            </label>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto">
+            {/* location */}
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  htmlFor="state"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  State / Region *
+                </label>
+                <select
+                  id="state"
+                  value={form.state}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="" disabled>
+                    Select your region...
+                  </option>
+                  {states.map((option) => (
+                    <option key={option} value={option}>
+                      {option.toUpperCase()}
+                    </option>
+                  ))}
+                </select>
+                <span className="text-red-500 text-xs">{errors.state}</span>
+              </div>
+
+              <div>
+                <label
+                  htmlFor="township"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Township *
+                </label>
+                <input
+                  id="township"
+                  type="text"
+                  value={form.township}
+                  onChange={handleChange}
+                  placeholder="e.g., Kamayut"
+                  className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+                />
+                <span className="text-red-500 text-xs">{errors.township}</span>
+              </div>
+            </div>
+
+            {/* contact info */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="md:col-span-2">
+                <label
+                  htmlFor="phone"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Phone Number *
+                </label>
+                <input
+                  id="phone"
+                  type="tel"
+                  value={form.phone}
+                  onChange={handleChange}
+                  placeholder="09xxxxxxxxx"
+                  className="w-full bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-primary transition-all"
+                />
+                <span className="text-red-500 text-xs">{errors.phone}</span>
+              </div>
+
+              <div className="md:col-span-1">
+                <label
+                  htmlFor="preferredMethod"
+                  className="block text-text-muted text-sm font-medium mb-2"
+                >
+                  Preferred
+                </label>
+                <select
+                  id="preferredMethod"
+                  value={form.preferredMethod}
+                  onChange={handleChange}
+                  className="w-full bg-bg border border-border text-text rounded-xl px-3 py-3 text-sm focus:outline-none focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="any">Anytime</option>
+                  <option value="call">Call Only</option>
+                  <option value="telegram">Telegram Only</option>
+                  <option value="message">Message Only</option>
+                </select>
+              </div>
+            </div>
+
+            {/* ★ Social media — data-driven, 4x duplicate block ဖျက်ပြီး map */}
+            <div className="pt-2 border-t border-border/50 space-y-3">
+              <label className="block text-text-subtle text-xs font-semibold uppercase tracking-wider">
+                Add Social Media (Optional)
+              </label>
+
+              <div className="flex flex-wrap gap-2">
+                {socialPlatforms.map((platform) => {
+                  const isActive = activeSocials.includes(platform.id);
+                  return (
+                    <button
+                      key={platform.id}
+                      type="button"
+                      onClick={() => toggleSocial(platform.id)}
+                      style={{
+                        backgroundColor: isActive
+                          ? `${platform.color}15`
+                          : "transparent",
+                        borderColor: isActive
+                          ? platform.color
+                          : "var(--color-border)",
+                        color: isActive
+                          ? platform.color
+                          : "var(--color-text-subtle)",
+                      }}
+                      className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 transition-all active:scale-95"
+                    >
+                      <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
+                        <path d={platform.path} />
+                      </svg>
+                      <span>{platform.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="space-y-2 pt-2">
+                {socialPlatforms
+                  .filter((platform) => activeSocials.includes(platform.id))
+                  .map((platform) => (
+                    <div key={platform.id} className="flex flex-col gap-1">
+                      <div className="flex items-center gap-2">
+                        <span
+                          className="text-xs font-semibold w-20 shrink-0"
+                          style={{ color: platform.color }}
+                        >
+                          {platform.label}
+                        </span>
+                        <input
+                          type="text"
+                          id={platform.id}
+                          value={form[platform.id]}
+                          onChange={handleChange}
+                          placeholder={platform.placeholder}
+                          className="flex-1 bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-3 py-2.5 text-sm focus:outline-none transition-all"
+                          style={{ borderColor: "var(--color-border)" }}
+                        />
+                      </div>
+                      {/* ★ Error Message ကို platform.id အလိုက် Dynamic ပြသခြင်း */}
+                      {errors[platform.id] && (
+                        <span className="text-red-500 text-xs font-medium pl-22">
+                          {errors[platform.id]}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+            {/* save as draft btn */}
             <button
               type="button"
-              className="flex-1 sm:flex-initial px-5 py-3 inline-flex items-center justify-center gap-2 bg-surface hover:bg-surface-2 text-text-muted hover:text-text border border-border rounded-xl font-semibold transition-all duration-200 active:scale-[0.99]"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting}
+              className="w-full sm:w-auto px-5 py-3 inline-flex items-center justify-center gap-2 bg-surface hover:bg-surface-2 text-text-muted hover:text-text border border-border rounded-xl font-semibold transition-all duration-200 active:scale-[0.99]"
             >
-              Cancel
+              Save as Draft
             </button>
 
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 sm:flex-initial px-5 py-3 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl border border-primary/50 shadow-sm transition-all duration-200 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-bg-subtle disabled:text-text-subtle disabled:border-border-muted disabled:cursor-not-allowed"
-            >
-              <CloudUpload size={17} />
-              {isSubmitting ? "Publishing..." : "Publish"}
-            </button>
+            <div className="flex items-center gap-3 w-full sm:w-auto">
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="flex-1 sm:flex-initial px-5 py-3 inline-flex items-center justify-center gap-2 bg-surface hover:bg-surface-2 text-text-muted hover:text-text border border-border rounded-xl font-semibold transition-all duration-200 active:scale-[0.99]"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="flex-1 sm:flex-initial px-5 py-3 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl border border-primary/50 shadow-sm transition-all duration-200 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:bg-bg-subtle disabled:text-text-subtle disabled:border-border-muted disabled:cursor-not-allowed"
+              >
+                <CloudUpload size={17} />
+                {isSubmitting ? "Publishing..." : "Publish"}
+              </button>
+            </div>
           </div>
         </div>
       </form>
