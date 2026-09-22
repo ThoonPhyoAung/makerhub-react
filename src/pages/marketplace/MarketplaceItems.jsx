@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useState, useEffect } from "react";
-import { Loader2, Eye, Bookmark, Tag, MapPin } from "lucide-react";
+import { Loader2, Eye, Bookmark, Tag, MapPin, Layers } from "lucide-react";
 
 // API & Custom Hooks
 import { useFetch } from "../../hooks/useFetch";
@@ -11,7 +11,7 @@ import {
 } from "../../api/marketplaceApi";
 import { useAlert } from "../../context/AlertContext";
 
-function MarketplaceGrid({ activeCategory }) {
+function MarketplaceGrid({ activeCategory, searchQuery = "" }) {
   // console.log("active category", activeCategory);
 
   // useFetch hook
@@ -40,10 +40,12 @@ function MarketplaceGrid({ activeCategory }) {
     if (activeCategory.toLowerCase() === "saved items") {
       if (!currentUser) return [];
       result = itemList.filter((item) => {
-        const wishlist = Array.isArray(item.savedUsers) ? item.savedUsers : [];
+        const savedItems = Array.isArray(item.savedUsers)
+          ? item.savedUsers
+          : [];
 
         // condition checking
-        return wishlist.some(
+        return savedItems.some(
           (
             data, //.some => true or false
           ) =>
@@ -56,10 +58,10 @@ function MarketplaceGrid({ activeCategory }) {
       // Sort စီခြင်း (savedAt အသစ်ဆုံးမှ အဟောင်းအတိုင်း)
       result.sort((a, b) => {
         const getSavedTime = (item) => {
-          const wishlist = Array.isArray(item.savedUsers)
+          const savedItems = Array.isArray(item.savedUsers)
             ? item.savedUsers
             : [];
-          const entry = wishlist.find((data) =>
+          const entry = savedItems.find((data) =>
             typeof data === "object"
               ? String(data.userId) === String(currentUser?.id)
               : String(data) === String(currentUser?.id),
@@ -79,12 +81,29 @@ function MarketplaceGrid({ activeCategory }) {
       );
     }
 
+    // ★ Search query ရှိရင် title/description/components name ကို match
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+
+      result = result.filter((item) => {
+        const inTitle = item.title?.toLowerCase().includes(q);
+
+        const inDescription = item.description?.toLowerCase().includes(q);
+
+        const inComponents = Array.isArray(item.components)
+          ? item.components.some((comp) => comp.name?.toLowerCase().includes(q))
+          : false;
+
+        return inTitle || inDescription || inComponents;
+      });
+    }
+
     return [...result].reverse();
   }
 
   const filteredItems = getFilteredItems();
 
-  // Wishlist toggle
+  // savedItems toggle
   const handleToggleWishlist = async (e, itemId) => {
     e.preventDefault();
 
@@ -145,7 +164,7 @@ function MarketplaceGrid({ activeCategory }) {
       });
       showAlert(alreadySaved ? "Removed from Saved" : "Added to Saved!");
     } catch (err) {
-      console.error("Wishlist Update Error:", err);
+      console.error("savedItems Update Error:", err);
       // D. Error တက်ရင် မူလ State သို့ ပြန်လှည့်မယ် (Rollback)
       setItemList(previousItems);
       showAlert({ message: "Failed to update watchlist. Please try again." });
@@ -244,6 +263,14 @@ function MarketplaceGrid({ activeCategory }) {
                         ? `${item.price.toLocaleString()} MMK`
                         : item.price || "0 MMK"}
                     </div>
+
+                    {Array.isArray(item.components) &&
+                      item.components.length > 0 && (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-text-subtle bg-surface px-2 py-0.5 rounded-full border border-border-muted w-fit mb-1.5">
+                          <Layers size={10} /> {item.components.length} items
+                          included
+                        </span>
+                      )}
 
                     {/* added break-words to short description */}
                     <p className="text-text-muted text-[11px] sm:text-xs leading-relaxed mb-2.5 line-clamp-2 break-words overflow-hidden">

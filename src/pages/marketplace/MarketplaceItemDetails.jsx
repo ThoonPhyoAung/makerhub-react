@@ -46,14 +46,22 @@ const MessengerIcon = () => (
 );
 
 const ViberIcon = () => (
-  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-    <path d="M19.38 4.62C17.42 2.66 14.81 1.58 12.03 1.58c-5.78 0-10.48 4.7-10.48 10.48 0 1.85.48 3.65 1.39 5.23L1.5 22.5l5.37-1.41c1.53.84 3.27 1.28 5.06 1.28 5.78 0 10.48-4.7 10.48-10.48 0-2.78-1.08-5.39-3.03-7.27zM12.03 20.8c-1.57 0-3.1-.42-4.45-1.22l-.32-.19-3.3.87.88-3.21-.21-.34c-.88-1.4-1.35-3.02-1.35-4.68 0-4.91 4-8.91 8.91-8.91 2.38 0 4.61.93 6.29 2.6 1.68 1.68 2.6 3.92 2.6 6.3 0 4.92-4 8.91-8.91 8.91z" />
+  <svg
+    className="w-4 h-4 fill-current"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 640 640"
+  >
+    <path d="M508.3 113.9C495.6 102.2 444.2 64.9 329.6 64.4C329.6 64.4 194.5 56.3 128.7 116.7C92.1 153.3 79.2 207 77.8 273.5C76.4 340 74.7 464.6 194.8 498.4L194.9 498.4L194.8 550C194.8 550 194 570.9 207.8 575.1C224.4 580.3 234.2 564.4 250.1 547.3C258.8 537.9 270.8 524.1 279.9 513.6C362.1 520.5 425.2 504.7 432.4 502.4C449 497 542.9 485 558.1 360.4C573.9 231.8 550.5 150.6 508.3 113.9zM522.2 351C509.3 455 433.2 461.6 419.2 466.1C413.2 468 357.7 481.8 288 477.3C288 477.3 236 540 219.8 556.3C214.5 561.6 208.7 561.1 208.8 550.6C208.8 543.7 209.2 464.9 209.2 464.9L209.2 464.9C107.4 436.7 113.4 330.6 114.5 275.1C115.6 219.6 126.1 174.1 157.1 143.5C212.8 93 327.5 100.5 327.5 100.5C424.4 100.9 470.8 130.1 481.6 139.9C517.3 170.5 535.5 243.7 522.2 351zM383.2 270.2C383.6 278.8 370.7 279.4 370.3 270.8C369.2 248.8 358.9 238.1 337.7 236.9C329.1 236.4 329.9 223.5 338.4 224C366.3 225.5 381.8 241.5 383.2 270.2zM403.5 281.5C404.5 239.1 378 205.9 327.7 202.2C319.2 201.6 320.1 188.7 328.6 189.3C386.6 193.5 417.5 233.4 416.4 281.8C416.3 290.4 403.3 290 403.5 281.5zM450.5 294.9C450.6 303.5 437.6 303.6 437.6 295C437 213.5 382.7 169.1 316.8 168.6C308.3 168.5 308.3 155.7 316.8 155.7C390.5 156.2 449.8 207.1 450.5 294.9zM439.2 393L439.2 393.2C428.4 412.2 408.2 433.2 387.4 426.5L387.2 426.2C366.1 420.3 316.4 394.7 285 369.7C268.8 356.9 254 341.8 242.6 327.3C232.3 314.4 221.9 299.1 211.8 280.7C190.5 242.2 185.8 225 185.8 225C179.1 204.2 200 184 219.1 173.2L219.3 173.2C228.5 168.4 237.3 170 243.2 177.1C243.2 177.1 255.6 191.9 260.9 199.2C265.9 206 272.6 216.9 276.1 223C282.2 233.9 278.4 245 272.4 249.6L260.4 259.2C254.3 264.1 255.1 273.2 255.1 273.2C255.1 273.2 272.9 340.5 339.4 357.5C339.4 357.5 348.5 358.3 353.4 352.2L363 340.2C367.6 334.2 378.7 330.4 389.6 336.5C404.3 344.8 423 357.7 435.4 369.4C442.4 375.1 444 383.8 439.2 393z" />
   </svg>
 );
 
 const TikTokIcon = () => (
-  <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-    <path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.29-2.89 1.11-5.74 3.52-7.33 1.34-.89 2.94-1.31 4.54-1.24.01 1.49.01 2.97.01 4.46-.77-.07-1.56.09-2.24.46-.98.52-1.63 1.52-1.74 2.62-.18 1.43.54 2.89 1.76 3.63 1.19.73 2.75.7 3.88-.08.82-.55 1.35-1.48 1.44-2.47.08-2.61.03-5.22.04-7.83-.02-3.58-.02-7.16-.02-10.74z" />
+  <svg
+    className="w-4 h-4 fill-current"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 448 512"
+  >
+    <path d="M448.5 209.9c-44 .1-87-13.6-122.8-39.2l0 178.7c0 33.1-10.1 65.4-29 92.6s-45.6 48-76.6 59.6-64.8 13.5-96.9 5.3-60.9-25.9-82.7-50.8-35.3-56-39-88.9 2.9-66.1 18.6-95.2 40-52.7 69.6-67.7 62.9-20.5 95.7-16l0 89.9c-15-4.7-31.1-4.6-46 .4s-27.9 14.6-37 27.3-14 28.1-13.9 43.9 5.2 31 14.5 43.7 22.4 22.1 37.4 26.9 31.1 4.8 46-.1 28-14.4 37.2-27.1 14.2-28.1 14.2-43.8l0-349.4 88 0c-.1 7.4 .6 14.9 1.9 22.2 3.1 16.3 9.4 31.9 18.7 45.7s21.3 25.6 35.2 34.6c19.9 13.1 43.2 20.1 67 20.1l0 87.4z" />
   </svg>
 );
 
@@ -266,6 +274,7 @@ function MarketplaceItemDetails() {
     : "USED";
 
   const contacts = item.contactMethods || {};
+  const preferred = contacts.preferredMethod || "any";
   const phone = contacts.phone || item.sellerPhone;
 
   const telegramUrl = formatSocialUrl("telegram", contacts.telegram);
@@ -447,7 +456,10 @@ function MarketplaceItemDetails() {
 
               {item.savedUsers?.length > 0 && (
                 <span className="inline-flex items-center gap-1 text-xs text-text-muted bg-surface px-2.5 py-1 rounded-lg border border-border">
-                  <Heart size={12} className="text-red-400 fill-red-400" />
+                  <Bookmark
+                    size={12}
+                    className="text-primary fill-primary sm:w-[16px] sm:h-[16px]"
+                  />
                   {item.savedUsers.length} saved
                 </span>
               )}
@@ -461,6 +473,11 @@ function MarketplaceItemDetails() {
                   className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-black font-extrabold text-xs sm:text-sm py-2.5 rounded-xl transition-all active:scale-95 shadow-md shadow-primary/20"
                 >
                   <Phone size={16} /> CALL ({phone})
+                  {preferred === "phone" && (
+                    <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-primary text-white">
+                      Preferred
+                    </span>
+                  )}
                 </a>
                 <button
                   onClick={() => handleCopyText(phone, "Phone")}
@@ -485,51 +502,77 @@ function MarketplaceItemDetails() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
                 Other Contact Methods:
               </span>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                {telegramUrl && (
-                  <a
-                    href={telegramUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 border border-[#229ED9]/30 text-[#229ED9] text-xs font-bold py-2 px-2 rounded-xl transition-all"
-                  >
-                    <TelegramIcon /> Telegram
-                  </a>
-                )}
+              {telegramUrl || messengerUrl || viberUrl ? (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {telegramUrl && (
+                    <a
+                      href={telegramUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 border border-[#229ED9]/30 text-[#229ED9] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                    >
+                      <TelegramIcon /> Telegram
+                      {preferred === "telegram" && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#229ED9] text-white text-[9px] px-1 rounded-full">
+                          ★
+                        </span>
+                      )}
+                    </a>
+                  )}
 
-                {messengerUrl && (
-                  <a
-                    href={messengerUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 border border-[#0084FF]/30 text-[#0084FF] text-xs font-bold py-2 px-2 rounded-xl transition-all"
-                  >
-                    <MessengerIcon /> Messenger
-                  </a>
-                )}
+                  {messengerUrl && (
+                    <a
+                      href={messengerUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 border border-[#0084FF]/30 text-[#0084FF] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                    >
+                      <MessengerIcon /> Messenger
+                      {preferred === "messenger" && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#0084FF] text-white text-[9px] px-1 rounded-full">
+                          ★
+                        </span>
+                      )}
+                    </a>
+                  )}
 
-                {viberUrl && (
-                  <a
-                    href={viberUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-[#7360F2]/10 hover:bg-[#7360F2]/20 border border-[#7360F2]/30 text-[#7360F2] text-xs font-bold py-2 px-2 rounded-xl transition-all"
-                  >
-                    <ViberIcon /> Viber
-                  </a>
-                )}
+                  {viberUrl && (
+                    <a
+                      href={viberUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 bg-[#7360F2]/10 hover:bg-[#7360F2]/20 border border-[#7360F2]/30 text-[#7360F2] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                    >
+                      <ViberIcon /> Viber
+                      {preferred === "viber" && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#7360f2] text-white text-[9px] px-1 rounded-full">
+                          ★
+                        </span>
+                      )}
+                    </a>
+                  )}
 
-                {tiktokUrl && (
-                  <a
-                    href={tiktokUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 bg-pink-500/10 hover:bg-pink-500/20 border border-pink-500/30 text-pink-400 text-xs font-bold py-2 px-2 rounded-xl transition-all"
-                  >
-                    <TikTokIcon /> TikTok
-                  </a>
-                )}
-              </div>
+                  {tiktokUrl && (
+                    <a
+                      href={tiktokUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                    >
+                      <TikTokIcon /> TikTok
+                      {preferred === "tiktok" && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-[9px] px-1 rounded-full">
+                          ★
+                        </span>
+                      )}
+                    </a>
+                  )}
+                </div>
+              ) : (
+                <p className="text-xs text-text-subtle italic bg-surface/50 border border-border/50 py-2 px-3 rounded-xl">
+                  No other contact methods provided.
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -724,59 +767,52 @@ function MarketplaceItemDetails() {
               </div>
 
               {componentsList.length > 0 ? (
-                /* BOM Table when seller added multi-item breakdown */
-                <div className="overflow-x-auto rounded-xl border border-border/60 bg-surface/20">
-                  <table className="w-full text-left text-xs sm:text-sm">
-                    <thead>
-                      <tr className="bg-surface/80 border-b border-border/60 text-text-subtle uppercase text-[11px] font-bold tracking-wider">
-                        <th className="py-3 px-4">Item Image</th>
-                        <th className="py-3 px-4">Component Name</th>
-                        <th className="py-3 px-4 text-center">Qty</th>
-                        <th className="py-3 px-4 text-right">
-                          Estimated Price
-                        </th>
-                        <th className="py-3 px-4 text-center">Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border/40 text-text">
-                      {componentsList.map((comp, idx) => (
-                        <tr
-                          key={idx}
-                          className="hover:bg-surface/40 transition-colors"
-                        >
-                          <td className="py-2.5 px-4">
-                            <img
-                              src={
-                                comp.imageUrl ||
-                                "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=200"
-                              }
-                              alt={comp.name}
-                              className="w-10 h-10 rounded-lg object-cover border border-border"
-                            />
-                          </td>
-                          <td className="py-2.5 px-4 font-semibold text-text">
-                            {comp.name || `Component #${idx + 1}`}
-                          </td>
-                          <td className="py-2.5 px-4 text-center font-mono font-bold text-primary">
-                            x{comp.quantity || 1}
-                          </td>
-                          <td className="py-2.5 px-4 text-right font-mono font-medium text-emerald-400">
-                            {comp.price
-                              ? `${comp.price.toLocaleString()} MMK`
-                              : "Included / Set"}
-                          </td>
-                          <td className="py-2.5 px-4 text-center">
-                            <a
-                              href={`tel:${phone}`}
-                              className="inline-flex items-center gap-1 text-[11px] font-bold text-primary hover:underline bg-primary/10 px-2.5 py-1 rounded-lg border border-primary/20"
-                            >
-                              Ask Seller
-                            </a>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                <div className="mt-8 pt-6 border-t border-border">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Layers className="text-primary" size={20} />
+                    <h3 className="text-lg font-bold text-text">
+                      Included Components ({item.components.length})
+                    </h3>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {item.components.map((comp, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-border/80 hover:border-primary/40 transition-all"
+                      >
+                        {/* Component Image */}
+                        <div className="w-12 h-12 rounded-lg bg-bg-elevated border border-border overflow-hidden shrink-0">
+                          <img
+                            src={
+                              comp.image ||
+                              "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=200"
+                            }
+                            alt={comp.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.onerror = null;
+                              e.currentTarget.src =
+                                "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=200";
+                            }}
+                          />
+                        </div>
+
+                        {/* Component Info */}
+                        <div className="min-w-0 flex-1">
+                          <h4 className="text-sm font-semibold text-text truncate">
+                            {comp.name || "Unnamed Component"}
+                          </h4>
+                          <p className="text-xs text-text-muted mt-0.5">
+                            Qty:{" "}
+                            <span className="text-primary font-bold">
+                              {comp.quantity || "1"}
+                            </span>
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               ) : (
                 /* Empty / Preview State when current listing is single item */

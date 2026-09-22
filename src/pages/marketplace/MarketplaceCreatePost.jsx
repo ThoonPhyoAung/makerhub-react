@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
   Plus,
+  Minus,
   X,
   Star,
   Image as ImageIcon,
@@ -14,6 +15,9 @@ import {
   FileText,
   DollarSign,
   MapPin,
+  Layers,
+  Wrench,
+  Trash2,
 } from "lucide-react";
 
 import { marketplaceCategories } from "../../data/marketplaceCategories";
@@ -85,6 +89,7 @@ const initialForm = {
   messenger: "",
   viber: "",
   tiktok: "",
+  components: [],
 };
 
 // getting saved draft if save data exists
@@ -102,6 +107,18 @@ const getInitialForm = () => {
 // checking image link
 const isBase64DataUrl = (value) => {
   return typeof value === "string" && value.startsWith("data:");
+};
+
+// ★ ပြင်ဆင်ချက်: YouTube Link အမျိုးမျိုး (youtu.be, watch?v=, params ပါဝင်သော Link များ) ကို
+// Embed URL အဖြစ် မှန်ကန်စွာ ပြောင်းလဲပေးသည့် Helper Function
+const getYoutubeEmbedUrl = (url) => {
+  if (!url) return null;
+  const regExp =
+    /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+  const match = url.match(regExp);
+  return match && match[2].length === 11
+    ? `https://www.youtube.com/embed/${match[2]}`
+    : null;
 };
 
 function MarketplacePostForm() {
@@ -187,16 +204,22 @@ function MarketplacePostForm() {
     if (!url) return;
 
     if (isBase64DataUrl(url)) {
-      showAlert(
-        "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
-      );
+      // ★ ပြင်ဆင်ချက်: AlertContext သို့ Object Format ဖြင့် ပို့ပေးပါသည်
+      showAlert({
+        message:
+          "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
+        type: "warning",
+      });
       return;
     }
 
     const currentCount = form.images?.length || 0;
 
     if (currentCount >= 5) {
-      showAlert("Maximum 5 images allowed");
+      showAlert({
+        message: "Maximum 5 images allowed",
+        type: "warning",
+      });
       return;
     }
 
@@ -213,7 +236,10 @@ function MarketplacePostForm() {
     }
 
     if (currentCount + 1 === 5) {
-      showAlert("Maximum 5 images reached");
+      showAlert({
+        message: "Maximum 5 images reached",
+        type: "info",
+      });
     }
 
     setImageUrlInput("");
@@ -240,6 +266,41 @@ function MarketplacePostForm() {
     }));
   };
 
+  // ★ components array အတွက် add/update/remove
+
+  const addComponent = () => {
+    setForm((prev) => ({
+      ...prev,
+      components: [...prev.components, { name: "", quantity: "1", image: "" }],
+    }));
+  };
+
+  const updateComponent = (index, key, value) => {
+    if (["image"].includes(key) && isBase64DataUrl(value)) {
+      // ★ ပြင်ဆင်ချက်: AlertContext Format ဖြင့် ပြင်ထားပါသည်
+      showAlert({
+        message:
+          "ကျေးဇူးပြု၍ image file ကို paste မလုပ်ပါနှင့်၊ hosted image URL (https://...) ကိုသာ ထည့်ပါ။",
+        type: "warning",
+      });
+      return;
+    }
+
+    setForm((prev) => ({
+      ...prev,
+      components: prev.components.map((item, i) =>
+        i === index ? { ...item, [key]: value } : item,
+      ),
+    }));
+  };
+
+  const removeComponent = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      components: prev.components.filter((_, i) => i !== index),
+    }));
+  };
+
   // checking validation
   const validateData = () => {
     const err = {};
@@ -260,12 +321,15 @@ function MarketplacePostForm() {
     }
 
     // 4. Description
-    if (!form.description) {
+    // ★ ပြင်ဆင်ချက်: Space သီးသန့် ရိုက်ထားလျှင်လည်း စစ်ဆေးနိုင်ရန် .trim() ထည့်သွင်းထားပါသည်
+    if (!form.description?.trim()) {
       err.description = "Description is required";
     }
 
     // 5. Price (Required & Must be positive number)
-    if (!form.price || Number(form.price) <= 0) {
+    // ★ ပြင်ဆင်ချက်: စာသားများ (e.g. "abc") ရိုက်ထည့်ပါက NaN ဖြစ်ပြီး validation ကျော်သွားသည့် bug ကို isNaN() ဖြင့် ကာကွယ်ထားပါသည်
+    const parsedPrice = Number(form.price);
+    if (!form.price || isNaN(parsedPrice) || parsedPrice <= 0) {
       err.price = "Valid price is required";
     }
 
@@ -295,19 +359,7 @@ function MarketplacePostForm() {
       }
     });
 
-    /* 
-    Optional Fields (Validation ရေးရန် မလိုပါ):
-    - boardTag (Brand/Model)
-    - description 
-    - demoVideoUrl (Proof Video)
-    - isNegotiable (Nego Checkbox)
-    - preferredMethod (Preferred Contact)
-    - telegram, messenger, viber, tiktok (Social Media Links)
-  */
-
     setErrors(err);
-    console.log("errors", errors);
-
     return err;
   };
 
@@ -317,7 +369,11 @@ function MarketplacePostForm() {
       // Form ထဲမှာ ရှိသမျှ စာများကို LocalStorage ထဲ သိမ်းမည်
       localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
       setIsDraftSaved(true);
-      showAlert("Draft saved successfully!");
+      // ★ ပြင်ဆင်ချက်: AlertContext သို့ Object Format ဖြင့် ပို့ပေးပါသည်
+      showAlert({
+        message: "Draft saved successfully!",
+        type: "success",
+      });
     } catch (error) {
       showAlert({
         message: "Failed to save draft!",
@@ -325,6 +381,7 @@ function MarketplacePostForm() {
       });
     }
   };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -349,6 +406,7 @@ function MarketplacePostForm() {
         boardTag: form.boardTag,
         condition: form.condition,
         images: form.images, // Image URLs / Base64 Array
+        components: form.components,
         description: form.description,
         demoVideoUrl: form.demoVideoUrl || "",
         isNegotiable: Boolean(form.isNegotiable),
@@ -373,7 +431,10 @@ function MarketplacePostForm() {
         sellerId: userId || "usr_default",
         sellerName: userName || "Thoon Phyo Aung",
         sellerAvatar: userAvatar,
-        sellerJoinDate: user?.joinDate || "2026-01",
+        sellerJoinDate:
+          user?.createdAt ||
+          user?.joinDate ||
+          new Date().toISOString().slice(0, 7),
 
         // System Defaults
         createdAt: new Date().toISOString(),
@@ -726,17 +787,132 @@ function MarketplacePostForm() {
               </p>
             </div>
 
-            {form.demoVideoUrl &&
-              form.demoVideoUrl.includes("youtube.com/watch?v=") && (
-                <div className="mt-2 aspect-video w-full rounded-lg overflow-hidden border border-border">
-                  <iframe
-                    src={form.demoVideoUrl.replace("watch?v=", "embed/")}
-                    title="Demo Video Preview"
-                    className="w-full h-full"
-                    allowFullScreen
+            {/* ★ ပြင်ဆင်ချက်: getYoutubeEmbedUrl helper function ဖြင့် YouTube Preview ကို ပုံစံမျိုးစုံ စစ်ဆေးပေးထားပါသည် */}
+            {form.demoVideoUrl && getYoutubeEmbedUrl(form.demoVideoUrl) && (
+              <div className="mt-2 aspect-video w-full rounded-lg overflow-hidden border border-border">
+                <iframe
+                  src={getYoutubeEmbedUrl(form.demoVideoUrl)}
+                  title="Demo Video Preview"
+                  className="w-full h-full"
+                  allowFullScreen
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Components section (Optional — bundle listing အတွက်) */}
+          <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
+                <Layers size={14} /> Items Included (Optional)
+              </label>
+            </div>
+
+            {form.components.map((comp, i) => (
+              <div
+                key={i} // ★ Key ကို အပြင်ဘက်ဆုံး div မှာထားပါ
+                className="bg-surface/60 border border-border-muted p-3.5 rounded-xl flex flex-col md:flex-row md:items-center gap-3 transition-all shadow-xs"
+              >
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  {/* Image Preview */}
+                  <div className="w-11 h-11 shrink-0 rounded-xl bg-bg-subtle border border-border flex items-center justify-center overflow-hidden text-text-subtle shadow-xs">
+                    {comp.image ? (
+                      <img
+                        src={comp.image}
+                        alt={comp.name || "Preview"}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none";
+                        }}
+                      />
+                    ) : (
+                      <Wrench size={18} className="text-text-subtle" />
+                    )}
+                  </div>
+
+                  {/* Item Name */}
+                  <input
+                    type="text"
+                    value={comp.name}
+                    onChange={(e) => updateComponent(i, "name", e.target.value)}
+                    placeholder="Item name (e.g., ESP32 Dev Board)"
+                    className="flex-1 min-w-0 bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary transition-all"
                   />
+
+                  {/* ★ Ultra-Compact Qty Stepper for Mobile */}
+                  <div className="flex items-center border border-border rounded-lg bg-surface overflow-hidden shrink-0 h-8 sm:h-9">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateComponent(
+                          i,
+                          "quantity",
+                          Math.max(1, (parseInt(comp.quantity) || 1) - 1),
+                        )
+                      }
+                      className="px-1.5 sm:px-2 h-full flex items-center justify-center text-text-muted hover:text-text hover:bg-border/40 transition-colors"
+                      title="Decrease"
+                    >
+                      <Minus size={12} />
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      value={comp.quantity}
+                      onChange={(e) =>
+                        updateComponent(
+                          i,
+                          "quantity",
+                          Math.max(1, parseInt(e.target.value) || 1),
+                        )
+                      }
+                      className="w-7 sm:w-8 bg-transparent text-center text-text text-xs font-bold focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none px-0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        updateComponent(
+                          i,
+                          "quantity",
+                          (parseInt(comp.quantity) || 0) + 1,
+                        )
+                      }
+                      className="px-1.5 sm:px-2 h-full flex items-center justify-center text-text-muted hover:text-text hover:bg-border/40 transition-colors"
+                      title="Increase"
+                    >
+                      <Plus size={12} />
+                    </button>
+                  </div>
                 </div>
-              )}
+
+                {/* Photo Link Input */}
+                <input
+                  type="url"
+                  value={comp.image}
+                  onChange={(e) => updateComponent(i, "image", e.target.value)}
+                  placeholder="Photo link (optional)"
+                  className="w-full md:w-48 bg-bg border border-border text-text placeholder:text-text-subtle/50 rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-primary transition-all"
+                />
+
+                {/* Remove Button */}
+                <button
+                  type="button"
+                  onClick={() => removeComponent(i)}
+                  className="w-full md:w-auto flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 hover:border-red-500/30 text-xs font-medium transition-all shrink-0"
+                >
+                  <Trash2 size={14} />
+                  <span className="md:hidden">Remove</span>
+                </button>
+              </div>
+            ))}
+
+            <button
+              type="button"
+              onClick={addComponent}
+              className="flex items-center gap-1.5 text-xs font-semibold px-3.5 py-2.5 rounded-xl bg-bg-subtle border border-border-muted text-text-muted hover:text-primary hover:border-primary transition-colors"
+            >
+              <Plus size={14} /> Add Item
+            </button>
           </div>
 
           {/* Pricing & Condition */}
@@ -907,7 +1083,9 @@ function MarketplacePostForm() {
                   <option value="any">Anytime</option>
                   <option value="call">Call Only</option>
                   <option value="telegram">Telegram Only</option>
-                  <option value="message">Message Only</option>
+                  <option value="messenger">Messenger Only</option>
+                  <option value="viber">Viber Only</option>
+                  <option value="titok">Messenger Only</option>
                 </select>
               </div>
             </div>
@@ -970,9 +1148,9 @@ function MarketplacePostForm() {
                           style={{ borderColor: "var(--color-border)" }}
                         />
                       </div>
-                      {/* ★ Error Message ကို platform.id အလိုက် Dynamic ပြသခြင်း */}
+                      {/* ★ ပြင်ဆင်ချက်: pl-22 အစား Tailwind Standard ဖြစ်သော pl-20 သို့ ပြောင်းထားပါသည် */}
                       {errors[platform.id] && (
-                        <span className="text-red-500 text-xs font-medium pl-22">
+                        <span className="text-red-500 text-xs font-medium pl-20">
                           {errors[platform.id]}
                         </span>
                       )}

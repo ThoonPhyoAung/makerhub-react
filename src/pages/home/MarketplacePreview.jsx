@@ -213,34 +213,37 @@ function MarketplacePreview() {
                         {item.description || "No description provided."}
                       </p>
 
-                      {item.location && (
-                        <div className="flex items-center gap-1 text-[11px] text-text-muted mb-3 hidden md:flex">
-                          <MapPin
-                            size={14}
-                            className="shrink-0 text-text-subtle"
-                          />
-                          <span className="truncate">
-                            {item.location.township},{" "}
-                            {item.location.state || item.location.city}
-                          </span>
-                        </div>
-                      )}
-
                       <div className="pt-2 border-t border-border-muted/60 mt-auto">
-                        <div className="flex items-center gap-2 mb-3">
-                          <img
-                            src={displayAvatar}
-                            alt={item.sellerName || "Seller"}
-                            className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border border-border-muted object-cover p-px"
-                          />
-                          <span className="text-text-subtle text-[10px] sm:text-xs max-w-[80px] sm:max-w-[130px] font-medium truncate">
-                            {item.sellerName || "Anonymous"}
-                          </span>
+                        <div className="flex items-center justify-between gap-2 mb-3">
+                          {/* Left: Avatar + Seller Name Group */}
+                          <div className="flex items-center gap-2 min-w-0">
+                            <img
+                              src={displayAvatar}
+                              alt={item.sellerName || "Seller"}
+                              className="w-4 h-4 sm:w-6 sm:h-6 rounded-full border border-border-muted object-cover p-px"
+                            />
+                            <span className="text-text-subtle text-[10px] sm:text-xs max-w-[80px] sm:max-w-[130px] font-medium truncate">
+                              {item.sellerName || "Anonymous"}
+                            </span>
+                          </div>
+
+                          {item.location && (
+                            <div className="hidden md:flex items-center gap-1 text-[11px] text-text-muted shrink-0 min-w-0">
+                              <MapPin
+                                size={14}
+                                className="shrink-0 text-text-subtle"
+                              />
+                              <span className="truncate">
+                                {item.location.township},{" "}
+                                {item.location.state.toUpperCase()}
+                              </span>
+                            </div>
+                          )}
                         </div>
 
                         <div className="flex gap-2">
                           <Link
-                            to={`/marketplace/${item.id}`}
+                            to={`/marketplace/items/${item.id}`}
                             className="flex-1 flex items-center justify-center gap-1.5 bg-surface hover:bg-bg-elevated text-text text-[11px] sm:text-xs font-semibold py-1.5 sm:py-2 rounded-lg sm:rounded-xl border border-border hover:border-primary/40 active:scale-95 transition-all"
                           >
                             <Eye

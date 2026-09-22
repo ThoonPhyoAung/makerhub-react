@@ -14,6 +14,7 @@ const defaultUsers = [
     role: "admin", // admin role
     email: "admin@makerhub.mm",
     password: "admin",
+    createdAt: "2025-08-15",
     xp: 99,
     streakDays: 30,
     progress: 20,
@@ -25,6 +26,7 @@ const defaultUsers = [
     role: "learner", // learner role
     email: "learner@makerhub.mm",
     password: "123456",
+    createdAt: "2025-08-15",
     xp: 45,
     streakDays: 5,
     progress: 20,
@@ -72,6 +74,7 @@ export const userLogin = (userinfo) => {
     name: user.name,
     role: user.role,
     email: user.email,
+    createdAt: user.createdAt || new Date().toISOString().slice(0, 7),
     xp: user.xp || 0,
     streakDays: user.streakDays || 1,
     progress: user.progress || 0,
@@ -99,13 +102,16 @@ export const userSignUp = (userData) => {
     return { status: 0, message: "Email is already registered!" };
   }
 
+  // လက်ရှိ လနှင့် နှစ် ကို YYYY-MM Format ဖြင့် ရယူခြင်း (e.g., "2026-09")
+  const currentMonthYear = new Date().toISOString().slice(0, 7);
+
   const newUser = {
     id: `usr_${Date.now()}`,
     name,
     role: "learner", // learner role
     email,
     password,
-    role,
+    createdAt: currentMonthYear,
     xp: 100, // Sign up bonus XP
     streakDays: 1,
     progress: 0,
