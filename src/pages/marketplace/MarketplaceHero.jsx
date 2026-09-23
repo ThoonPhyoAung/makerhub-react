@@ -162,7 +162,9 @@ function MarketplaceHero({ items = [] }) {
 
                       {/* Price Badge */}
                       <span className="absolute bottom-1.5 right-1.5 bg-primary text-black font-black text-[10px] px-1.5 py-0.5 rounded shadow">
-                        ${item.price}
+                        {typeof item.price === "number"
+                          ? `${item.price.toLocaleString()} MMK`
+                          : item.price || "0 MMK"}
                       </span>
                     </div>
 
