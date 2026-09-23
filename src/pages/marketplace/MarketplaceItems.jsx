@@ -37,25 +37,20 @@ function MarketplaceGrid({ activeCategory, searchQuery = "" }) {
 
     let result = itemList;
 
+    // 1. Saved Items စစ်ဆေးခြင်း
     if (activeCategory.toLowerCase() === "saved items") {
       if (!currentUser) return [];
       result = itemList.filter((item) => {
         const savedItems = Array.isArray(item.savedUsers)
           ? item.savedUsers
           : [];
-
-        // condition checking
-        return savedItems.some(
-          (
-            data, //.some => true or false
-          ) =>
-            typeof data === "object"
-              ? String(data.userId) === String(currentUser?.id)
-              : String(data) === String(currentUser?.id),
+        return savedItems.some((data) =>
+          typeof data === "object"
+            ? String(data.userId) === String(currentUser?.id)
+            : String(data) === String(currentUser?.id),
         );
       });
 
-      // Sort စီခြင်း (savedAt အသစ်ဆုံးမှ အဟောင်းအတိုင်း)
       result.sort((a, b) => {
         const getSavedTime = (item) => {
           const savedItems = Array.isArray(item.savedUsers)
@@ -70,31 +65,41 @@ function MarketplaceGrid({ activeCategory, searchQuery = "" }) {
             ? entry.savedAt
             : 0;
         };
-
-        return getSavedTime(b) - getSavedTime(a); // ကြီးရာမှ ငယ်ရာ (Last Saved First) အနှုတ်တန်ဖိုး (< 0) => [a, b]	,အပေါင်းတန်ဖိုး (> 0) => [b, a]
+        return getSavedTime(b) - getSavedTime(a);
       });
-
-      return result;
-    } else if (activeCategory.toLowerCase() !== "all") {
+    }
+    // ★ Search Query ရိုက်မထားချိန်မှသာ Category အလိုက် Filter လုပ်မည်
+    // (Search Query ပါလာပါက Category အားလုံးထဲမှ ရှာပေးမည်)
+    else if (activeCategory.toLowerCase() !== "all" && !searchQuery.trim()) {
       result = itemList.filter(
-        (item) => item.category.toLowerCase() === activeCategory.toLowerCase(),
+        (item) => item.category?.toLowerCase() === activeCategory.toLowerCase(),
       );
     }
 
-    // ★ Search query ရှိရင် title/description/components name ကို match
+    // ★ 2. Search Query Matching Logic (Space, Dash & Case Insensitive)
+    // 2. Search Query Matching Logic
     if (searchQuery.trim()) {
-      const q = searchQuery.trim().toLowerCase();
+      const rawQ = searchQuery.trim().toLowerCase();
+      const cleanQ = rawQ.replace(/\(.*?\)/g, "").replace(/[-_ ]/g, "");
 
       result = result.filter((item) => {
-        const inTitle = item.title?.toLowerCase().includes(q);
+        const normalize = (text) =>
+          text ? String(text).toLowerCase().replace(/[-_ ]/g, "") : "";
 
-        const inDescription = item.description?.toLowerCase().includes(q);
+        const inTitle = normalize(item.title).includes(cleanQ);
+        const inDescription = normalize(item.description).includes(cleanQ);
+        const inBoardTag = normalize(item.boardTag).includes(cleanQ);
+        const inCategory = normalize(item.category).includes(cleanQ);
 
         const inComponents = Array.isArray(item.components)
-          ? item.components.some((comp) => comp.name?.toLowerCase().includes(q))
+          ? item.components.some((comp) =>
+              normalize(comp.name).includes(cleanQ),
+            )
           : false;
 
-        return inTitle || inDescription || inComponents;
+        return (
+          inTitle || inDescription || inBoardTag || inCategory || inComponents
+        );
       });
     }
 

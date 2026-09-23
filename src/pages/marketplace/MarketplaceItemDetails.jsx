@@ -502,66 +502,81 @@ function MarketplaceItemDetails() {
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
                 Other Contact Methods:
               </span>
-              {telegramUrl || messengerUrl || viberUrl ? (
+
+              {telegramUrl || messengerUrl || viberUrl || tiktokUrl ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {/* Telegram */}
                   {telegramUrl && (
                     <a
                       href={telegramUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 border border-[#229ED9]/30 text-[#229ED9] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                      className={`relative flex items-center justify-center gap-1.5 bg-[#229ED9]/10 hover:bg-[#229ED9]/20 border border-[#229ED9]/30 text-[#229ED9] text-xs font-bold py-2 px-2 rounded-xl transition-all ${
+                        preferred === "telegram" ? "ring-2 ring-[#229ED9]" : ""
+                      }`}
                     >
                       <TelegramIcon /> Telegram
                       {preferred === "telegram" && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-[#229ED9] text-white text-[9px] px-1 rounded-full">
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#229ED9] text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                           ★
                         </span>
                       )}
                     </a>
                   )}
 
+                  {/* Messenger */}
                   {messengerUrl && (
                     <a
                       href={messengerUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 border border-[#0084FF]/30 text-[#0084FF] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                      className={`relative flex items-center justify-center gap-1.5 bg-[#0084FF]/10 hover:bg-[#0084FF]/20 border border-[#0084FF]/30 text-[#0084FF] text-xs font-bold py-2 px-2 rounded-xl transition-all ${
+                        preferred === "messenger" ? "ring-2 ring-[#0084FF]" : ""
+                      }`}
                     >
                       <MessengerIcon /> Messenger
                       {preferred === "messenger" && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-[#0084FF] text-white text-[9px] px-1 rounded-full">
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#0084FF] text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                           ★
                         </span>
                       )}
                     </a>
                   )}
 
+                  {/* Viber */}
                   {viberUrl && (
                     <a
                       href={viberUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 bg-[#7360F2]/10 hover:bg-[#7360F2]/20 border border-[#7360F2]/30 text-[#7360F2] text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                      className={`relative flex items-center justify-center gap-1.5 bg-[#7360F2]/10 hover:bg-[#7360F2]/20 border border-[#7360F2]/30 text-[#7360F2] text-xs font-bold py-2 px-2 rounded-xl transition-all ${
+                        preferred === "viber" ? "ring-2 ring-[#7360F2]" : ""
+                      }`}
                     >
                       <ViberIcon /> Viber
                       {preferred === "viber" && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-[#7360f2] text-white text-[9px] px-1 rounded-full">
+                        <span className="absolute -top-1.5 -right-1.5 bg-[#7360f2] text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                           ★
                         </span>
                       )}
                     </a>
                   )}
 
+                  {/* TikTok (API Typo စစ်ဆေးရန် "titok" ပါ ထည့်ထားသည်) */}
                   {tiktokUrl && (
                     <a
                       href={tiktokUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold py-2 px-2 rounded-xl transition-all"
+                      className={`relative flex items-center justify-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 border border-red-500/30 text-red-400 text-xs font-bold py-2 px-2 rounded-xl transition-all ${
+                        preferred === "tiktok" || preferred === "titok"
+                          ? "ring-2 ring-red-500"
+                          : ""
+                      }`}
                     >
                       <TikTokIcon /> TikTok
-                      {preferred === "tiktok" && (
-                        <span className="absolute -top-1.5 -right-1.5 bg-primary text-white text-[9px] px-1 rounded-full">
+                      {(preferred === "tiktok" || preferred === "titok") && (
+                        <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded-full font-bold shadow-sm">
                           ★
                         </span>
                       )}

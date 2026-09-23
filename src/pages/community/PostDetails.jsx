@@ -86,8 +86,11 @@ function PostDetails() {
   const navigate = useNavigate();
 
   const handleMarketplaceSearch = (itemName) => {
-    // Marketplace Page သို့ Search Query ပါဝင်သော URL ဖြင့် သွားမည်
-    navigate(`/marketplace?search=${encodeURIComponent(itemName)}`);
+    // URL ကို clean ဖြစ်အောင် /marketplace သို့ပဲ သွားမည်
+    // state ထဲမှာ အိုင်တမ်နာမည်ကို ထည့်ပေးလိုက်မည်
+    navigate("/marketplace", {
+      state: { initialSearch: itemName },
+    });
   };
 
   // check login user for comment , like and save
@@ -467,7 +470,7 @@ function PostDetails() {
 
                     {/* Shop Icon / Button ကို ညာဘက်အစွန်းဆုံးသို့ ပို့ရန် ml-auto သုံးထားသည် */}
                     <button
-                      onClick={() => handleMarketplaceSearch(item.name || item)}
+                      onClick={() => handleMarketplaceSearch(item.name)}
                       className="ml-auto  flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover bg-primary/10 hover:bg-primary/25 px-3 py-2 sm:px-2.5 sm:py-1.5 rounded-lg transition-colors shrink-0"
                       title={`Find ${item.name || item} in Marketplace`}
                     >

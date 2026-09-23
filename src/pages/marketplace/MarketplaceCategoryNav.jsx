@@ -37,11 +37,12 @@ function MarketplaceCategoryNav({
 
   return (
     <>
-      <nav className="sticky top-[64px] z-30 py-2.5 bg-bg-elevated border-b border-border">
+      {/* 1. Category & Search Nav */}
+      <nav className="sticky top-[64px] z-40 py-2.5 bg-bg-elevated border-b border-border shadow-sm">
         <div className="max-w-7xl mx-auto px-4 lg:px-8 flex flex-col md:flex-row gap-3 items-center justify-between">
           {/* Category Buttons List */}
           <div
-            className="flex gap-2 overflow-x-auto w-full md:w-auto"
+            className="flex gap-2 overflow-x-auto w-full md:w-auto py-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
           >
             {marketplaceCategories.map((cat) => {
@@ -50,7 +51,10 @@ function MarketplaceCategoryNav({
               return (
                 <button
                   key={cat.id}
-                  onClick={() => onCategoryChange(cat.id)}
+                  onClick={() => {
+                    onCategoryChange(cat.id);
+                    onSearchChange(""); // Category ပြောင်းတာနဲ့ Search Bar ကို Clear ပြုလုပ်ပေးမည်
+                  }}
                   className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm whitespace-nowrap transition-colors ${
                     isActive
                       ? "bg-primary text-black font-bold"
