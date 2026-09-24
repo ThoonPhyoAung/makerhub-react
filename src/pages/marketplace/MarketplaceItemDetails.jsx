@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from "react";
+// src/pages/MarketplaceItemDetails.jsx
+import React, { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import {
@@ -31,8 +32,10 @@ import {
   updateMarketplaceItem,
 } from "../../api/marketplaceApi";
 import { useAlert } from "../../context/AlertContext";
+import { useFetch } from "../../hooks/useFetch"; // 👈 useFetch ကို import လုပ်ထားပါသည်
 
 // --- Custom Brand SVG Icons ---
+// (Icons များကို မူလအတိုင်း ထားရှိပါသည်)
 const TelegramIcon = () => (
   <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 0 0-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.49.95-4.22 2.79-.4.27-.76.41-1.08.4-.36-.01-1.04-.2-1.55-.37-.63-.2-1.12-.31-1.08-.66.02-.18.27-.36.74-.55 2.92-1.27 4.86-2.11 5.83-2.51 2.78-1.16 3.35-1.36 3.73-1.36.08 0 .27.02.39.12.1.08.13.19.14.27-.01.06.01.24 0 .38z" />
@@ -92,41 +95,32 @@ function MarketplaceItemDetails() {
 
   const currentUser = useSelector((state) => state.auth?.user);
 
+  // 1. useCallback ဖြင့် API Call function ကို ပတ်ပေးပြီး useFetch သို့ လွှဲပြောင်းပေးခြင်း
+  const fetchFn = useCallback(() => getMarketplaceItemById(id), [id]);
+
+  // 2. useFetch မှ data, loading, error တို့ကို ရယူခြင်း
+  const { data: fetchedItem, loading, error } = useFetch(fetchFn);
+
+  // 3. Local State များ (Wishlist ကဲ့သို့သော optimistic updates များအတွက် Local State ကို ဆက်လက်ထားရှိသည်)
   const [item, setItem] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState("");
   const [activeTab, setActiveTab] = useState("description"); // 'description' | 'details' | 'bom' | 'video' | 'seller'
   const [copiedPhone, setCopiedPhone] = useState(false);
 
+  // 4. API မှ Data အသစ်ရလာပါက Local State (item) နှင့် Initial Image ကို Update လုပ်ပေးခြင်း
   useEffect(() => {
-    let isMounted = true;
-    const fetchItem = async () => {
-      try {
-        setLoading(true);
-        const data = await getMarketplaceItemById(id);
-        if (isMounted) {
-          setItem(data);
-          const initialImg =
-            Array.isArray(data?.images) && data.images.length > 0
-              ? data.images[0]
-              : "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=800";
-          setSelectedImage(initialImg);
-        }
-      } catch (err) {
-        if (isMounted) {
-          setError(err.message || "Item မရှာဖွေနိုင်ပါ");
-        }
-      } finally {
-        if (isMounted) setLoading(false);
-      }
-    };
+    if (fetchedItem) {
+      setItem(fetchedItem);
+      const initialImg =
+        Array.isArray(fetchedItem.images) && fetchedItem.images.length > 0
+          ? fetchedItem.images[0]
+          : "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=800";
+      setSelectedImage(initialImg);
+    }
+  }, [fetchedItem]);
 
-    if (id) fetchItem();
-    return () => {
-      isMounted = false;
-    };
-  }, [id]);
+  const isOwner =
+    currentUser && item && String(item.sellerId) === String(currentUser.id);
 
   // Saved/Wishlist Check
   const isSaved =
@@ -170,6 +164,7 @@ function MarketplaceItemDetails() {
         )
       : [...savedUsers, { userId, savedAt }];
 
+    // ချက်ချင်း UI ပြောင်းလဲစေရန် Optimistic Update လုပ်ခြင်း
     setItem((prev) => ({ ...prev, savedUsers: updatedWishlist }));
 
     try {
@@ -180,7 +175,7 @@ function MarketplaceItemDetails() {
       showAlert(alreadySaved ? "Removed from Saved" : "Added to Saved!");
     } catch (err) {
       console.error("Wishlist Update Error:", err);
-      setItem(previousItem);
+      setItem(previousItem); // ပြဿနာရှိပါက မူလ Data သို့ပြန်ပြောင်းခြင်း
       showAlert({ message: "Failed to update watchlist. Please try again." });
     }
   };
@@ -231,6 +226,7 @@ function MarketplaceItemDetails() {
     }
   };
 
+  // 5. Loading State ကို useFetch မှ တိုက်ရိုက်ယူသုံးခြင်း
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center py-16">
@@ -242,6 +238,7 @@ function MarketplaceItemDetails() {
     );
   }
 
+  // 6. Error State သို့မဟုတ် Item ရှာမတွေ့သော အခြေအနေ
   if (error || !item) {
     return (
       <div className="max-w-4xl mx-auto px-4 py-16 text-center">
@@ -292,7 +289,6 @@ function MarketplaceItemDetails() {
       })
     : "Recently";
 
-  // Check if API includes components array (BOM)
   const componentsList = Array.isArray(item.components) ? item.components : [];
 
   return (
@@ -300,13 +296,21 @@ function MarketplaceItemDetails() {
       {/* Back Button & Action Controls */}
       <div className="flex items-center justify-between mb-6">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate(`/marketplace/`)}
           className="inline-flex items-center gap-2 text-xs sm:text-sm text-text-subtle hover:text-text bg-surface hover:bg-bg-elevated px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-border transition-all active:scale-95"
         >
           <ArrowLeft size={16} /> Back
         </button>
 
         <div className="flex items-center gap-2">
+          {isOwner && (
+            <button
+              onClick={() => navigate(`/marketplace/edit/${item.id}`)}
+              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 rounded-xl text-xs sm:text-sm font-bold transition-all"
+            >
+              Edit
+            </button>
+          )}
           <button
             onClick={handleShare}
             className="p-2 bg-surface hover:bg-bg-elevated text-text rounded-xl border border-border hover:border-primary/40 active:scale-95 transition-all"
@@ -331,7 +335,7 @@ function MarketplaceItemDetails() {
 
       {/* Main Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10">
-        {/* LEFT COLUMN: Main Image with Small Thumbnails UNDER IT */}
+        {/* LEFT COLUMN */}
         <div className="lg:col-span-7 flex flex-col gap-3">
           <div className="relative w-full h-80 sm:h-96 md:h-[460px] rounded-2xl overflow-hidden bg-black/50 border border-border flex items-center justify-center">
             <img
@@ -357,7 +361,7 @@ function MarketplaceItemDetails() {
             </div>
           </div>
 
-          {/* Thumbnails Row UNDER Big Image */}
+          {/* Thumbnails Row */}
           {imagesList.length > 1 && (
             <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-none">
               {imagesList.map((imgUrl, idx) => (
@@ -381,10 +385,9 @@ function MarketplaceItemDetails() {
           )}
         </div>
 
-        {/* RIGHT COLUMN: Info, Price, Location & Contacts Panel */}
+        {/* RIGHT COLUMN */}
         <div className="lg:col-span-5 flex flex-col justify-between bg-bg-elevated/40 border border-border rounded-2xl p-5 sm:p-6">
           <div>
-            {/* Category & Board Tag */}
             <div className="flex items-center justify-between text-xs font-medium mb-3 pb-2 border-b border-border/40">
               <span className="inline-flex items-center gap-1.5 uppercase tracking-wider font-bold text-primary">
                 <Tag size={14} />
@@ -397,12 +400,10 @@ function MarketplaceItemDetails() {
               )}
             </div>
 
-            {/* Title */}
             <h1 className="text-xl sm:text-2xl md:text-3xl font-black text-text mb-3 leading-tight">
               {item.title || "Untitled Item"}
             </h1>
 
-            {/* Price & Negotiable Status */}
             <div className="flex items-center gap-3 mb-4">
               <span className="text-2xl sm:text-3xl font-black text-primary">
                 {typeof item.price === "number"
@@ -416,7 +417,6 @@ function MarketplaceItemDetails() {
               )}
             </div>
 
-            {/* Location & Post Date */}
             <div className="flex flex-wrap items-center gap-3 text-xs text-text-muted mb-5">
               {item.location && (
                 <div className="inline-flex items-center gap-1.5 bg-surface/80 px-3 py-1.5 rounded-lg border border-border/60">
@@ -434,7 +434,6 @@ function MarketplaceItemDetails() {
             </div>
           </div>
 
-          {/* Seller Card & Social Contacts */}
           <div className="pt-4 border-t border-border/60 flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -465,7 +464,6 @@ function MarketplaceItemDetails() {
               )}
             </div>
 
-            {/* Phone Contact Block */}
             {phone && phone !== "09xxxxxxxxx" ? (
               <div className="flex gap-2">
                 <a
@@ -497,7 +495,6 @@ function MarketplaceItemDetails() {
               </div>
             )}
 
-            {/* Real Social Media Contact Icons Strip */}
             <div className="flex flex-col gap-2">
               <span className="text-[11px] font-bold uppercase tracking-wider text-text-subtle">
                 Other Contact Methods:
@@ -505,7 +502,6 @@ function MarketplaceItemDetails() {
 
               {telegramUrl || messengerUrl || viberUrl || tiktokUrl ? (
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {/* Telegram */}
                   {telegramUrl && (
                     <a
                       href={telegramUrl}
@@ -524,7 +520,6 @@ function MarketplaceItemDetails() {
                     </a>
                   )}
 
-                  {/* Messenger */}
                   {messengerUrl && (
                     <a
                       href={messengerUrl}
@@ -543,7 +538,6 @@ function MarketplaceItemDetails() {
                     </a>
                   )}
 
-                  {/* Viber */}
                   {viberUrl && (
                     <a
                       href={viberUrl}
@@ -562,7 +556,6 @@ function MarketplaceItemDetails() {
                     </a>
                   )}
 
-                  {/* TikTok (API Typo စစ်ဆေးရန် "titok" ပါ ထည့်ထားသည်) */}
                   {tiktokUrl && (
                     <a
                       href={tiktokUrl}
@@ -593,9 +586,8 @@ function MarketplaceItemDetails() {
         </div>
       </div>
 
-      {/* LOWER SECTION: Tabs for Description, Specifications, BOM Components & Embedded Video */}
+      {/* LOWER SECTION */}
       <div className="bg-bg-elevated/30 border border-border rounded-2xl p-4 sm:p-6">
-        {/* Tab Buttons Navigation */}
         <div className="flex items-center gap-6 border-b border-border/60 pb-3 mb-6 overflow-x-auto scrollbar-none">
           <button
             onClick={() => setActiveTab("description")}
@@ -619,7 +611,6 @@ function MarketplaceItemDetails() {
             <Info size={15} /> Specifications
           </button>
 
-          {/* New BOM / Components Tab */}
           <button
             onClick={() => setActiveTab("bom")}
             className={`flex items-center gap-2 text-xs sm:text-sm font-bold tracking-wider uppercase pb-2 transition-all whitespace-nowrap ${
@@ -663,9 +654,7 @@ function MarketplaceItemDetails() {
           </button>
         </div>
 
-        {/* Tab Contents */}
         <div className="min-h-[160px]">
-          {/* Description Tab */}
           {activeTab === "description" && (
             <div className="text-text-muted text-xs sm:text-sm leading-relaxed whitespace-pre-line break-words bg-black/20 p-4 rounded-xl border border-border/40">
               {item.description ||
@@ -673,7 +662,6 @@ function MarketplaceItemDetails() {
             </div>
           )}
 
-          {/* Specifications Table (Redesigned Modern UI Table) */}
           {activeTab === "details" && (
             <div className="overflow-hidden rounded-xl border border-border/60 bg-surface/30">
               <table className="w-full text-left text-xs sm:text-sm border-collapse">
@@ -765,7 +753,6 @@ function MarketplaceItemDetails() {
             </div>
           )}
 
-          {/* DEVICES & COMPONENTS (BOM) TAB - Production Ready Structure */}
           {activeTab === "bom" && (
             <div className="flex flex-col gap-4">
               <div className="flex items-center justify-between bg-surface/50 p-3.5 rounded-xl border border-border/60">
@@ -796,7 +783,6 @@ function MarketplaceItemDetails() {
                         key={idx}
                         className="flex items-center gap-3 p-3 rounded-xl bg-surface border border-border/80 hover:border-primary/40 transition-all"
                       >
-                        {/* Component Image */}
                         <div className="w-12 h-12 rounded-lg bg-bg-elevated border border-border overflow-hidden shrink-0">
                           <img
                             src={
@@ -813,7 +799,6 @@ function MarketplaceItemDetails() {
                           />
                         </div>
 
-                        {/* Component Info */}
                         <div className="min-w-0 flex-1">
                           <h4 className="text-sm font-semibold text-text truncate">
                             {comp.name || "Unnamed Component"}
@@ -830,7 +815,6 @@ function MarketplaceItemDetails() {
                   </div>
                 </div>
               ) : (
-                /* Empty / Preview State when current listing is single item */
                 <div className="text-center py-10 px-4 bg-surface/20 border border-dashed border-border/80 rounded-2xl flex flex-col items-center justify-center gap-3">
                   <div className="p-3 bg-surface rounded-full text-text-muted border border-border">
                     <Package size={28} />
@@ -849,11 +833,9 @@ function MarketplaceItemDetails() {
             </div>
           )}
 
-          {/* Embedded YouTube Demo Video Tab */}
           {activeTab === "video" && item.demoVideoUrl && (
             <div className="flex flex-col gap-4">
               {embedVideoUrl ? (
-                /* Responsive 16:9 Embedded YouTube Player */
                 <div className="relative w-full aspect-video max-w-3xl mx-auto rounded-2xl overflow-hidden border border-border shadow-2xl bg-black">
                   <iframe
                     src={embedVideoUrl}
@@ -888,7 +870,6 @@ function MarketplaceItemDetails() {
             </div>
           )}
 
-          {/* Seller Info Tab */}
           {activeTab === "seller" && (
             <div className="flex items-center gap-4 p-4 bg-surface/50 rounded-xl border border-border/40">
               <img

@@ -20,6 +20,7 @@ import EditPost from "./pages/community/EditPost";
 // marketplace
 import MarketplacePostForm from "./pages/marketplace/MarketplaceCreatePost";
 import MarketplaceItemDetails from "./pages/marketplace/MarketplaceItemDetails"
+import MarketplaceEditPost from "./pages/marketplace/MarketplaceEditPost";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/marketplace/sell" element={<MarketplacePostForm />} />
             <Route path="/marketplace/items/:id" element={<MarketplaceItemDetails />} />
+            <Route path="/marketplace/edit/:id" element={<MarketplaceEditPost />} />
           </Route>
         </Routes>
       </div>

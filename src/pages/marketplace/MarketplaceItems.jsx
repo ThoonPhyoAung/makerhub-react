@@ -238,9 +238,16 @@ function MarketplaceGrid({ activeCategory, searchQuery = "" }) {
                         }}
                       />
                     </div>
-                    <span className="absolute top-2 right-2 sm:top-3 sm:right-3 inline-flex items-center text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/60 border border-white/15 backdrop-blur-md text-primary shadow-sm tracking-wider">
-                      {formattedCondition}
-                    </span>
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3 flex gap-2">
+                      {item.isSold && (
+                        <span className="text-[10px] sm:text-xs font-bold px-3 py-1 rounded-full bg-red-500/90 text-white tracking-wider shadow-md">
+                          SOLD OUT
+                        </span>
+                      )}
+                      <span className=" inline-flex items-center text-[9px] sm:text-[10px] font-bold px-1.5 sm:px-2.5 py-0.5 sm:py-1 rounded-full bg-black/60 border border-white/15 backdrop-blur-md text-primary shadow-sm tracking-wider">
+                        {formattedCondition}
+                      </span>
+                    </div>
                   </div>
 
                   <div className="p-2 sm:p-3 flex flex-col flex-1">

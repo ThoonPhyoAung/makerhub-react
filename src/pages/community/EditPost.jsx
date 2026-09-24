@@ -41,9 +41,6 @@ const pjTypeOptions = communityCategories.filter(
   (c) => c.id !== "all" && c.id !== "help",
 );
 
-// ★localStorage draft key to auto save
-const DRAFT_KEY = "createPost_draft";
-
 // Base64 validation helper
 const isBase64DataUrl = (value) => {
   return typeof value === "string" && value.startsWith("data:");
@@ -94,14 +91,6 @@ function EditPost() {
     }
   }, [editPostData, activeUser, navigate, showAlert]);
 
-  // form ပြောင်းတိုင်း localStorage ထဲ auto-save
-  useEffect(() => {
-    if (form) {
-      const DRAFT_KEY = `editPost_draft_${id}`;
-      localStorage.setItem(DRAFT_KEY, JSON.stringify(form));
-    }
-  }, [form]);
-
   if (loading) {
     return (
       <div className="text-center py-24">
@@ -124,14 +113,6 @@ function EditPost() {
       </div>
     );
   }
-
-  // Derived indicator state
-  const hasDraftContent = Boolean(
-    form?.title?.trim() ||
-    form?.description?.trim() ||
-    form?.content?.trim() ||
-    form?.image,
-  );
 
   // Handle single input changes
   const changeInput = (e) => {
@@ -230,7 +211,7 @@ function EditPost() {
 
     try {
       await updatePost(id, payload);
-      localStorage.removeItem(DRAFT_KEY); // ★ Part 1: publish အောင်မြင်ရင် draft ဖျက်
+
       showAlert("Post updated successfully!");
       navigate(`/community/project/${id}`);
     } catch (err) {
@@ -249,14 +230,13 @@ function EditPost() {
       showAlert({
         message: "Unsaved changes will be lost. Leave this page?",
         actionText: "Leave",
+        type: "warning",
         duration: 0, // ★ auto-dismiss ပိတ် — user click လုပ်မှသာ ပိတ်မယ်
         onAction: () => {
-          localStorage.removeItem(DRAFT_KEY);
           navigate(`/community/project/${id}`);
         },
       });
     } else {
-      localStorage.removeItem(DRAFT_KEY);
       navigate(`/community/project/${id}`);
     }
   };
@@ -269,11 +249,12 @@ function EditPost() {
       message:
         "Are you sure you want to delete this post? This action cannot be undone.",
       actionText: "Delete",
+      type: "warning",
       duration: 0, // ★ delete လို destructive action ဆို ပိုအရေးကြီးတယ်
       onAction: async () => {
         try {
           await deletePost(id);
-          localStorage.removeItem(DRAFT_KEY);
+
           showAlert("Post deleted Successfully !");
           navigate("/community");
         } catch (error) {
@@ -295,12 +276,6 @@ function EditPost() {
         <p className="text-text-muted text-sm">
           Update details for your post details or troubleshooting progress.
         </p>
-        {/* ★ draft auto-saved indicator */}
-        {hasDraftContent && (
-          <p className="flex items-center gap-1.5 text-xs text-text-subtle mt-2">
-            <Save size={12} /> Draft auto-saved
-          </p>
-        )}
       </div>
 
       {/* Main Form */}

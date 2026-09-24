@@ -15,14 +15,16 @@ export const getMarketplaceItemById = async (id) => {
 
 // 3. Create New Listing
 export const createMarketplaceItem = async (itemData) => {
-  const response = await marketplaceApi.post("/marketplace", itemData
-  //   {
-  //   ...itemData,
-  //   createdAt: new Date().toISOString(),
-  //   isSold: false,
-  //   reportCount: 0,
-  // }
-);
+  const response = await marketplaceApi.post(
+    "/marketplace",
+    itemData,
+    //   {
+    //   ...itemData,
+    //   createdAt: new Date().toISOString(),
+    //   isSold: false,
+    //   reportCount: 0,
+    // }
+  );
   return response.data;
 };
 
@@ -32,11 +34,14 @@ export const updateMarketplaceItem = async (id, itemData) => {
   return response.data;
 };
 
-// 5. Mark as Sold (Status ပြောင်းရန်)
+// src/api/marketplaceApi.jsx
+
+// 5. Mark as Sold (Status ပြောင်းရန် - data အဟောင်းများ မပျောက်စေရန် ဖြည့်စွက်ခြင်း)
 export const markItemAsSold = async (id, currentData) => {
   const response = await marketplaceApi.put(`/marketplace/${id}`, {
     ...currentData,
     isSold: true,
+    updatedAt: new Date().toISOString(),
   });
   return response.data;
 };
