@@ -778,17 +778,17 @@ function PostDetails() {
                 const isActive = activeSection === section.id;
                 return (
                   <li key={section.id}>
-                    <a
-                      href={`#${section.id}`}
+                    <button
+                      type="button"
                       onClick={(e) => handleSmoothScroll(e, section.id)}
-                      className={`block text-sm px-3 py-1.5 rounded-lg transition-all ${
+                      className={`w-full text-left block text-sm px-3 py-1.5 rounded-lg transition-all ${
                         isActive
                           ? "bg-primary/10 text-primary font-semibold border-l-2 border-primary"
                           : "text-text-muted hover:text-primary hover:bg-bg-subtle"
                       }`}
                     >
                       {section.label}
-                    </a>
+                    </button>
                   </li>
                 );
               })}

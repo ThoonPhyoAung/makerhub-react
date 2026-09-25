@@ -15,7 +15,7 @@ const slides = [
     lead: "Where AI takes action. Explore cutting-edge DIY projects powered by edge computing.",
     buttonText: "Explore Projects",
     buttonIcon: <ArrowRight className="w-3.5 h-3.5 md:w-4 md:h-4" />,
-    href: "#projectsSection",
+    to: "#projectsSection",
   },
   {
     id: "community-showcase",
@@ -26,7 +26,7 @@ const slides = [
     lead: "See what fellow makers are building with next-gen Wi-Fi & AI capabilities.",
     buttonText: "View Maker Projects",
     buttonIcon: <Images className="w-3.5 h-3.5 md:w-4 md:h-4" />,
-    href: "#categoryNavBar",
+    to: "#categoryNavBar",
   },
   {
     id: "learning-hub",
@@ -130,13 +130,22 @@ function CommunityHero() {
                       {slide.buttonIcon}
                     </Link>
                   ) : (
-                    <a
-                      href={slide.href}
-                      className="inline-flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/30 text-white font-bold text-xs md:text-base px-3 py-1.5 md:px-6 md:py-3 rounded-lg shadow hover:bg-white/25 transition-all"
+                    <Link
+                      to={slide.to}
+                      onClick={
+                        slide.to === "/community/create-post"
+                          ? handleCreateClick
+                          : undefined
+                      }
+                      className={`inline-flex items-center gap-1.5 font-bold text-xs md:text-base px-3 py-1.5 md:px-6 md:py-3 rounded-lg shadow transition-all ${
+                        slide.to === "/community/create-post"
+                          ? "bg-primary hover:bg-primary/90 text-text md:rounded-xl active:scale-95"
+                          : "bg-white/15 backdrop-blur-md border border-white/30 text-white hover:bg-white/25"
+                      }`}
                     >
                       <span>{slide.buttonText}</span>
                       {slide.buttonIcon}
-                    </a>
+                    </Link>
                   )}
                 </div>
               </div>

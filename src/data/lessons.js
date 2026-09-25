@@ -13,7 +13,6 @@
 // တွေကို key-based object (title: { mm: "...", en: "..." }) ပြောင်းဖို့
 // လွယ်အောင် အခုအတိုင်း flat string ထားထားတာ — deep concatenation
 // မလုပ်ထားလို့ swap လုပ်ရင် lesson object တစ်ခုချင်းစီပဲ ပြင်ရမယ်.
-
 export const lessons = [
   {
     id: "arduino-01",
@@ -23,7 +22,7 @@ export const lessons = [
     title: "Getting Started with Arduino",
     xpReward: 50,
     content:
-      "Placeholder lesson content. Arduino board ရဲ့ parts, IDE setup, နဲ့ ပထမဆုံး sketch upload လုပ်နည်း အကျဉ်းချုပ်။ Real content ကို TR ရလာရင် ဒီနေရာမှာ ထည့်မယ်။",
+      "Placeholder lesson content. Arduino board ရဲ့ parts, IDE setup, နဲ့ ပထမဆုံး sketch upload လုပ်နည်း အကျဉ်းချုပ်။",
   },
   {
     id: "arduino-02",
@@ -32,8 +31,10 @@ export const lessons = [
     order: 2,
     title: "Your First Blinking LED",
     xpReward: 75,
+    // 💡 စမ်းသပ်ရန် Wokwi Public Arduino Blink ID
+    wokwiProjectId: "476144724285786113",
     content:
-      "Placeholder lesson content. digitalWrite() နဲ့ delay() သုံးပြီး LED blink လုပ်တဲ့ classic beginner project.",
+      "digitalWrite() နဲ့ delay() သုံးပြီး LED blink လုပ်တဲ့ classic beginner project ဖြစ်ပါတယ်။ အောက်ပါ Simulator မှာ Run ကို နှိပ်ပြီး စမ်းသပ်ကြည့်ပါ။",
   },
   {
     id: "arduino-03",
