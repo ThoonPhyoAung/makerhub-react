@@ -7,7 +7,7 @@ export const boardIconMap = {
   arduino: SiArduino,
   esp32: SiEspressif,
   esp8266: SiEspressif,
-  "raspberry-pi": SiRaspberrypi,
+  raspberrypi: SiRaspberrypi,
 };
 
 // post.category string ("Project Showcase" / "Help & Troubleshooting")
@@ -28,5 +28,3 @@ export function RenderIcon({
   const Icon = map[iconKey?.toLowerCase()?.trim()] ?? Fallback;
   return <Icon {...props} />;
 }
-
-
