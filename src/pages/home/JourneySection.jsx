@@ -95,10 +95,10 @@ function JourneySection() {
                       </p>
                       <div className="flex gap-3 sm:gap-4 text-text-muted text-xs sm:text-sm">
                         <span className="flex items-center gap-1">
-                          <BookOpen size={13} /> {j.totalLessons}
+                          <BookOpen size={13} /> {j.totalLessons} lessons
                         </span>
                         <span className="flex items-center gap-1">
-                          <Users size={13} /> {j.studentsCount}
+                          <Users size={13} /> {j.studentsCount} learners
                         </span>
                       </div>
                     </div>

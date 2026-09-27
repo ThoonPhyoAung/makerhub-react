@@ -2,9 +2,9 @@ import { Routes, Route } from "react-router-dom";
 
 import WebLayout from "./layout/WebLayout";
 import Home from "./pages/home/Home";
-import Learning from "./pages/learning/Learning";
-import JourneyDetail from "./pages/learning/JourneyDetail";
-import LessonDetail from "./pages/learning/LessonDetail";
+import LearningPage from "./pages/learning/index";
+
+// import LearningPage from "./pages/learning/LessonDetail";
 import CommunityPage from "./pages/community/index";
 import Marketplace from "./pages/marketplace/Marketplace";
 
@@ -13,13 +13,16 @@ import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 // Alert
 import { AlertProvider } from "./context/AlertContext"; // named import — curly braces ပါရမယ်
+// Learning page
+import JourneyDetail from "./pages/learning/JourneyDetail/index";
+
 //community post create form
 import CreatePost from "./pages/community/CreatePost";
 import PostDetails from "./pages/community/PostDetails";
 import EditPost from "./pages/community/EditPost";
 // marketplace
 import MarketplacePostForm from "./pages/marketplace/MarketplaceCreatePost";
-import MarketplaceItemDetails from "./pages/marketplace/MarketplaceItemDetails"
+import MarketplaceItemDetails from "./pages/marketplace/MarketplaceItemDetails";
 import MarketplaceEditPost from "./pages/marketplace/MarketplaceEditPost";
 
 function App() {
@@ -41,12 +44,12 @@ function App() {
           {/* Weblayout */}
           <Route element={<WebLayout />}>
             <Route path="/" element={<Home />} />
-            <Route path="/learning" element={<Learning />} />
+            <Route path="/learning" element={<LearningPage />} />
             <Route path="/learning/:journeyId" element={<JourneyDetail />} />
-            <Route
+            {/* <Route
               path="/learning/:journeyId/:lessonSlug"
               element={<LessonDetail />}
-            />
+            /> */}
             <Route path="/community" element={<CommunityPage />} />
             <Route path="/community/create-post" element={<CreatePost />} />
             <Route path="/community/project/:id" element={<PostDetails />} />
@@ -54,8 +57,14 @@ function App() {
 
             <Route path="/marketplace" element={<Marketplace />} />
             <Route path="/marketplace/sell" element={<MarketplacePostForm />} />
-            <Route path="/marketplace/items/:id" element={<MarketplaceItemDetails />} />
-            <Route path="/marketplace/edit/:id" element={<MarketplaceEditPost />} />
+            <Route
+              path="/marketplace/items/:id"
+              element={<MarketplaceItemDetails />}
+            />
+            <Route
+              path="/marketplace/edit/:id"
+              element={<MarketplaceEditPost />}
+            />
           </Route>
         </Routes>
       </div>
