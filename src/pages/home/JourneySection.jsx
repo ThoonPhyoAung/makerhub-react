@@ -142,7 +142,7 @@ function JourneySection() {
                       </span>
 
                       <Link
-                        to={`/learning/${j.link}`}
+                        to={`/learning/${j.id}`}
                         className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border transition-all duration-300 group-hover:bg-white/5"
                         style={{ borderColor: j.color, color: j.color }}
                       >

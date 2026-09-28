@@ -37,18 +37,42 @@ function LessonDetail() {
       ? journeyLessons[currentIndex + 1]
       : null;
 
-  // Wokwi Clean Embed URL Generator Function
-  const getWokwiUrl = (projectId) => {
-    if (!projectId) return "";
-    const cleanId = String(projectId)
-      .replace("https://wokwi.com/projects/", "")
-      .replace("https://wokwi.com/wokwi-embed.html?id=", "")
-      .split("?")[0]
-      .trim();
+  // 🚀 Dual Simulator URL & Link Configuration Helper
+  const getSimulatorDetails = (sim) => {
+    if (!sim || !sim.id) return null;
 
-    // 🚀 nav=0 ပါဝင်ခြင်းဖြင့် Mobile Screen တွင် Toolbar များ ကျုံ့သွားပြီး Diagram ကို အလယ်တည့်တည့် Zoom မျှပေးပါသည်
-    return `https://wokwi.com/projects/${cleanId}?embed=1&nav=0`;
+    if (sim.type === "wokwi") {
+      const cleanId = String(sim.id)
+        .replace("https://wokwi.com/projects/", "")
+        .replace("https://wokwi.com/wokwi-embed.html?id=", "")
+        .split("?")[0]
+        .trim();
+
+      return {
+        name: "Wokwi Simulator",
+        embedUrl: `https://wokwi.com/projects/${cleanId}?embed=1&nav=0`,
+        fullEditorUrl: `https://wokwi.com/projects/${cleanId}`,
+      };
+    }
+
+    if (sim.type === "velxio") {
+      // URL ထဲမှာ embed ID တစ်ခုတည်း သီးသန့်ခွဲထုတ်ခြင်း
+      const cleanId = String(sim.id)
+        .replace("https://velxio.dev/embed/", "")
+        .replace("https://velxio.dev/", "")
+        .trim();
+
+      return {
+        name: "Velxio Simulator",
+        embedUrl: `https://velxio.dev/embed/${cleanId}`,
+        fullEditorUrl: sim.shareUrl || `https://velxio.dev/embed/${cleanId}`,
+      };
+    }
+
+    return null;
   };
+
+  const simConfig = getSimulatorDetails(lesson.simulator);
 
   return (
     <section className="py-10 md:py-16 px-4">
@@ -77,17 +101,17 @@ function LessonDetail() {
           {lesson.content}
         </div>
 
-        {/* 🚀 Wokwi Official Share Project iframe */}
-        {lesson.wokwiProjectId && (
+        {/* 🚀 Dynamic Hardware Simulator Embed (Wokwi or Velxio) */}
+        {simConfig && (
           <div className="mb-10 border border-border rounded-2xl overflow-hidden bg-[#18181b] shadow-2xl">
-            {/* Page Header */}
+            {/* Simulator Header */}
             <div className="bg-[#09090b] px-4 py-3 border-b border-border flex items-center justify-between">
               <span className="text-xs font-bold text-primary flex items-center gap-2">
-                <Cpu size={15} /> Interactive Simulator
+                <Cpu size={15} /> {simConfig.name}
               </span>
 
               <a
-                href={`https://wokwi.com/projects/${lesson.wokwiProjectId}`}
+                href={simConfig.fullEditorUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-xs text-text-subtle hover:text-primary font-medium transition-colors"
@@ -96,14 +120,16 @@ function LessonDetail() {
               </a>
             </div>
 
-            {/* Mobile Screen တွင် Dynamic Height သတ်မှတ်ခြင်း (Responsive Viewport) */}
+            {/* Viewport Frame */}
             <div className="relative w-full h-[450px] sm:h-[550px] bg-[#000000]">
               <iframe
-                title="Wokwi Hardware Simulation"
-                src={getWokwiUrl(lesson.wokwiProjectId)}
+                title={`${lesson.title} - Hardware Simulation`}
+                src={simConfig.embedUrl}
                 className="w-full h-full border-0"
                 loading="lazy"
-                allow="fullscreen; autoplay"
+                // Hardware communication & full performance ရရှိရန် allow attribute
+                allow="accelerometer; ambient-light-sensor; camera; encrypted-media; geolocation; gyroscope; hid; microphone; midi; payment; usb; vr; xr-spatial-tracking; serial; autoplay; fullscreen"
+                allowFullScreen
               />
             </div>
           </div>

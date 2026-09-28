@@ -4,7 +4,6 @@ import {
   ChevronRight,
   BookOpen,
   Clock,
-  Award,
   Users,
   Play,
   CheckCircle2,
@@ -13,7 +12,7 @@ import {
   Code2,
   Cpu,
   Lightbulb,
-  Zap,
+  Star,
 } from "lucide-react";
 import { boardIconMap, RenderIcon } from "../../../utils/iconMaps";
 
@@ -201,7 +200,7 @@ function JourneyHero({ journey }) {
 
                 {/* Earned XP Badge */}
                 <div className="bg-bg-elevated/90 border border-purple-500/30 backdrop-blur-md rounded-lg px-2.5 py-1.5 shadow-sm flex items-center gap-2">
-                  <Zap size={14} className="fill-purple-400 text-purple-400" />
+                  <Star size={14} className="fill-purple-400 text-purple-400" />
                   <div>
                     <div className="text-[10px] font-bold text-text">
                       {earnedXp} XP
@@ -223,7 +222,7 @@ function JourneyHero({ journey }) {
                 </div>
                 <span className="text-white/20">•</span>
                 <div className="flex items-center gap-1">
-                  <Award size={13} className="text-purple-400" />
+                  <Star size={13} className="text-purple-400" />
                   <span>{totalXp} XP</span>
                 </div>
                 <span className="text-white/20">•</span>

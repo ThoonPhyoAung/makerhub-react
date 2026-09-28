@@ -2,7 +2,7 @@ import { SiArduino, SiEspressif, SiRaspberrypi } from "react-icons/si";
 
 export const journeys = [
   {
-    id: "arduino",
+    id: "arduino-uno",
     icon: SiArduino,
     title: "Arduino Journey",
     badge: "Beginner",
@@ -14,7 +14,7 @@ export const journeys = [
     color: "#3b82f6",
     colorBg: "rgba(59,130,246,0.15)",
     image: "/assets/arduinouno.png",
-    link: "/learning/arduino",
+    link: "/learning/arduino-uno",
   },
   {
     id: "esp32",

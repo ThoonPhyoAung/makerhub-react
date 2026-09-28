@@ -1,66 +1,72 @@
-// TODO: TR ကနေ real content (text/image/code/quiz block) ရလာရင်
-// ဒီ placeholder lessons တွေကို အစားထိုးမယ်။ ခုချိန်မှာတော့
-// route/layout/navigation logic ကို စမ်းဖို့အတွက်ပဲ ဒါလေးထားထားတယ်.
-//
-// journeyId က data/journeys.js ထဲက journey.id တွေနဲ့ တူညီရမယ်
-// (ယူဆချက်: "arduino", "esp32", "esp8266", "raspberry-pi").
-// journeys.js ထဲက id တွေ မတူရင် ဒီနေရာက journeyId string တွေကို
-// ချိန်ညှိပေးရမယ်။
-//
-// content က အခုတော့ plain string ချည်းပါ — TR ကနေ format
-// ဆုံးဖြတ်ပြီးမှ block array ({ type, value }) ပြောင်းမယ်.
-// Burmese/English switch (i18n) လုပ်တဲ့အခါ title/content string
-// တွေကို key-based object (title: { mm: "...", en: "..." }) ပြောင်းဖို့
-// လွယ်အောင် အခုအတိုင်း flat string ထားထားတာ — deep concatenation
-// မလုပ်ထားလို့ swap လုပ်ရင် lesson object တစ်ခုချင်းစီပဲ ပြင်ရမယ်.
 export const lessons = [
+  // --- Arduino (Wokwi Simulator) ---
   {
     id: "arduino-01",
-    journeyId: "arduino",
+    journeyId: "arduino-uno",
+    chapterId: "ch-1",
     slug: "getting-started",
     order: 1,
     title: "Getting Started with Arduino",
     xpReward: 50,
     content:
-      "Placeholder lesson content. Arduino board ရဲ့ parts, IDE setup, နဲ့ ပထမဆုံး sketch upload လုပ်နည်း အကျဉ်းချုပ်။",
+      "Arduino board ရဲ့ parts, IDE setup, နဲ့ ပထမဆုံး sketch upload လုပ်နည်း အကျဉ်းချုပ်။",
   },
   {
-    id: "arduino-02",
-    journeyId: "arduino",
-    slug: "blinking-led",
+    id: "uno-basics",
+    journeyId: "arduino-uno",
+    chapterId: "ch-1",
+    slug: "uno-basics",
     order: 2,
     title: "Your First Blinking LED",
     xpReward: 75,
-    // 💡 စမ်းသပ်ရန် Wokwi Public Arduino Blink ID
-    wokwiProjectId: "476144724285786113",
+    // Arduino အတွက် Wokwi Simulator သုံးမည်
+    simulator: {
+      type: "wokwi",
+      id: "476144724285786113",
+    },
     content:
-      "digitalWrite() နဲ့ delay() သုံးပြီး LED blink လုပ်တဲ့ classic beginner project ဖြစ်ပါတယ်။ အောက်ပါ Simulator မှာ Run ကို နှိပ်ပြီး စမ်းသပ်ကြည့်ပါ။",
+      "digitalWrite() နဲ့ delay() သုံးပြီး LED blink လုပ်တဲ့ classic beginner project ဖြစ်ပါတယ်။ အောက်ပါ Wokwi Simulator မှာ Run ကို နှိပ်ပြီး စမ်းသပ်ကြည့်ပါ။",
   },
   {
     id: "arduino-03",
-    journeyId: "arduino",
+    journeyId: "arduino-uno",
+    chapterId: "ch-2",
     slug: "reading-sensors",
     order: 3,
     title: "Reading Sensor Data",
     xpReward: 75,
     content:
-      "Placeholder lesson content. analogRead() သုံးပြီး sensor value ဖတ်တာ, Serial Monitor မှာ ပြတာ.",
+      "analogRead() သုံးပြီး sensor value ဖတ်တာ, Serial Monitor မှာ ပြတာ။",
   },
 
-  // esp32 / esp8266 / raspberrypi journeys: lesson content မရေးရသေးဘူး —
-  // getLessonsByJourney() က empty array ပြန်ပေးမှာမို့ JourneyDetail
-  // page ထဲမှာ "Coming soon" empty state ကိုယ်တိုင် ပြပါလိမ့်မယ်.
+  // --- ESP32 (Velxio Simulator) ---
+  {
+    id: "esp32-cam-01",
+    journeyId: "esp32",
+    chapterId: "ch-1",
+    slug: "esp32-wifi",
+    order: 1,
+    title: "ESP32-CAM Live Simulation",
+    xpReward: 100,
+    // ESP32 အတွက် Velxio Simulator သုံးမည်
+    simulator: {
+      type: "velxio",
+      id: "01f5582b-c199-45e9-aab4-d5bca2333160",
+      shareUrl: "https://velxio.dev/thoonphyo141/esp32-blink/",
+    },
+    content:
+      "ESP32-CAM စမ်းသပ်ရန် Velxio Live Simulator ဖြစ်ပါတယ်။ အောက်ပါ Simulator တွင် တိုက်ရိုက် စမ်းသပ်နိုင်ပါတယ်။",
+  },
 ];
 
-// journeyId နဲ့ filter + order နဲ့ sort လုပ်ပေးတဲ့ helper.
-// array index အစား order field ကို သုံးလို့ lesson အသစ်
-// ကြားညှပ်ထည့်ချင်ရင် index အားလုံး ပြန်မရေးရဘူး.
 export function getLessonsByJourney(journeyId) {
   return lessons
     .filter((l) => l.journeyId === journeyId)
     .sort((a, b) => a.order - b.order);
 }
 
-export function getLessonBySlug(journeyId, slug) {
-  return lessons.find((l) => l.journeyId === journeyId && l.slug === slug);
+export function getLessonsByChapter(journeyId, chapterId) {
+  return lessons
+    .filter((l) => l.journeyId === journeyId && l.chapterId === chapterId)
+    .sort((a, b) => a.order - b.order);
 }

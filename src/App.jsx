@@ -15,6 +15,7 @@ import SignUp from "./pages/auth/SignUp";
 import { AlertProvider } from "./context/AlertContext"; // named import — curly braces ပါရမယ်
 // Learning page
 import JourneyDetail from "./pages/learning/JourneyDetail/index";
+import LessonDetail from "./pages/learning/LessonDetail"
 
 //community post create form
 import CreatePost from "./pages/community/CreatePost";
@@ -46,6 +47,10 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/learning" element={<LearningPage />} />
             <Route path="/learning/:journeyId" element={<JourneyDetail />} />
+            <Route
+              path="/learning/:journeyId/:lessonSlug"
+              element={<LessonDetail />}
+            />
             {/* <Route
               path="/learning/:journeyId/:lessonSlug"
               element={<LessonDetail />}
