@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { Lock, Play, Check, Search, BookOpen, Clock } from "lucide-react";
+import { Lock, Check, Search, BookOpen, Clock } from "lucide-react";
 import { boardIconMap, RenderIcon } from "../../../utils/iconMaps";
 import { Link } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
+import LearnerProToggle from "../components/LearnerProToggle";
 
 function CircularProgress({ percentage = 0, color = "#f97316", size = 34 }) {
   const strokeWidth = 3;
@@ -55,11 +56,21 @@ function ChapterCardsGrid({
   primaryColor = "#10b981",
 }) {
   const showAlert = useAlert();
-  const [userMode, setUserMode] = useState("learner");
+
+  // 💡 localStorage မှ Mode ကို ဖတ်ယူပြီး ရွေးချယ်ထားသော Mode ကို သိမ်းဆည်းပါမည်
+  const [userMode, setUserMode] = useState(() => {
+    return localStorage.getItem("userMode") || "learner";
+  });
   const [searchQuery, setSearchQuery] = useState("");
 
   const isPro = userMode === "pro";
   const activeColor = journey?.color || primaryColor;
+
+  const handleModeChange = (newMode) => {
+    setUserMode(newMode);
+    localStorage.setItem("userMode", newMode);
+    setSearchQuery("");
+  };
 
   const filteredChapters = useMemo(() => {
     if (!isPro || !searchQuery.trim()) return chapters;
@@ -72,33 +83,14 @@ function ChapterCardsGrid({
     <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
       {/* Mode Switcher & Search Bar */}
       <div className="w-full max-w-6xl flex flex-col items-center gap-4 mb-8 z-20">
-        <div className="flex bg-[#1a1d24] p-1.5 rounded-full border border-white/10">
-          <button
-            onClick={() => {
-              setUserMode("learner");
-              setSearchQuery("");
-            }}
-            className={`px-5 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all ${
-              !isPro ? "text-black shadow-md" : "text-gray-400 hover:text-white"
-            }`}
-            style={{ backgroundColor: !isPro ? activeColor : "transparent" }}
-          >
-            Learner Mode
-          </button>
-
-          <button
-            onClick={() => setUserMode("pro")}
-            className={`px-5 sm:px-6 py-1.5 sm:py-2 rounded-full text-xs font-bold transition-all ${
-              isPro ? "text-black shadow-md" : "text-gray-400 hover:text-white"
-            }`}
-            style={{ backgroundColor: isPro ? activeColor : "transparent" }}
-          >
-            Pro Mode
-          </button>
-        </div>
+        <LearnerProToggle
+          mode={userMode}
+          onChange={handleModeChange}
+          activeColor={activeColor}
+        />
 
         {isPro && (
-          <div className="relative w-full max-w-md animate-fadeIn">
+          <div className="relative w-full max-w-md">
             <Search
               size={16}
               className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
@@ -115,7 +107,7 @@ function ChapterCardsGrid({
         )}
       </div>
 
-      {/* Cards Grid */}
+      {/* Chapters Grid */}
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 justify-items-center">
         {filteredChapters.length === 0 ? (
           <div className="col-span-full py-12 text-center text-gray-500 text-xs sm:text-sm">
@@ -138,14 +130,15 @@ function ChapterCardsGrid({
               0;
             const duration = chapter.duration || chapter.time || "30m";
 
-            // ★ Unlocked ဆို Link (နှိပ်ရင် chapter page ကိုသွား)၊ Locked ဆို div
             const CardTag = isLocked ? "div" : Link;
             const cardProps = isLocked
               ? {
                   onClick: () =>
-                    showAlert(
-                      "Learner Mode မှာ ရှေ့ chapter ပြီးမှ ဖွင့်လို့ရမယ်။ အကုန်ကြည့်ချင်ရင် Pro Mode သုံးပါ။",
-                    ),
+                    showAlert({
+                      message:
+                        "Learner Mode မှာ ရှေ့ chapter ပြီးမှ ဖွင့်လို့ရမည်။ အကုန်ကြည့်ချင်ပါက Pro Mode သုံးပါ။",
+                      type: "warning",
+                    }),
                 }
               : { to: `/learning/${journey?.id}/${chapter.id}` };
 
@@ -159,7 +152,7 @@ function ChapterCardsGrid({
                     : "border-white/10 cursor-pointer hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),14px_20px_36px_-10px_rgba(0,0,0,0.8)] active:scale-[0.98]"
                 }`}
               >
-                {/* Lock Overlay */}
+                {/* Lock Overlay (Learner Mode သီးသန့်) */}
                 {isLocked && (
                   <div className="absolute inset-0 z-30 bg-[#0a0a0b]/75 backdrop-blur-[1px] flex flex-col items-center justify-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center mb-1 border border-white/10">
@@ -168,50 +161,39 @@ function ChapterCardsGrid({
                   </div>
                 )}
 
-                {/* Header */}
+                {/* Card Header */}
                 <div className="w-full pt-5 sm:pt-6 pr-2.5 sm:pr-4 flex items-center justify-between">
                   <div
                     className="w-[62%] h-10 sm:h-12 rounded-r-full flex items-center justify-center shadow-lg shrink-0"
                     style={{ backgroundColor: cardColor }}
                   >
-                    {isPro ? (
-                      <div className="text-white">
-                        {/* ★ 18 → 28 */}
-                        <RenderIcon
-                          iconKey={iconKey}
-                          map={boardIconMap}
-                          size={28}
-                        />
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center leading-none text-white">
-                        <span className="font-black text-lg sm:text-2xl">
-                          {chapterBadge}
-                        </span>
-                        <span className="font-bold text-[7px] sm:text-[9px] tracking-[0.25em] pl-[0.25em] mt-0.5">
-                          STEP
-                        </span>
-                      </div>
-                    )}
+                    <div className="text-white">
+                      <RenderIcon
+                        iconKey={iconKey}
+                        map={boardIconMap}
+                        size={28}
+                      />
+                    </div>
                   </div>
 
-                  <div className="shrink-0 min-w-[32px] min-h-[32px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center">
-                    {!isPro && !isLocked && (
-                      <CircularProgress
-                        percentage={progress}
-                        color={cardColor}
-                        size={32}
-                      />
-                    )}
-                    {!isPro && isLocked && (
-                      <div className="w-[32px] h-[32px] sm:w-[38px] sm:h-[38px] rounded-full bg-[#1e2329] border border-white/10 flex items-center justify-center shadow-md">
-                        <Lock size={14} className="text-gray-500" />
-                      </div>
-                    )}
-                  </div>
+                  {!isPro && (
+                    <div className="shrink-0 min-w-[32px] min-h-[32px] sm:min-w-[38px] sm:min-h-[38px] flex items-center justify-center">
+                      {!isLocked ? (
+                        <CircularProgress
+                          percentage={progress}
+                          color={cardColor}
+                          size={32}
+                        />
+                      ) : (
+                        <div className="w-[32px] h-[32px] sm:w-[38px] sm:h-[38px] rounded-full bg-[#1e2329] border border-white/10 flex items-center justify-center shadow-md">
+                          <Lock size={14} className="text-gray-500" />
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {/* Body */}
+                {/* Card Body */}
                 <div className="px-3 sm:px-5 pt-3 sm:pt-4 pb-2 flex-1 flex flex-col items-center text-center">
                   <h3
                     className="font-extrabold uppercase text-[11px] sm:text-sm tracking-wide leading-snug line-clamp-2 mb-1.5"
@@ -220,7 +202,6 @@ function ChapterCardsGrid({
                     {chapter.title || `Chapter ${index + 1}`}
                   </h3>
 
-                  {/* ★ mobile 2 ကြောင်း၊ sm+ 3 ကြောင်း — ကျန်တာ ဖြတ်ပြီး ... ပြ */}
                   {chapter.desc && (
                     <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed line-clamp-2 sm:line-clamp-3 mb-2">
                       {chapter.desc}
@@ -239,7 +220,7 @@ function ChapterCardsGrid({
                   </div>
                 </div>
 
-                {/* ★ Bottom tab — button မဟုတ်တော့ဘူး (card တစ်ခုလုံးက နှိပ်ရမယ့်နေရာ) */}
+                {/* Card Bottom Tag */}
                 <div className="w-full flex justify-center pt-1">
                   <div
                     className="w-[52%] h-6 sm:h-7 rounded-t-xl flex items-center justify-center transition-all group-hover:brightness-110"
@@ -249,13 +230,9 @@ function ChapterCardsGrid({
                         : cardColor,
                     }}
                   >
-                    {!isLocked && (
-                      <Play
-                        size={11}
-                        fill="currentColor"
-                        className="text-white"
-                      />
-                    )}
+                    <span className="font-extrabold text-[10px] sm:text-xs text-white uppercase tracking-wider whitespace-nowrap">
+                      Chapter {chapterBadge}
+                    </span>
                   </div>
                 </div>
               </CardTag>

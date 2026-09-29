@@ -2,7 +2,7 @@ import { useFetch } from "../../hooks/useFetch";
 import { getJourneys } from "../../api/journeysApi";
 
 import LearningHeader from "./components/LearningHeader";
-import JourneyCardsGrid from "./components/JourneyCardsGrid";
+import JourneyCardsGrid from "./Journeys/JourneyCardsGrid";
 
 function Learning() {
   const { data: journeys, loading, error } = useFetch(getJourneys);

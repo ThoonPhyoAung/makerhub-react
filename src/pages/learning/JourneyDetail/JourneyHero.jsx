@@ -15,6 +15,7 @@ import {
   Star,
 } from "lucide-react";
 import { boardIconMap, RenderIcon } from "../../../utils/iconMaps";
+import LearningBreadcrumb from "../components/LearningBreadcrumb";
 
 function JourneyHero({ journey }) {
   if (!journey) return null;
@@ -73,26 +74,12 @@ function JourneyHero({ journey }) {
   return (
     <>
       {/* 📍 1. Sticky Sub-Nav Bar (Compact) */}
-      <div
-        style={{ backgroundColor: "#1C2128" }}
-        className="sticky top-[64px] z-30 w-full bg-bg/95 backdrop-blur-md border-b border-white/10 py-2.5"
-      >
-        <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 text-xs">
-          <div className="flex items-center gap-1.5 truncate text-text-muted">
-            <Link
-              to="/learning"
-              className="hover:text-text transition-colors duration-200 font-medium"
-            >
-              Learning
-            </Link>
-            <ChevronRight
-              size={13}
-              className="text-text-muted/50 flex-shrink-0"
-            />
-            <span className="text-text font-semibold truncate">{title}</span>
-          </div>
-        </div>
-      </div>
+      <LearningBreadcrumb
+        items={[
+          { label: "Learning", path: "/learning" },
+          { label: journey.title },
+        ]}
+      />
 
       {/* 🚀 2. Main Hero Section (Reduced Height) */}
       <div className="relative w-full bg-bg-elevated/30 border-b border-white/5 py-4 sm:py-6 overflow-hidden">
