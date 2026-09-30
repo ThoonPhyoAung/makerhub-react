@@ -36,6 +36,12 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
   const isPro = userMode === "pro";
   const activeColor = journey?.color || "#10b981";
 
+  const [language] = useState(() => localStorage.getItem("lang") || "en");
+  const t = (field) => {
+    if (typeof field === "string") return field;
+    return field?.[language] ?? field?.en ?? "";
+  };
+
   // 4. API + LocalStorage ဖြင့် Completed ဖြစ်မဖြစ် စစ်ဆေးသည့် Helper Function
   const checkIsCompleted = (lessonItem) => {
     if (!lessonItem) return false;
@@ -63,9 +69,9 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
   const filteredLessons = useMemo(() => {
     if (!isPro || !searchQuery.trim()) return lessons;
     return lessons.filter((lesson) =>
-      (lesson.title || "").toLowerCase().includes(searchQuery.toLowerCase()),
+      t(lesson.title).toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [lessons, isPro, searchQuery]);
+  }, [lessons, isPro, searchQuery, language]);
 
   return (
     <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
@@ -196,7 +202,7 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                   {lesson.coverImage ? (
                     <img
                       src={lesson.coverImage}
-                      alt={lesson.title}
+                      alt={t(lesson.title)}
                       referrerPolicy="no-referrer"
                       className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
@@ -234,7 +240,7 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                       className="text-xs sm:text-base font-bold leading-snug line-clamp-2 tracking-tight"
                       style={{ color: activeColor }}
                     >
-                      {lesson.title || `Lesson ${lessonNumber}`}
+                      {t(lesson.title) || `Lesson ${lessonNumber}`}
                     </h4>
 
                     <div
@@ -245,7 +251,7 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                     {/* Description */}
                     {lesson.description && (
                       <p className="text-gray-300 text-[10px] sm:text-xs leading-relaxed line-clamp-2 opacity-90">
-                        {lesson.description}
+                        {t(lesson.description)}
                       </p>
                     )}
                   </div>

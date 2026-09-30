@@ -49,10 +49,9 @@ export const lessons = [
     title: "ESP32-CAM Live Simulation",
     xpReward: 100,
     // ESP32 အတွက် Velxio Simulator သုံးမည်
-    simulator: {
-      type: "velxio",
-      id: "01f5582b-c199-45e9-aab4-d5bca2333160",
-      shareUrl: "https://velxio.dev/thoonphyo141/esp32-blink/",
+     simulator: {
+      type: "wokwi",
+      id: "476144724285786113",
     },
     content:
       "ESP32-CAM စမ်းသပ်ရန် Velxio Live Simulator ဖြစ်ပါတယ်။ အောက်ပါ Simulator တွင် တိုက်ရိုက် စမ်းသပ်နိုင်ပါတယ်။",
