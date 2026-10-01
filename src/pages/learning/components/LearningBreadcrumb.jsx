@@ -1,6 +1,6 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { ChevronRight, Zap, CheckCircle2, Globe } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronRight, Zap, CheckCircle2, Globe, ArrowLeft } from "lucide-react";
 
 function LearningBreadcrumb({
   items = [],
@@ -10,13 +10,38 @@ function LearningBreadcrumb({
   onToggleLanguage,
   isPro = localStorage.getItem("userMode") === "pro" || false,
 }) {
+  const navigate = useNavigate();
   if (!items.length) return null;
 
+  const parentItem = items.length > 1 ? items[items.length - 2] : null;
+
   return (
-    <div className="sticky top-[64px] z-30 w-full bg-[#1C2128] border-b border-white/10 py-2.5">
-      <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-4 text-xs">
-        {/* 📍 ဘယ်ဘက်ခြမ်း: Breadcrumb Links */}
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+    <div className="sticky top-[56px] sm:top-[64px] z-30 w-full bg-[#1C2128] border-b border-white/10 py-2 sm:py-2.5">
+      <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 text-xs">
+        
+        {/* 📱 1. MOBILE ONLY: Back Button */}
+        <div className="flex md:hidden items-center min-w-0">
+          {parentItem?.path ? (
+            <Link
+              to={parentItem.path}
+              className="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium py-1 text-xs"
+            >
+              <ArrowLeft size={16} />
+              <span>Back</span>
+            </Link>
+          ) : (
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium py-1 text-xs"
+            >
+              <ArrowLeft size={16} />
+              <span>Back</span>
+            </button>
+          )}
+        </div>
+
+        {/* 💻 2. DESKTOP ONLY: Full Path */}
+        <div className="hidden md:flex items-center gap-1.5 overflow-x-auto py-0.5">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
 
@@ -41,38 +66,38 @@ function LearningBreadcrumb({
           })}
         </div>
 
-        {/* 🚀 ညာဘက်ခြမ်း: XP, Completed Badge & Language Toggle */}
-        <div className="flex items-center gap-2 shrink-0">
-          {/* Pro မဟုတ်မှသာ XP နဲ့ Completed Badge များကို ပြမည် */}
+        {/* 🚀 3. EVERY SCREEN (XP, Completed & Language Toggle) */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {!isPro && (
             <>
               {/* XP Badge */}
               {xp > 0 && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[11px]">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] sm:text-[11px]">
                   <Zap size={11} className="fill-amber-400" /> +{xp} XP
                 </span>
               )}
 
-              {/* Completed Badge */}
+              {/* Completed Badge (Mobile, Tablet, Desktop အားလုံးမှာ ပေါ်မည်) */}
               {isCompleted && (
-                <span className="hidden sm:flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[11px]">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] sm:text-[11px]">
                   <CheckCircle2 size={11} /> Completed
                 </span>
               )}
             </>
           )}
 
-          {/* Language Toggle Button (Pro ရော Normal ပါ မြင်ရမည်) */}
+          {/* Language Toggle Button */}
           {onToggleLanguage && (
             <button
               onClick={onToggleLanguage}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 font-semibold text-[11px] hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 font-semibold text-[10px] sm:text-[11px] hover:bg-white/10 transition-colors"
             >
               <Globe size={11} />
-              {language === "en" ? "မြန်မာ" : "English"}
+              <span>{language === "en" ? "မြန်မာ" : "English"}</span>
             </button>
           )}
         </div>
+
       </div>
     </div>
   );
