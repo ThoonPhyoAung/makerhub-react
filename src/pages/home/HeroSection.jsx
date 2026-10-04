@@ -74,7 +74,7 @@ function HeroSection() {
           {/* Buttons */}
           <div className="flex flex-wrap gap-3 mb-12">
             <Link
-              to="/learning/arduino"
+              to="/learning/"
               className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-extrabold text-sm px-6 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(34,197,94,0.3)] transition-all"
             >
               Start Learning <ArrowRight size={16} />

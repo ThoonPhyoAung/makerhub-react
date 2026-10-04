@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { useFetch } from "../../../hooks/useFetch";
 import { getJourneyById } from "../../../api/journeysApi";
 import { getLessonsByChapterId } from "../../../api/lessonsApi";
@@ -10,7 +11,21 @@ import LessonCardsGrid from "./LessonCardsGrid";
 function ChapterDetail() {
   const { journeyId, chapterId } = useParams();
 
-  // 1. Fetch Journey Detail (To get Chapter Metadata & Board Info)
+  // 📍 1. Redux Store မှ Active User ကို ယူခြင်း
+  const activeUser = useSelector((state) => state.auth.user);
+
+  // 📍 2. Global Language State & Toggle
+  const [language, setLanguage] = useState(
+    () => localStorage.getItem("lang") || "en",
+  );
+
+  const toggleLanguage = () => {
+    const nextLang = language === "en" ? "mm" : "en";
+    setLanguage(nextLang);
+    localStorage.setItem("lang", nextLang);
+  };
+
+  // 📍 3. Fetch Journey Details
   const fetchJourney = useCallback(
     () => getJourneyById(journeyId),
     [journeyId],
@@ -21,7 +36,7 @@ function ChapterDetail() {
     error: journeyError,
   } = useFetch(fetchJourney);
 
-  // 2. Fetch Lessons for this specific Chapter from API
+  // 📍 4. Fetch Lessons for this Chapter
   const fetchLessons = useCallback(
     () => getLessonsByChapterId(chapterId),
     [chapterId],
@@ -51,13 +66,15 @@ function ChapterDetail() {
     );
   }
 
-  // Current Chapter Metadata
   const currentChapter = journey?.chapters?.find(
     (ch) => String(ch.id) === String(chapterId),
   ) || {
     id: chapterId,
-    title: "Chapter Modules",
-    desc: "Explore hands-on hardware modules.",
+    title: { en: "Chapter Modules", mm: "Chapter သင်ခန်းစာများ" },
+    desc: {
+      en: "Explore hands-on hardware modules.",
+      mm: "လက်တွေ့ စမ်းသပ်လေ့လာနိုင်သော Module များကို စတင်လိုက်ပါ။",
+    },
   };
 
   const lessons = Array.isArray(lessonsData) ? lessonsData : [];
@@ -69,14 +86,19 @@ function ChapterDetail() {
         journey={journey}
         chapter={currentChapter}
         lessons={lessons}
+        activeUser={activeUser}
+        language={language}
+        onToggleLanguage={toggleLanguage}
       />
 
-      {/* 2. Module Cards Grid with Learner/Pro Modes */}
+      {/* 2. Module Cards Grid */}
       <div id="modulesSection">
         <LessonCardsGrid
           journey={journey}
           chapter={currentChapter}
           lessons={lessons}
+          activeUser={activeUser}
+          language={language}
         />
       </div>
     </div>

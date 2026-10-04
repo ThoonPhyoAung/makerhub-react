@@ -1,6 +1,13 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ChevronRight, Zap, CheckCircle2, Globe, ArrowLeft } from "lucide-react";
+import { useSelector } from "react-redux";
+import {
+  ChevronRight,
+  Zap,
+  CheckCircle2,
+  Globe,
+  ArrowLeft,
+} from "lucide-react";
 
 function LearningBreadcrumb({
   items = [],
@@ -8,9 +15,13 @@ function LearningBreadcrumb({
   isCompleted = false,
   language = "en",
   onToggleLanguage,
-  isPro = localStorage.getItem("userMode") === "pro" || false,
 }) {
   const navigate = useNavigate();
+  // Redux မှ Active User Data ကို ယူသုံးခြင်း
+  const user = useSelector((state) => state.auth.user);
+
+  const isPro = localStorage.getItem("userMode") === "pro" || false;
+
   if (!items.length) return null;
 
   const parentItem = items.length > 1 ? items[items.length - 2] : null;
@@ -18,7 +29,6 @@ function LearningBreadcrumb({
   return (
     <div className="sticky top-[56px] sm:top-[64px] z-30 w-full bg-[#1C2128] border-b border-white/10 py-2 sm:py-2.5">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 text-xs">
-        
         {/* 📱 1. MOBILE ONLY: Back Button */}
         <div className="flex md:hidden items-center min-w-0">
           {parentItem?.path ? (
@@ -77,7 +87,7 @@ function LearningBreadcrumb({
                 </span>
               )}
 
-              {/* Completed Badge (Mobile, Tablet, Desktop အားလုံးမှာ ပေါ်မည်) */}
+              {/* Completed Badge */}
               {isCompleted && (
                 <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] sm:text-[11px]">
                   <CheckCircle2 size={11} /> Completed
@@ -97,7 +107,6 @@ function LearningBreadcrumb({
             </button>
           )}
         </div>
-
       </div>
     </div>
   );

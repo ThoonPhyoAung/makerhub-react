@@ -1,16 +1,80 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import { Lock, Check, Search, BookOpen, Clock } from "lucide-react";
 import { boardIconMap, RenderIcon } from "../../../utils/iconMaps";
 import { Link } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
 import LearnerProToggle from "../components/LearnerProToggle";
 
-function CircularProgress({ percentage = 0, color = "#f97316", size = 34 }) {
+// Helper: Extract safe Lesson ID
+const getLessonId = (l) => {
+  if (!l) return "";
+  if (typeof l === "string" || typeof l === "number") return String(l);
+  return String(l.id || l._id || l.lessonId || l.lesson_id || "");
+};
+
+// Helper: Extract completed sets
+const getCompletedSets = (activeUser, journeyId) => {
+  const completedLessonSet = new Set();
+  const completedChapterSet = new Set();
+
+  if (!activeUser) return { completedLessonSet, completedChapterSet };
+
+  const user =
+    activeUser.user || activeUser.profile || activeUser.data || activeUser;
+
+  const addItems = (arr, set) => {
+    if (!Array.isArray(arr)) return;
+    arr.forEach((item) => {
+      if (!item) return;
+      if (typeof item === "string" || typeof item === "number") {
+        set.add(String(item));
+      } else if (typeof item === "object" && item.id != null) {
+        set.add(String(item.id));
+      }
+    });
+  };
+
+  addItems(user.completedLessons, completedLessonSet);
+  addItems(user.completedChapters, completedChapterSet);
+
+  if (user.progress && typeof user.progress === "object") {
+    const jProg = user.progress[journeyId] || user.progress;
+    if (jProg) {
+      addItems(jProg.completedLessons || jProg.lessons, completedLessonSet);
+      addItems(jProg.completedChapters || jProg.chapters, completedChapterSet);
+    }
+  }
+
+  return { completedLessonSet, completedChapterSet };
+};
+
+// Helper: Format total duration
+const formatChapterDuration = (chapterLessons = []) => {
+  if (!Array.isArray(chapterLessons) || chapterLessons.length === 0)
+    return "0 min";
+
+  const totalMins = chapterLessons.reduce((sum, lesson) => {
+    const d = parseInt(lesson?.durationMin || 0, 10);
+    return sum + (isNaN(d) ? 0 : d);
+  }, 0);
+
+  if (totalMins <= 0) return "0 min";
+  if (totalMins < 60) return `${totalMins} mins`;
+
+  const hrs = Math.floor(totalMins / 60);
+  const mins = totalMins % 60;
+  return mins > 0 ? `${hrs}h ${mins}m` : `${hrs} hours`;
+};
+
+// Circular Progress Component
+function CircularProgress({ percentage = 0, color = "#10b981", size = 34 }) {
   const strokeWidth = 3;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  const isCompleted = percentage >= 100;
+  const validPercentage = Math.min(Math.max(Number(percentage) || 0, 0), 100);
+  const strokeDashoffset =
+    circumference - (validPercentage / 100) * circumference;
+  const isCompleted = validPercentage >= 100;
 
   return (
     <div
@@ -43,7 +107,9 @@ function CircularProgress({ percentage = 0, color = "#f97316", size = 34 }) {
         {isCompleted ? (
           <Check size={11} strokeWidth={3.5} className="text-green-500" />
         ) : (
-          <span className="text-[8px] font-bold text-white">{percentage}%</span>
+          <span className="text-[8px] font-bold text-white">
+            {Math.round(validPercentage)}%
+          </span>
         )}
       </div>
     </div>
@@ -53,42 +119,147 @@ function CircularProgress({ percentage = 0, color = "#f97316", size = 34 }) {
 function ChapterCardsGrid({
   journey,
   chapters = [],
+  journeyLessons = [],
   primaryColor = "#10b981",
+  activeUser,
+  language = "en",
 }) {
-  const showAlert = useAlert();
+  const alertContext = useAlert();
+  const showAlert =
+    typeof alertContext === "function"
+      ? alertContext
+      : alertContext?.showAlert || (({ message }) => window.alert(message));
 
-  // 💡 localStorage မှ Mode ကို ဖတ်ယူပြီး ရွေးချယ်ထားသော Mode ကို သိမ်းဆည်းပါမည်
-  const [userMode, setUserMode] = useState(() => {
-    return localStorage.getItem("userMode") || "learner";
-  });
+  const [userMode, setUserMode] = useState(
+    () => localStorage.getItem("userMode") || "learner",
+  );
   const [searchQuery, setSearchQuery] = useState("");
 
   const isPro = userMode === "pro";
   const activeColor = journey?.color || primaryColor;
 
+  // Safe border color for search input
+  const safeBorderColor =
+    typeof activeColor === "string" &&
+    activeColor.startsWith("#") &&
+    activeColor.length === 7
+      ? `${activeColor}40`
+      : activeColor;
+
+  // Translation Helper
+  const t = (field) => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    return field?.[language] ?? field?.en ?? field?.mm ?? "";
+  };
+
+  // Handle Mode Change
   const handleModeChange = (newMode) => {
     setUserMode(newMode);
     localStorage.setItem("userMode", newMode);
     setSearchQuery("");
   };
 
-  const filteredChapters = useMemo(() => {
-    if (!isPro || !searchQuery.trim()) return chapters;
-    return chapters.filter((chapter) =>
-      (chapter.title || "").toLowerCase().includes(searchQuery.toLowerCase()),
+  // 1. Sort chapters by 'order' or original array sequence
+  const sortedChapters = [...chapters].sort((a, b) => {
+    const orderA = a.order ?? 999;
+    const orderB = b.order ?? 999;
+    return orderA - orderB;
+  });
+
+  // 2. add clear chapter numbers to each chapter based on sorted order
+  const indexedChapters = sortedChapters.map((chapter, index) => ({
+    ...chapter,
+    chapterNumber: chapter.order || index + 1,
+  }));
+
+  // 3. Filter for search if in Pro mode
+  const displayedChapters = indexedChapters.filter((chapter) => {
+    if (!isPro || !searchQuery.trim()) return true;
+    return t(chapter.title || chapter.name)
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase());
+  });
+
+  // 4. Get completed sets for the active user
+  const { completedLessonSet, completedChapterSet } = getCompletedSets(
+    activeUser,
+    journey?.id,
+  );
+
+  const getChapterProgressData = (chapter) => {
+    if (!chapter)
+      return {
+        totalLessons: 0,
+        completedCount: 0,
+        progress: 0,
+        isCompleted: false,
+      };
+
+    const chId = String(chapter.id || chapter._id || "");
+    const chapterLessons = journeyLessons.filter(
+      (l) => String(l.chapterId) === chId,
     );
-  }, [chapters, isPro, searchQuery]);
+
+    const isExplicitlyCompleted =
+      (chId && completedChapterSet.has(chId)) ||
+      Boolean(chapter.isCompleted) ||
+      Boolean(chapter.completed) ||
+      chapter.status === "completed";
+
+    const totalLessons =
+      chapterLessons.length > 0
+        ? chapterLessons.length
+        : chapter.totalLessons || chapter.lessonsCount || 0;
+
+    if (isExplicitlyCompleted) {
+      return {
+        totalLessons,
+        completedCount: totalLessons,
+        progress: 100,
+        isCompleted: true,
+      };
+    }
+
+    if (chapterLessons.length === 0) {
+      return {
+        totalLessons: 0,
+        completedCount: 0,
+        progress: 0,
+        isCompleted: false,
+      };
+    }
+
+    let completedCount = 0;
+    chapterLessons.forEach((l) => {
+      const lId = getLessonId(l);
+      if (lId && completedLessonSet.has(lId)) {
+        completedCount++;
+      }
+    });
+
+    const progress =
+      totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0;
+    const isCompleted =
+      (progress >= 100 || completedCount >= totalLessons) && totalLessons > 0;
+
+    return {
+      totalLessons,
+      completedCount,
+      progress: Math.min(progress, 100),
+      isCompleted,
+    };
+  };
 
   return (
     <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
-      {/* Mode Switcher & Search Bar */}
       <div className="w-full max-w-6xl flex flex-col items-center gap-4 mb-8 z-20">
         <LearnerProToggle
           mode={userMode}
           onChange={handleModeChange}
           activeColor={activeColor}
         />
-
+        {/* search bar for pro */}
         {isPro && (
           <div className="relative w-full max-w-md">
             <Search
@@ -101,34 +272,51 @@ function ChapterCardsGrid({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-10 pr-4 py-2 bg-[#121418] border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none transition-all shadow-inner"
-              style={{ borderColor: `${activeColor}40` }}
+              style={{ borderColor: safeBorderColor }}
             />
           </div>
         )}
       </div>
 
-      {/* Chapters Grid */}
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 justify-items-center">
-        {filteredChapters.length === 0 ? (
+        {displayedChapters.length === 0 ? (
           <div className="col-span-full py-12 text-center text-gray-500 text-xs sm:text-sm">
             No chapters found matching "{searchQuery}"
           </div>
         ) : (
-          filteredChapters.map((chapter, index) => {
-            const chapterBadge = `0${index + 1}`.slice(-2);
-            const isLocked = isPro ? false : index !== 0;
+          displayedChapters.map((chapter) => {
+            const chapterNum = chapter.chapterNumber;
+            const chapterBadge = `0${chapterNum}`.slice(-2);
+            const chId = String(chapter.id || chapter._id || "");
 
-            const progress = chapter.progress ?? 0;
+            const chapterLessons = journeyLessons.filter(
+              (l) => String(l.chapterId) === chId,
+            );
+
+            const { totalLessons, progress } = getChapterProgressData(chapter);
+
+            // Unlock logic based on the sorted order position
+            const prevChapter =
+              chapterNum > 1
+                ? indexedChapters.find(
+                    (c) => c.chapterNumber === chapterNum - 1,
+                  )
+                : null;
+            const prevChapterData = prevChapter
+              ? getChapterProgressData(prevChapter)
+              : null;
+            const isPrevCompleted = prevChapterData
+              ? prevChapterData.isCompleted
+              : true;
+
+            const isLocked = isPro
+              ? false
+              : chapterNum !== 1 && !isPrevCompleted;
+
             const cardColor = chapter.color || activeColor;
             const iconKey =
               chapter.iconKey || journey?.iconKey || journey?.id || "code";
-
-            const totalLessons =
-              chapter.totalLessons ||
-              chapter.lessonsCount ||
-              chapter.lessons?.length ||
-              0;
-            const duration = chapter.duration || chapter.time || "30m";
+            const duration = formatChapterDuration(chapterLessons);
 
             const CardTag = isLocked ? "div" : Link;
             const cardProps = isLocked
@@ -136,15 +324,17 @@ function ChapterCardsGrid({
                   onClick: () =>
                     showAlert({
                       message:
-                        "Learner Mode မှာ ရှေ့ chapter ပြီးမှ ဖွင့်လို့ရမည်။ အကုန်ကြည့်ချင်ပါက Pro Mode သုံးပါ။",
+                        language === "mm"
+                          ? "Learner Mode မှာ ရှေ့ chapter ပြီးမှ ဖွင့်လို့ရပါမည်။ အကုန်ကြည့်ချင်ပါက Pro Mode သုံးပါ။"
+                          : "In Learner Mode, complete the previous chapter to unlock this one. Switch to Pro Mode to view all.",
                       type: "warning",
                     }),
                 }
-              : { to: `/learning/${journey?.id}/${chapter.id}` };
+              : { to: `/learning/${journey?.id || journey?._id}/${chId}` };
 
             return (
               <CardTag
-                key={chapter.id || chapter._id || index}
+                key={chId || chapterNum}
                 {...cardProps}
                 className={`group relative z-10 w-full max-w-[170px] sm:max-w-[210px] min-h-[230px] sm:min-h-[270px] bg-[#121418] rounded-[20px] sm:rounded-3xl border flex flex-col overflow-hidden transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),10px_14px_28px_-10px_rgba(0,0,0,0.7)] ${
                   isLocked
@@ -152,7 +342,6 @@ function ChapterCardsGrid({
                     : "border-white/10 cursor-pointer hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),14px_20px_36px_-10px_rgba(0,0,0,0.8)] active:scale-[0.98]"
                 }`}
               >
-                {/* Lock Overlay (Learner Mode သီးသန့်) */}
                 {isLocked && (
                   <div className="absolute inset-0 z-30 bg-[#0a0a0b]/75 backdrop-blur-[1px] flex flex-col items-center justify-center">
                     <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center mb-1 border border-white/10">
@@ -161,8 +350,7 @@ function ChapterCardsGrid({
                   </div>
                 )}
 
-                {/* Card Header */}
-                <div className="w-full pt-5 sm:pt-6 pr-2.5 sm:pr-4 flex items-center justify-between">
+                <div className="w-full pt-7 sm:pt-8 pr-2.5 sm:pr-4 flex items-center justify-between">
                   <div
                     className="w-[62%] h-10 sm:h-12 rounded-r-full flex items-center justify-center shadow-lg shrink-0"
                     style={{ backgroundColor: cardColor }}
@@ -193,18 +381,18 @@ function ChapterCardsGrid({
                   )}
                 </div>
 
-                {/* Card Body */}
                 <div className="px-3 sm:px-5 pt-3 sm:pt-4 pb-2 flex-1 flex flex-col items-center text-center">
                   <h3
                     className="font-extrabold uppercase text-[11px] sm:text-sm tracking-wide leading-snug line-clamp-2 mb-1.5"
                     style={{ color: cardColor }}
                   >
-                    {chapter.title || `Chapter ${index + 1}`}
+                    {t(chapter.title || chapter.name) ||
+                      `Chapter ${chapterNum}`}
                   </h3>
 
-                  {chapter.desc && (
+                  {(chapter.desc || chapter.description) && (
                     <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed line-clamp-2 sm:line-clamp-3 mb-2">
-                      {chapter.desc}
+                      {t(chapter.desc || chapter.description)}
                     </p>
                   )}
 
@@ -220,7 +408,6 @@ function ChapterCardsGrid({
                   </div>
                 </div>
 
-                {/* Card Bottom Tag */}
                 <div className="w-full flex justify-center pt-1">
                   <div
                     className="w-[52%] h-6 sm:h-7 rounded-t-xl flex items-center justify-center transition-all group-hover:brightness-110"

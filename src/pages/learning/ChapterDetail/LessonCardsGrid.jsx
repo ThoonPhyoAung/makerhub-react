@@ -4,30 +4,28 @@ import { Link } from "react-router-dom";
 import { useAlert } from "../../../context/AlertContext";
 import LearnerProToggle from "../components/LearnerProToggle";
 
-function LessonCardsGrid({ journey, chapter, lessons = [] }) {
-  const showAlert = useAlert();
+// Lesson တစ်ခုအတွင်းရှိ Question များ၏ XP စုစုပေါင်းကို တွက်ချက်ခြင်း
+const getLessonAllQuestionsXp = (lesson) => {
+  if (!lesson) return 0;
+  if (Array.isArray(lesson.questions) && lesson.questions.length > 0) {
+    return lesson.questions.reduce((sum, q) => sum + Number(q.xp || 0), 0);
+  }
+  return lesson.xp || 0;
+};
 
-  // 1. localStorage မှ Active User Data ရယူခြင်း
-  const activeUser = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("makerhub_active_user") || "{}");
-    } catch {
-      return {};
-    }
-  }, []);
+function LessonCardsGrid({
+  journey,
+  chapter,
+  lessons = [],
+  activeUser,
+  language = "en",
+}) {
+  const alertContext = useAlert();
+  const showAlert =
+    typeof alertContext === "function"
+      ? alertContext
+      : alertContext?.showAlert || (({ message }) => window.alert(message));
 
-  const currentUserId = activeUser?.id; // "usr_1788836452174"
-
-  // 2. LocalStorage completedLessonIds (Fallback အဖြစ်ထားရှိခြင်း)
-  const localCompletedIds = useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("completedLessonIds") || "[]");
-    } catch {
-      return [];
-    }
-  }, []);
-
-  // 3. Mode Switcher State
   const [userMode, setUserMode] = useState(() => {
     return localStorage.getItem("userMode") || "learner";
   });
@@ -36,27 +34,36 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
   const isPro = userMode === "pro";
   const activeColor = journey?.color || "#10b981";
 
-  const [language] = useState(() => localStorage.getItem("lang") || "en");
   const t = (field) => {
+    if (!field) return "";
     if (typeof field === "string") return field;
-    return field?.[language] ?? field?.en ?? "";
+    return field?.[language] ?? field?.en ?? field?.mm ?? "";
   };
 
-  // 4. API + LocalStorage ဖြင့် Completed ဖြစ်မဖြစ် စစ်ဆေးသည့် Helper Function
+  // Sorting lessons by order before logic checks
+  const sortedLessons = useMemo(() => {
+    return [...lessons].sort((a, b) => {
+      const orderA = a.order ?? a.lessonNumber ?? 999;
+      const orderB = b.order ?? b.lessonNumber ?? 999;
+      return orderA - orderB;
+    });
+  }, [lessons]);
+
   const checkIsCompleted = (lessonItem) => {
     if (!lessonItem) return false;
-    const lessonId = lessonItem.id || lessonItem._id;
+    const lessonId = String(lessonItem.id || lessonItem._id || "");
 
-    // API မှ completedUserIds array ထဲတွင် User ID ပါမပါ စစ်ဆေးခြင်း
+    const userCompletedList = (activeUser?.completedLessons || []).map(String);
+    const isCompletedInRedux = userCompletedList.includes(lessonId);
+
+    const currentUserId = String(activeUser?.id || activeUser?._id || "");
     const isCompletedInApi =
       Array.isArray(lessonItem.completedUserIds) && currentUserId
-        ? lessonItem.completedUserIds.includes(currentUserId)
+        ? lessonItem.completedUserIds.map(String).includes(currentUserId)
         : false;
 
-    const isCompletedInLocal = localCompletedIds.includes(lessonId);
-
     return (
-      isCompletedInApi || isCompletedInLocal || Boolean(lessonItem.isCompleted)
+      isCompletedInRedux || isCompletedInApi || Boolean(lessonItem.isCompleted)
     );
   };
 
@@ -67,11 +74,11 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
   };
 
   const filteredLessons = useMemo(() => {
-    if (!isPro || !searchQuery.trim()) return lessons;
-    return lessons.filter((lesson) =>
+    if (!isPro || !searchQuery.trim()) return sortedLessons;
+    return sortedLessons.filter((lesson) =>
       t(lesson.title).toLowerCase().includes(searchQuery.toLowerCase()),
     );
-  }, [lessons, isPro, searchQuery, language]);
+  }, [sortedLessons, isPro, searchQuery, language]);
 
   return (
     <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
@@ -111,15 +118,13 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
           filteredLessons.map((lesson, index) => {
             const isCompleted = checkIsCompleted(lesson);
 
-            // ရှာဖွေမှုပြုလုပ်ထားပါက မူရင်း array index ကို ပြန်ရှာပါသည်
-            const originalIndex = lessons.findIndex(
+            const originalIndex = sortedLessons.findIndex(
               (l) => (l.id || l._id) === (lesson.id || lesson._id),
             );
             const actualIndex = originalIndex !== -1 ? originalIndex : index;
 
-            // Learner Flow: Order 1 (index 0) အမြဲပွင့်မည်၊ Order 2 မှစ၍ ရှေ့ Lesson ပြီးမှပွင့်မည်
             const prevLesson =
-              actualIndex > 0 ? lessons[actualIndex - 1] : null;
+              actualIndex > 0 ? sortedLessons[actualIndex - 1] : null;
             const isPrevCompleted = prevLesson
               ? checkIsCompleted(prevLesson)
               : true;
@@ -133,27 +138,30 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
               lesson.durationText ||
               lesson.duration ||
               `${lesson.durationMin || 10}m`;
-            const xpReward = lesson.xpReward || 20;
+            const xpReward =
+              getLessonAllQuestionsXp(lesson) || lesson.xpReward || 20;
 
             const CardTag = isLocked ? "div" : Link;
+            const lessonUrl = lesson.id || lesson._id || lesson.lessonUrlParam;
+
             const cardProps = isLocked
               ? {
                   onClick: () =>
                     showAlert({
                       message:
-                        "Learner Mode မှာ ရှေ့ lesson ပြီးမှ ဖွင့်လို့ရမည်။ အကုန်ကြည့်ချင်ပါက Pro Mode သုံးပါ။",
+                        language === "mm"
+                          ? "Learner Mode မှာ ရှေ့ lesson ပြီးမှ ဖွင့်လို့ရပါမည်။ အကုန်ကြည့်ချင်ပါက Pro Mode သုံးပါ။"
+                          : "In Learner Mode, complete previous lessons to unlock. Switch to Pro Mode to unlock all.",
                       type: "warning",
                     }),
                 }
               : {
-                  to: `/learning/${journey?.id || lesson.journeyId}/${
-                    chapter?.id || lesson.chapterId
-                  }/${lesson.id || lesson._id}`,
+                  to: `/learning/${journey?.id || lesson.journeyId}/${chapter?.id || lesson.chapterId}/${lessonUrl}`,
                 };
 
             return (
               <CardTag
-                key={lesson.id || lesson._id || index}
+                key={lessonUrl || index}
                 {...cardProps}
                 className={`group relative w-full min-w-0 bg-[#121418] rounded-2xl sm:rounded-3xl border p-2 sm:p-3 flex flex-col overflow-hidden transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)] ${
                   isLocked
@@ -175,9 +183,9 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                   </div>
                 )}
 
-                {/* 1. Cover Image With Badges */}
+                {/* 1. Cover Image With Badges & Tilt Animation */}
                 <div className="relative z-0 w-full aspect-[16/10] rounded-xl overflow-hidden border-2 border-white/10 bg-[#0a0c10] shadow-md transition-transform duration-500 sm:-rotate-1 sm:group-hover:rotate-0 shrink-0">
-                  {/* ⚡ XP Badge (Learner Mode တွင်သာ ပြသမည်) */}
+                  {/* ⚡ XP Badge */}
                   {!isPro && (
                     <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-amber-500/30 text-amber-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
                       <Zap
@@ -188,7 +196,7 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                     </div>
                   )}
 
-                  {/* ✅ Completed Status Overlay (Learner Mode + Done ဖြစ်မှသာ ပြသမည်) */}
+                  {/* ✅ Completed Status Overlay */}
                   {!isPro && isCompleted && (
                     <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
                       <CheckCircle2
@@ -249,9 +257,9 @@ function LessonCardsGrid({ journey, chapter, lessons = [] }) {
                     />
 
                     {/* Description */}
-                    {lesson.description && (
+                    {(lesson.description || lesson.desc) && (
                       <p className="text-gray-300 text-[10px] sm:text-xs leading-relaxed line-clamp-2 opacity-90">
-                        {t(lesson.description)}
+                        {t(lesson.description || lesson.desc)}
                       </p>
                     )}
                   </div>
