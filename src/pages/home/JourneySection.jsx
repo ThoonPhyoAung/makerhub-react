@@ -1,7 +1,7 @@
 import { useFetch } from "../../hooks/useFetch";
 import { getJourneys } from "../../api/journeysApi";
-import { getLessons } from "../../api/lessonsApi"; 
-import JourneyCardsGrid from "../Learning/Journeys/JourneyCardsGrid";
+import { getLessons } from "../../api/lessonsApi";
+import JourneyCardsGrid from "../learning/Journeys/JourneyCardsGrid";
 
 function JourneySection() {
   const {

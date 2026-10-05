@@ -1,8 +1,8 @@
 import { useFetch } from "../../hooks/useFetch";
 import { getJourneys } from "../../api/journeysApi";
-import { getLessons } from "../../api/lessonsApi"; 
-import LearningHeader from "../Learning/components/LearningHeader";
-import JourneyCardsGrid from "../Learning/Journeys/JourneyCardsGrid";
+import { getLessons } from "../../api/lessonsApi";
+import LearningHeader from "./components/LearningHeader";
+import JourneyCardsGrid from "./Journeys/JourneyCardsGrid";
 
 function Learning() {
   // 📍 1. Get Journeys Data
