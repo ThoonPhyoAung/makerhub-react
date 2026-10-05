@@ -163,7 +163,8 @@ function LessonCardsGrid({
               <CardTag
                 key={lessonUrl || index}
                 {...cardProps}
-                className={`group relative w-full min-w-0 bg-[#121418] rounded-2xl sm:rounded-3xl border p-2 sm:p-3 flex flex-col overflow-hidden transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)] ${
+                className={`group relative w-full min-w-0 rounded-2xl sm:rounded-2xl  flex flex-col overflow-hidden transition-all duration-300 outline-none  ${
+                  //focus-visible:ring-2 focus-visible:ring-white/40   shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)]
                   isLocked
                     ? "border-white/5 opacity-75 cursor-not-allowed"
                     : !isPro && isCompleted
@@ -183,8 +184,9 @@ function LessonCardsGrid({
                   </div>
                 )}
 
-                {/* 1. Cover Image With Badges & Tilt Animation */}
-                <div className="relative z-0 w-full aspect-[16/10] rounded-xl overflow-hidden border-2 border-white/10 bg-[#0a0c10] shadow-md transition-transform duration-500 sm:-rotate-1 sm:group-hover:rotate-0 shrink-0">
+                {/* 1. Cover Image With Badges & Tilt Animation === sm:-rotate-2 sm:group-hover:rotate-0           */}
+                <div className="relative z-0 w-full aspect-[16/10] rounded-t-2xl overflow-hidden shadow-md transition-transform duration-500 ease-out shrink-0 translate-y-3 group-hover:translate-y-0">
+                  {" "}
                   {/* ⚡ XP Badge */}
                   {!isPro && (
                     <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-amber-500/30 text-amber-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
@@ -195,7 +197,6 @@ function LessonCardsGrid({
                       <span>+{xpReward} XP</span>
                     </div>
                   )}
-
                   {/* ✅ Completed Status Overlay */}
                   {!isPro && isCompleted && (
                     <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
@@ -206,13 +207,12 @@ function LessonCardsGrid({
                       <span>Done</span>
                     </div>
                   )}
-
                   {lesson.coverImage ? (
                     <img
                       src={lesson.coverImage}
                       alt={t(lesson.title)}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-500 "
                     />
                   ) : (
                     <div
@@ -234,12 +234,12 @@ function LessonCardsGrid({
 
                 {/* 2. Folder-tab Panel */}
                 <div
-                  className="relative z-10 flex-1 -mt-3 sm:-mt-4 rounded-xl px-2.5 sm:px-3.5 pt-3.5 sm:pt-5 pb-2.5 flex flex-col justify-between"
+                  className="relative z-10 flex-1 -mt-3 sm:-mt-4 rounded-xl px-2.5 sm:px-3.5 pt-3.5 sm:pt-5 pb-2.5 flex flex-col justify-between border border-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)]"
                   style={{
                     backgroundColor: "#121418",
                     backgroundImage: `linear-gradient(${activeColor}1f, ${activeColor}1f)`,
                     clipPath:
-                      "polygon(0 0, 52% 0, calc(52% + 10px) 12px, 100% 12px, 100% 100%, 0 100%)",
+                      "polygon(0 0, 48% 0, calc(48% + 10px) 12px, 100.5% 12px, 100.5% 100%, 0 100%)",
                   }}
                 >
                   <div>
@@ -264,7 +264,7 @@ function LessonCardsGrid({
                     )}
                   </div>
 
-                  {/* Footer Meta Row */}
+                  {/* Footer Row */}
                   <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[9px] sm:text-[11px] text-gray-400">
                     <span className="flex items-center gap-1 shrink-0">
                       <Clock size={10} className="text-gray-400" />
