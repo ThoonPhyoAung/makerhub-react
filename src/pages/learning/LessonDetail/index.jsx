@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import {
@@ -63,23 +63,23 @@ function LessonDetailPage() {
   const isPro = userMode === "pro";
 
   // -------------------------------------------------------------
-  // Data Fetching Fix using useCallback
+  // Data Fetching Fix using useMemo (Stable Function References)
   // -------------------------------------------------------------
-  const fetchJourney = useCallback(
-    () => getJourneyById(journeyId),
+  const fetchJourney = useMemo(
+    () => () => getJourneyById(journeyId),
     [journeyId],
   );
 
-  const fetchLesson = useCallback(
-    () => getLessonBySlug(lessonSlug),
+  const fetchLesson = useMemo(
+    () => () => getLessonBySlug(lessonSlug),
     [lessonSlug],
   );
 
+  const fetchTotalLessons = useMemo(() => () => getLessons(), []);
+
   const { data: journey } = useFetch(fetchJourney);
   const { data: currentLesson, loading, error } = useFetch(fetchLesson);
-
-  // getLessons သည် Static Function ဖြစ်၍ useCallback Wrap လုပ်ရန် မလိုပါ
-  const { data: totalLessonsData } = useFetch(getLessons);
+  const { data: totalLessonsData } = useFetch(fetchTotalLessons);
 
   const journeyColor = journey?.color || "#10b981";
   const totalLessonsCount = Array.isArray(totalLessonsData)
@@ -145,34 +145,24 @@ function LessonDetailPage() {
       }))
     : [];
 
-  // ❌ အဟောင်း code
-  // useEffect(() => {
-  //   if (lessonSections.length > 0 && !activeSectionId) {
-  //     setActiveSectionId(lessonSections[0].id);
-  //   }
-  // }, [lessonSections, activeSectionId]);
-
-  // ✅ အသစ် ပြင်ဆင်ရန် code
   useEffect(() => {
     if (lessonSections.length === 0) return;
 
     const observerOptions = {
       root: null,
-      rootMargin: "-20% 0px -60% 0px", // Section ကို မျက်နှာပြင် အလယ်/အပေါ်နား ရောက်မှ Active ဖြစ်စေရန်
+      rootMargin: "-20% 0px -60% 0px",
       threshold: 0,
     };
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
-          // Section Element ၏ ID (e.g., "section-abc") မှ မူလ Section ID ကို ထုတ်ယူခြင်း
           const sectionId = entry.target.id.replace("section-", "");
           setActiveSectionId(sectionId);
         }
       });
     }, observerOptions);
 
-    // Lesson Section တိုင်းကို Observer ဖြင့် စောင့်ကြည့်ခြင်း
     lessonSections.forEach((section) => {
       const el = document.getElementById(`section-${section.id}`);
       if (el) observer.observe(el);

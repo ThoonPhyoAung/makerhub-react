@@ -12,7 +12,7 @@ import { AlertProvider } from "./context/AlertContext"; // named import — curl
 import LearningPage from "./pages/learning";
 import JourneyDetail from "./pages/learning/JourneyDetail";
 import ChapterDetailPage from "./pages/learning/ChapterDetail";
-import LessonDetailPage from "./pages/learning/LessonDetail";
+import LessonDetailPage from "./pages/learning/LessonDetail/index";
 
 //community
 import CommunityPage from "./pages/community/index";
