@@ -19,7 +19,7 @@ function LessonQuizModal({
   if (!isOpen) return null;
 
   const questions = currentLesson?.questions || [];
-  const q = questions[currentQuestionIndex];
+  const q = questions[currentQuestionIndex]; // this confirm which question have to question number 1 or question numb 2 or 3
   const qKey = q?.id || `q_${currentQuestionIndex}`;
   const isLast = currentQuestionIndex === questions.length - 1;
   const selectedOpt = quizAnswers[qKey];

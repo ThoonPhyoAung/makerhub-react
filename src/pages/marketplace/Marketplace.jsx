@@ -21,7 +21,7 @@ function Marketplace() {
     }
   }, [items]);
 
-  // Community Post ကနေ ရောက်လာရင် state ထဲက initialSearch ကို ယူပြီး Search Bar ထဲ ထည့်မည်
+  // Community Post and learning ကနေ ရောက်လာရင် state ထဲက initialSearch ကို ယူပြီး Search Bar ထဲ ထည့်မည်
   useEffect(() => {
     if (location.state?.initialSearch) {
       setSearchQuery(location.state.initialSearch);

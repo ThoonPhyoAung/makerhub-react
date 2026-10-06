@@ -78,10 +78,10 @@ function LessonSidebar({
                 {isAlreadyCompleted
                   ? "Quiz Completed"
                   : isPro
-                  ? "Pro Mode (Read Only)"
-                  : !activeUser
-                  ? "Login to Quiz"
-                  : "Verify & Quiz"}
+                    ? "Pro Mode (Read Only)"
+                    : !activeUser
+                      ? "Login to Quiz"
+                      : "Verify & Quiz"}
               </span>
               <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">
                 {currentLesson.questions.length}

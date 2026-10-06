@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+// import { useState, useEffect } from "react";
 import { Users, Cpu, ShoppingBag, Layers, Star, Loader2 } from "lucide-react";
 
 // API Hooks & Calls
@@ -6,77 +6,43 @@ import { useFetch } from "../../hooks/useFetch";
 import { getJourneys } from "../../api/journeysApi";
 import { getPosts } from "../../api/postsApi";
 import { getMarketplaceItems } from "../../api/marketplaceApi";
-import { getLessonsByJourneyId } from "../../api/lessonsApi";
+import { getLessons } from "../../api/lessonsApi"; //
 
-/**
- * 1. Journey တစ်ခုချင်းစီရဲ့ Lessons ကို useFetch ဖြင့် သီးသန့်ဆွဲယူပြီး
- *    First Lesson Completed User IDs များကို Parent ထံ ပို့ပေးမည့် Child Component
- */
-function JourneyUserTracker({ journeyId, onUsersFetched }) {
-  const { data: lessonsData } = useFetch(() =>
-    getLessonsByJourneyId(journeyId),
-  );
-
-  useEffect(() => {
-    if (lessonsData) {
-      const journeyLessons = Array.isArray(lessonsData)
-        ? lessonsData
-        : Array.isArray(lessonsData?.data)
-          ? lessonsData.data
-          : [];
-
-      const firstLesson = journeyLessons[0];
-      const userIds = firstLesson?.completedUserIds;
-
-      if (Array.isArray(userIds)) {
-        onUsersFetched(journeyId, userIds);
-      }
-    }
-  }, [lessonsData, journeyId, onUsersFetched]);
-
-  return null; // UI မှာ ဘာမှ ပြစရာမလိုပါ
-}
-
-/**
- * 2. Main StatsRibbon Component
- */
 function StatsRibbon({ customStats }) {
-  // Main APIs ခေါ်ယူခြင်း
+  // API များ ခေါ်ယူခြင်း
   const { data: journeys, loading: loadingJourneys } = useFetch(getJourneys);
   const { data: posts, loading: loadingPosts } = useFetch(getPosts);
   const { data: marketplaceItems, loading: loadingItems } =
     useFetch(getMarketplaceItems);
+  const { data: lessonsData, loading: loadingLessons } = useFetch(getLessons); // 👈 Lessons အားလုံးကို တစ်ကြိမ်တည်း ခေါ်ယူခြင်း
 
-  // Active Learners စာရင်းသိမ်းဆည်းရန် State
-  const [journeyUserMap, setJourneyUserMap] = useState({});
+  // Active Learners Unique Count ကို Lessons Data မှ တွက်ချက်ခြင်း
+  const activeLearnersCount = (() => {
+    const lessons = Array.isArray(lessonsData) ? lessonsData : [];
+    const activeUserSet = new Set(); // new Set()  will not count duplicate user IDs
 
-  // Child Component မှ User IDs များ ပို့ပေးလာပါက Map ထဲသိမ်းမည်
-  const handleUsersFetched = (journeyId, userIds) => {
-    setJourneyUserMap((prev) => {
-      // Data တူနေပါက re-render မဖြစ်အောင် စစ်ဆေးခြင်း
-      if (JSON.stringify(prev[journeyId]) === JSON.stringify(userIds)) {
-        return prev;
+    lessons.forEach((lesson) => {
+      if (Array.isArray(lesson.completedUserIds)) {
+        lesson.completedUserIds.forEach((id) => {
+          if (id) activeUserSet.add(String(id));
+        });
       }
-      return { ...prev, [journeyId]: userIds };
     });
-  };
 
-  // Active Learners Unique Count ကို တွက်ချက်ခြင်း
-  const activeUserSet = new Set();
-  Object.values(journeyUserMap).forEach((userIds) => {
-    userIds.forEach((id) => {
-      if (id) activeUserSet.add(String(id));
-    });
-  });
-  const activeLearnersCount = activeUserSet.size;
+    return activeUserSet.size;
+  })();
 
   // Stats Data များ ပြင်ဆင်ခြင်း
   const projectsCount = Array.isArray(posts) ? posts.length : 0;
+
+  // Marketplace Items Count နှင့် Journeys Count ကို စစ်ဆေးခြင်း
   const itemsCount = Array.isArray(marketplaceItems)
     ? marketplaceItems.length
     : 0;
+  // Journey Boards Counting
   const boardsCount = Array.isArray(journeys) ? journeys.length : 0;
 
+  // Dynamic icon and data for the stats ribbon
   const dynamicStats = [
     {
       id: "statLearners",
@@ -115,26 +81,19 @@ function StatsRibbon({ customStats }) {
     },
   ];
 
-  const stats = customStats || dynamicStats;
-  const isLoading = loadingJourneys || loadingPosts || loadingItems;
+  const stats = customStats || dynamicStats; // if customStats is provided, use it; otherwise, use dynamicStats
+  // Loading state for the stats ribbon
+  const isLoading =
+    loadingJourneys || loadingPosts || loadingItems || loadingLessons;
 
   return (
     <section className="py-3.5 bg-bg-elevated/80 backdrop-blur-md border-y border-border/60 relative z-10">
-      {/* Hidden Tracker Components: Journey တစ်ခုစီအတွက် useFetch ခေါ်ယူရန် */}
-      {Array.isArray(journeys) &&
-        journeys.map((journey) => (
-          <JourneyUserTracker
-            key={journey.id}
-            journeyId={journey.id}
-            onUsersFetched={handleUsersFetched}
-          />
-        ))}
-
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div
           className="flex items-center justify-between gap-6 sm:gap-8 overflow-x-auto no-scrollbar scroll-smooth py-1"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
         >
+          {/* looping each stat */}
           {stats.map((stat, index) => {
             const IconComponent = stat.icon;
 

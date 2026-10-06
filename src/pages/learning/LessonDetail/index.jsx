@@ -9,6 +9,8 @@ import {
   ExternalLink,
   Lock,
   LogIn,
+  Cpu,
+  Download,
 } from "lucide-react";
 
 import { useAlert } from "../../../context/AlertContext";
@@ -26,6 +28,7 @@ import LessonSidebar from "./components/LessonSidebar";
 import LessonQuizModal from "./components/LessonQuizModal";
 import ConfettiBurst from "./components/ConfettiBurst";
 
+// for YouTube embed URL extraction
 function getYouTubeEmbedUrl(url) {
   if (!url) return "";
   const regExp =
@@ -37,10 +40,12 @@ function getYouTubeEmbedUrl(url) {
 }
 
 function LessonDetailPage() {
+  // getting journeyId, chapterId, and lessonSlug from the URL
   const { journeyId, chapterId, lessonSlug } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch(); // Redux dispatch for updating user progress
 
+  // able to directly search at marketplace
   const handleMarketplaceSearch = (itemName) => {
     navigate("/marketplace", { state: { initialSearch: itemName } });
   };
@@ -130,6 +135,7 @@ function LessonDetailPage() {
     localStorage.setItem("lang", next);
   };
 
+  // change language of content by this function
   const t = (field) => {
     if (!field) return "";
     if (typeof field === "string") return field;
@@ -145,33 +151,46 @@ function LessonDetailPage() {
       }))
     : [];
 
+  // --- SCROLLSPY LOGIC (Window Scroll Event Based) ---
   useEffect(() => {
-    if (lessonSections.length === 0) return;
+    if (!currentLesson || lessonSections.length === 0) return;
 
-    const observerOptions = {
-      root: null,
-      rootMargin: "-20% 0px -60% 0px",
-      threshold: 0,
-    };
+    const handleScroll = () => {
+      // section- စာလုံးပါသော id ရှိသည့် section element များကို ရှာယူခြင်း
+      const sectionElements = document.querySelectorAll("[id^='section-']");
+      const scrollPosition = window.scrollY + 200; // Offset allowance
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          const sectionId = entry.target.id.replace("section-", "");
+      // စာမျက်နှာ၏ အောက်ဆုံး (Bottom) ရောက်မရောက် စစ်ဆေးခြင်း
+      const isAtBottom =
+        window.innerHeight + window.scrollY >=
+        document.documentElement.scrollHeight - 100;
+
+      if (isAtBottom && sectionElements.length > 0) {
+        const lastSection = sectionElements[sectionElements.length - 1];
+        const sectionId = lastSection.id.replace("section-", "");
+        setActiveSectionId(sectionId);
+        return;
+      }
+
+      // တည်နေရာအလိုက် Active Section ခွဲခြားခြင်း
+      sectionElements.forEach((el) => {
+        const top = el.offsetTop;
+        const height = el.offsetHeight;
+
+        if (scrollPosition >= top && scrollPosition < top + height) {
+          const sectionId = el.id.replace("section-", "");
           setActiveSectionId(sectionId);
         }
       });
-    }, observerOptions);
-
-    lessonSections.forEach((section) => {
-      const el = document.getElementById(`section-${section.id}`);
-      if (el) observer.observe(el);
-    });
-
-    return () => {
-      observer.disconnect();
     };
-  }, [lessonSections]);
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+
+    // Page စတင် load လျှင် သို့မဟုတ် Lesson ပြောင်းသွားလျှင် ချက်ချင်း တစ်ကြိမ် စစ်ဆေးပေးရန်
+    handleScroll();
+
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [currentLesson, lessonSections]);
 
   const scrollToSection = (id) => {
     setActiveSectionId(id);
@@ -404,10 +423,24 @@ function LessonDetailPage() {
                   }
 
                   if (block.type === "simulator") {
+                    const simulatorUrl =
+                      block.url || `https://wokwi.com/projects/${block.id}`;
                     return (
                       <div key={bIdx} className="my-3">
-                        <div className="flex items-center gap-2 mb-2 text-sky-400 font-semibold text-xs">
-                          <Play size={14} /> Interactive Simulator
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2 text-sky-400 font-semibold text-xs">
+                            <Play size={14} /> Interactive Simulator
+                          </div>
+                          {simulatorUrl && (
+                            <a
+                              href={simulatorUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium hover:underline transition-all"
+                            >
+                              Visit original page <ExternalLink size={12} />
+                            </a>
+                          )}
                         </div>
                         <div className="w-full h-[500px] sm:h-[600px] rounded-2xl overflow-hidden border border-white/10 bg-[#08090b] shadow-2xl">
                           <iframe
@@ -417,6 +450,50 @@ function LessonDetailPage() {
                             allow="autoplay"
                           />
                         </div>
+                      </div>
+                    );
+                  }
+
+                  if (block.type === "software") {
+                    return (
+                      <div
+                        key={bIdx}
+                        className="my-3 p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="p-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
+                            <Cpu size={20} />
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="text-sm font-bold text-white">
+                                {t(block.name || block.softwareName)}
+                              </h4>
+                              {(block.softwareType || block.software_type) && (
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                  {t(block.softwareType || block.software_type)}
+                                </span>
+                              )}
+                            </div>
+                            {block.description && (
+                              <p className="text-xs text-gray-400 mt-1">
+                                {t(block.description)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {(block.link || block.url) && (
+                          <a
+                            href={block.link || block.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shrink-0"
+                          >
+                            <Download size={14} /> Get Software{" "}
+                            <ExternalLink size={12} />
+                          </a>
+                        )}
                       </div>
                     );
                   }

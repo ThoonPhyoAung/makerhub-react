@@ -93,7 +93,7 @@ function MarketplaceGrid({ activeCategory, searchQuery = "" }) {
 
         const inComponents = Array.isArray(item.components)
           ? item.components.some((comp) =>
-              normalize(comp.name).includes(cleanQ),
+              normalize(comp.name).includes(cleanQ), 
             )
           : false;
 
