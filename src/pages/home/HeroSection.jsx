@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { DotLottieReact } from "@lottiefiles/dotlottie-react";
+import { useFetch } from "../../hooks/useFetch";
+import { getLessons } from "../../api/lessonsApi";
 
 import {
   Rocket,
@@ -14,21 +16,51 @@ import {
   Cpu,
 } from "lucide-react";
 
+// 📍 Lesson တစ်ခုချင်းစီ၏ Total XP တွက်ပေးသော Helper Function
+const getLessonAllQuestionsXp = (lesson) => {
+  if (!lesson) return 0;
+  if (Array.isArray(lesson.questions) && lesson.questions.length > 0) {
+    return lesson.questions.reduce(
+      (sum, q) => sum + Number(q.xp || q.xpReward || 0),
+      0,
+    );
+  }
+  return Number(lesson.xp || lesson.xpReward || 0);
+};
+
 function HeroSection() {
   const streakDays = ["S", "M", "T", "W", "T", "F", "S"];
-
-  // to get real date (Sun=0, Mon=1, ..., Fri=5, Sat=6)
   const currentDayIndex = new Date().getDay();
 
-  const activeDays = currentDayIndex + 1;
-
   // Redux Auth State
-  const user = useSelector((state) => state.auth.user); // slice name/field ကို authSlice.js အတိုင်း ချိန်ညှိပါ
-  // const isLoggedIn = !!user; // user ရှိရင် true, null ဆိုရင် false
+  const user = useSelector((state) => state.auth.user);
+
+  const xp = user?.xp || 0;
+  const streakDaysCount = user?.streakDays || 0;
+  const progressPercent = user?.progress || 0;
+
+  // 📍 Lessons Data API ခေါ်ယူခြင်း
+  const { data: lessonsData, loading: lessonsLoading } = useFetch(getLessons);
+  const allLessons = Array.isArray(lessonsData) ? lessonsData : [];
+
+  // 📍 Platform ပေါ်ရှိ Lessons အားလုံး၏ Total Max XP ကို တွက်ချက်ခြင်း
+  const totalPlatformXp = allLessons.reduce(
+    (sum, lesson) => sum + getLessonAllQuestionsXp(lesson),
+    0,
+  );
+
+  // Default Max XP (API Data မလာသေးမီ သို့မဟုတ် Lessons မရှိသေးပါက fallback 100 ထားမည်)
+  const maxAvailableXp = totalPlatformXp > 0 ? totalPlatformXp : 100;
+
+  // XP Percentage တွက်ချက်ခြင်း
+  const xpPercentage = Math.min(
+    Math.round(((xp || 0) / maxAvailableXp) * 100),
+    100,
+  );
 
   return (
     <section className="relative bg-bg overflow-hidden py-16 lg:py-14 lg:min-h-[80vh] flex items-start lg:items-center">
-      {/* Background grid pattern - CSS ထဲက ::before ကို inline style နဲ့ ပြန်ဆောက်တာ */}
+      {/* Background grid pattern */}
       <div
         className="absolute inset-0 opacity-100 pointer-events-none"
         style={{
@@ -79,7 +111,6 @@ function HeroSection() {
             >
               Start Learning <ArrowRight size={16} />
             </Link>
-            {/* Same-page anchor, not a route — stays as <a> so it scrolls to #journeys instead of navigating */}
             <a
               href="#journeys"
               className="inline-flex items-center bg-bg-subtle text-text-muted font-bold text-sm px-6 py-2.5 rounded-lg border border-purple-400 hover:text-white hover:bg-purple-900/20 transition-all"
@@ -90,11 +121,9 @@ function HeroSection() {
 
           {/* Stat Cards */}
           <div className="grid grid-cols-3 gap-3">
-            {/* XP Card */}
+            {/* XP Card (Dynamic Total XP Logic) */}
             <div className="bg-bg-elevated border border-border rounded-2xl p-4 min-h-[150px] hover:border-surface-2 transition-all">
               <div className="flex items-center gap-2 mb-2">
-                {/* <Star size={16} className="text-amber-400" />
-                 */}
                 <DotLottieReact
                   src="https://lottie.host/e36de726-6eed-46d8-8d7c-7f510b82d70b/fEmr1CZdlB.lottie"
                   loop
@@ -107,19 +136,16 @@ function HeroSection() {
               </div>
               <div className="mb-3">
                 <span className="text-amber-400 text-2xl font-extrabold tracking-tight">
-                  {user?.xp || 0}
+                  {xp}
                 </span>
                 <span className="text-text-subtle text-xs font-medium">
-                  {" "}
-                  / 10,000
+                  / {lessonsLoading ? "..." : maxAvailableXp.toLocaleString()}
                 </span>
               </div>
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-green-500 to-cyan-500 rounded-full"
-                  style={{
-                    width: `${Math.min(((user?.xp || 0) / 10000) * 100, 100)}%`,
-                  }}
+                  className="h-full bg-gradient-to-r from-green-500 to-cyan-500 rounded-full transition-all duration-500"
+                  style={{ width: `${xpPercentage}%` }}
                 />
               </div>
             </div>
@@ -127,8 +153,6 @@ function HeroSection() {
             {/* Streak Card */}
             <div className="bg-bg-elevated border border-border rounded-2xl p-4 min-h-[150px] hover:border-surface-2 transition-all">
               <div className="flex items-center gap-2 mb-2">
-                {/* <Flame size={16} className="text-amber-400" />
-                 */}
                 <DotLottieReact
                   src="https://lottie.host/5aabccd7-7f7d-4263-8047-4df37882a0d1/GMt3jvcjV7.lottie"
                   loop
@@ -140,21 +164,19 @@ function HeroSection() {
                 </span>
               </div>
               <div className="text-amber-400 text-2xl font-extrabold tracking-tight mb-3">
-                {user?.streakDays || 0} Days
+                {streakDaysCount} Days
               </div>
               <div className="flex flex-col gap-1">
                 <div className="flex gap-1">
                   {streakDays.map((_, index) => {
-                    // checking today
                     const isToday = index === currentDayIndex;
-
                     return (
                       <div
                         key={index}
                         className={`w-[13px] h-[13px] rounded-sm transition-colors ${
                           isToday
-                            ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" // if today, Fade In/Out
-                            : "bg-surface border border-border" // other days
+                            ? "bg-primary animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]"
+                            : "bg-surface border border-border"
                         }`}
                       />
                     );
@@ -179,27 +201,27 @@ function HeroSection() {
                 </span>
               </div>
               <div className="text-cyan-400 text-2xl font-extrabold mb-1">
-                {user?.progress || 0} %
+                {progressPercent || 0} %
               </div>
               <div className="text-text-muted text-xs mb-3">
                 Journey Completion
               </div>
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full"
-                  style={{ width: `${user?.progress || 0}%` }}
+                  className="h-full bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full transition-all duration-500"
+                  style={{ width: `${progressPercent || 0}%` }}
                 />
               </div>
             </div>
           </div>
         </div>
 
-        {/* RIGHT COLUMN — Floating Hardware (Static for now, animation later) */}
+        {/* RIGHT COLUMN */}
         <div className="hidden lg:flex relative h-[460px] items-center justify-center">
           <img
             src="/assets/arduinouno.png"
             alt="Arduino"
-            className="absolute w-[58%] right-[-10%]  z-10 drop-shadow-[0_24px_48px_rgba(0,0,0,0.7)] animate-float"
+            className="absolute w-[58%] right-[-10%] z-10 drop-shadow-[0_24px_48px_rgba(0,0,0,0.7)] animate-float"
           />
           <img
             src="/assets/esp32.png"

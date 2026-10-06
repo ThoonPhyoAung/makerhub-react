@@ -11,9 +11,9 @@ const defaultUsers = [
     email: "admin@makerhub.mm",
     password: "admin",
     createdAt: "2025-08-15",
-    xp: 99,
-    streakDays: 30,
-    progress: 20,
+    xp: 0,
+    streakDays: 0,
+    progress: 0,
     completedLessons: [],
     completedChapters: [],
     completedJourneys: [],
@@ -25,9 +25,9 @@ const defaultUsers = [
     email: "learner@makerhub.mm",
     password: "123456",
     createdAt: "2025-08-15",
-    xp: 45,
-    streakDays: 5,
-    progress: 20,
+    xp: 0,
+    streakDays: 0,
+    progress: 0,
     completedLessons: ["esp32-basics-01"],
     completedChapters: [],
     completedJourneys: [],
@@ -82,6 +82,12 @@ export const userLogin = (userinfo) => {
     return { status: 0, message: "Invalid Email or Password" };
   }
 
+  // streakDates array မှ streakDays ကို တွက်မည်
+  const userStreakDates = Array.isArray(user.streakDates)
+    ? user.streakDates
+    : [];
+  const calculatedStreakDays = userStreakDates.length;
+
   // Active User Payload (Password မပါဘဲ သိမ်းဆည်းရန်)
   const activeUser = {
     id: user.id,
@@ -90,7 +96,8 @@ export const userLogin = (userinfo) => {
     email: user.email,
     createdAt: user.createdAt || new Date().toISOString().slice(0, 7),
     xp: user.xp || 0,
-    streakDays: user.streakDays || 1,
+    streakDates: userStreakDates,
+    streakDays: calculatedStreakDays, // 📍 1 အစား 0 သို့မဟုတ် အမှန်တကယ် ရှိသော length ကိုယူမည်
     progress: user.progress || 0,
     completedLessons: user.completedLessons || [],
     completedChapters: user.completedChapters || [],
@@ -127,7 +134,8 @@ export const userSignUp = (userData) => {
     password,
     createdAt: currentMonthYear,
     xp: 100, // Bonus XP
-    streakDays: 1,
+    streakDates: [], // 📍 Signup စလုပ်ချိန်တွင် Array အလွတ် ဖြစ်မည်
+    streakDays: 0, // 📍 Signup စလုပ်ချိန်တွင် 0 ဖြစ်မည်
     progress: 0,
     completedLessons: [],
     completedChapters: [],
@@ -154,24 +162,42 @@ export const completeLessonLogic = ({
   lessonId,
   chapterId,
   journeyId,
-  earnedXp,
-  chapterTotalLessons = [], // Mock API မှ Chapter ထဲရှိ Lesson ID များ
-  journeyTotalChapters = [], // Mock API မှ Journey ထဲရှိ Chapter ID များ
+  earnedXp = 0,
+  chapterTotalLessons = [],
+  journeyTotalChapters = [],
+  totalPlatformLessonsCount = 0,
 }) => {
   if (!currentUser) return null;
 
-  // 1. Lesson Level Update
-  const isAlreadyCompleted = currentUser.completedLessons.includes(lessonId);
+  const todayStr = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
+
+  // 1. Lesson & XP Updates
+  const isAlreadyCompleted = (currentUser.completedLessons || []).some(
+    (id) => String(id) === String(lessonId),
+  );
+
   const updatedCompletedLessons = isAlreadyCompleted
     ? currentUser.completedLessons
-    : [...currentUser.completedLessons, lessonId];
+    : [...(currentUser.completedLessons || []), lessonId];
 
-  // XP တိုးခြင်း (ပထမအကြိမ် ပြီးမှသာ XP ပေါင်းမည်)
   const updatedXp = isAlreadyCompleted
     ? currentUser.xp
-    : currentUser.xp + earnedXp;
+    : (currentUser.xp || 0) + earnedXp;
 
-  // 2. Chapter Level Calculation
+  // 2. Streak Dates Array Logic (အစ်ကို့ Idea အတိုင်း)
+  const currentStreakDates = Array.isArray(currentUser.streakDates)
+    ? currentUser.streakDates
+    : [];
+
+  // ဒီနေ့ ရက်စွဲ Array ထဲမှာ မပါသေးရင် ထည့်မည်
+  const updatedStreakDates = currentStreakDates.includes(todayStr)
+    ? currentStreakDates
+    : [...currentStreakDates, todayStr];
+
+  // Streak Days Count သည် streakDates Array ရဲ့ Length ဖြစ်မည်
+  const updatedStreakDays = updatedStreakDates.length;
+
+  // 3. Chapter Level Calculation
   let updatedCompletedChapters = [...(currentUser.completedChapters || [])];
   if (chapterId && chapterTotalLessons.length > 0) {
     const isChapterDone = chapterTotalLessons.every((lId) =>
@@ -182,7 +208,7 @@ export const completeLessonLogic = ({
     }
   }
 
-  // 3. Journey Level Calculation
+  // 4. Journey Level Calculation
   let updatedCompletedJourneys = [...(currentUser.completedJourneys || [])];
   if (journeyId && journeyTotalChapters.length > 0) {
     const isJourneyDone = journeyTotalChapters.every((cId) =>
@@ -193,15 +219,29 @@ export const completeLessonLogic = ({
     }
   }
 
+  // 5. Progress Calculation
+  const updatedProgress =
+    totalPlatformLessonsCount > 0
+      ? Math.min(
+          Math.round(
+            (updatedCompletedLessons.length / totalPlatformLessonsCount) * 100,
+          ),
+          100,
+        )
+      : 0;
+
   const updatedUser = {
     ...currentUser,
     xp: updatedXp,
+    streakDates: updatedStreakDates, // 📍 Array အဖြစ် သိမ်းမည်
+    streakDays: updatedStreakDays, // 📍 Array ရဲ့ length
+    lastActiveDate: todayStr,
+    progress: updatedProgress,
     completedLessons: updatedCompletedLessons,
     completedChapters: updatedCompletedChapters,
     completedJourneys: updatedCompletedJourneys,
   };
 
-  // LocalStorage နှစ်ခုလုံးတွင် ရောက်ရှိအောင် Sync လုပ်မည်
   syncUserStorage(updatedUser);
 
   return updatedUser;
