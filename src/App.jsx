@@ -3,6 +3,19 @@ import { Routes, Route } from "react-router-dom";
 import WebLayout from "./layout/WebLayout";
 import Home from "./pages/home/Home";
 
+// Admin Panel
+import ProtectedRoute from "./components/ProtectedRoute";
+import RoleBaseRoute from "./components/RoleBaseRoute";
+import AdminLayout from "./layout/AdminLayout";
+import Unauthorized from "./pages/Unauthorized";
+import Dashboard from "./pages/admin/Dashboard";
+import Users from "./pages/admin/Users";
+import CommunityPosts from "./pages/admin/CommunityPosts";
+import MarketItems from "./pages/admin/MarketItems";
+import Journeys from "./pages/admin/learning/Journeys";
+import Chapters from "./pages/admin/learning/Chapters";
+import Lessons from "./pages/admin/learning/Lessons";
+
 // Auth Pages Import
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
@@ -13,7 +26,6 @@ import LearningPage from "./pages/learning";
 import JourneyDetail from "./pages/learning/JourneyDetail";
 import ChapterDetailPage from "./pages/learning/ChapterDetail";
 import LessonDetailPage from "./pages/learning/LessonDetail/";
-
 //community
 import CommunityPage from "./pages/community/index";
 import CreatePost from "./pages/community/CreatePost";
@@ -30,16 +42,33 @@ function App() {
     <AlertProvider>
       <div>
         <Routes>
+          {/* Unathorized */}
+          <Route path="/unauthorized" element={<Unauthorized />} />
+
           {/* User Login Route */}
           <Route path="/login" element={<Login />} />
 
           {/* Admin Login Route */}
-          <Route path="/admin" element={<Login />} />
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin/" element={<Login />} />
 
           {/* Signup */}
           <Route path="/signup" element={<SignUp />} />
 
-          {/* Admin Layout */}
+          {/* Admin Panel for only one admin*/}
+          <Route element={<ProtectedRoute redirectTo="/admin" />}>
+            <Route element={<RoleBaseRoute allowedRoles={["admin"]} />}>
+              <Route element={<AdminLayout />}>
+                <Route path="/admin/dashboard" element={<Dashboard />} />
+                <Route path="/admin/users" element={<Users />} />
+                <Route path="/admin/community" element={<CommunityPosts />} />
+                <Route path="/admin/marketplace" element={<MarketItems />} />
+                <Route path="/admin/learning/journeys" element={<Journeys />} />
+                <Route path="/admin/learning/chapters" element={<Chapters />} />
+                <Route path="/admin/learning/lessons" element={<Lessons />} />
+              </Route>
+            </Route>
+          </Route>
 
           {/* Weblayout */}
           <Route element={<WebLayout />}>

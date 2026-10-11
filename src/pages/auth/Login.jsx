@@ -1,15 +1,21 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { Mail, Lock, ArrowRight, Cpu, Moon, Sun } from "lucide-react";
+
+import {
+  Mail,
+  Lock,
+  ArrowRight,
+  Cpu,
+  Moon,
+  Sun,
+  ShieldAlert,
+} from "lucide-react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { useLocation, Link } from "react-router-dom";
 
 // use fake api did with userService.jsx
 import { login } from "../../features/auth/authSlice";
 import { userLogin } from "../../api/userService";
-
-// to know current route location
-import { useLocation } from "react-router-dom";
 
 // show alert
 import { useAlert } from "../../context/AlertContext";
@@ -25,6 +31,8 @@ function Login() {
   const navigate = useNavigate();
   const currentRoute = useLocation();
   const showAlert = useAlert();
+  const location = useLocation();
+  const isAdminLogin = location.pathname.includes("/admin");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -47,9 +55,13 @@ function Login() {
           currentRoute.pathname.includes("/admin") &&
           response.data.role === "admin"
         ) {
-          showAlert(response.message); // "Login successful!"
+          showAlert("Welcome to Admin Panel!");
           navigate("/admin/dashboard");
         } else {
+          if (currentRoute.pathname.includes("/admin")) {
+            showAlert("Access Denied: Admin privileges required.");
+            return navigate("/unauthorized");
+          }
           showAlert(response.message); // "Login successful!"
           navigate("/");
         }
@@ -98,13 +110,25 @@ function Login() {
       {/* Card — form ချည်းပဲ */}
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-sm">
-          <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-6 md:p-8">
-            <div className="text-center mb-8">
+          <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-6 md:p-8 relative overflow-hidden">
+            {/* အကယ်၍ Admin Login ဖြစ်နေရင် အပေါ်ဆုံးမှာ အဒမင်သီးသန့် Badge လေး ပြပေးခြင်း */}
+            {isAdminLogin && (
+              <div className="absolute top-0 left-0 right-0 bg-primary/10 border-b border-primary/20 py-1.5 px-4 text-center">
+                <span className="text-primary text-[11px] font-bold tracking-wider uppercase flex items-center justify-center gap-1">
+                  <ShieldAlert size={13} /> Admin Portal Access
+                </span>
+              </div>
+            )}
+
+            <div className={`text-center ${isAdminLogin ? "mt-4" : ""} mb-8`}>
               <h1 className="text-text text-2xl font-bold tracking-tight mb-1.5">
-                Sign In
+                {isAdminLogin ? "Admin Sign In" : "Sign In"}
               </h1>
+
               <p className="text-text-muted text-sm max-w-xs mx-auto leading-relaxed">
-                Enter your credentials to access your account.
+                {isAdminLogin
+                  ? "Restricted area. Authorized personnel only."
+                  : "Enter your credentials to access your account."}
               </p>
             </div>
 
@@ -114,7 +138,6 @@ function Login() {
               </div>
             )}
 
-            {/* noValidate can prevent browser default form validation */}
             <form
               onSubmit={handleSubmit}
               noValidate
@@ -132,10 +155,11 @@ function Login() {
                   <input
                     id="email"
                     type="email"
-                    // required
                     ref={emailRef}
                     autoComplete="username"
-                    placeholder="name@example.com"
+                    placeholder={
+                      isAdminLogin ? "admin@makerhub.com" : "name@example.com"
+                    }
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
@@ -152,7 +176,6 @@ function Login() {
                   >
                     Password
                   </label>
-                  {/* Forgot-password page မဆောက်ရသေးလို့ placeholder ချည်းသာ */}
                   <Link
                     to="/forgot-password"
                     className="text-primary text-xs font-medium hover:underline"
@@ -165,7 +188,6 @@ function Login() {
                   <input
                     id="password"
                     type="password"
-                    // required
                     ref={passwordRef}
                     autoComplete="current-password"
                     placeholder="••••••••"
@@ -181,20 +203,27 @@ function Login() {
                 type="submit"
                 className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-2.5 rounded-xl mt-2 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Signing in..." : "Sign In"}
+                {isSubmitting
+                  ? "Signing in..."
+                  : isAdminLogin
+                    ? "Sign In as Admin"
+                    : "Sign In"}
                 {!isSubmitting && <ArrowRight size={15} />}
               </button>
             </form>
 
-            <p className="text-center text-text-muted text-sm mt-6">
-              Don't have an account?{" "}
-              <Link
-                to="/signup"
-                className="text-primary font-bold hover:underline"
-              >
-                Sign up for free
-              </Link>
-            </p>
+            {/* အကယ်၍ Admin Login ဖြစ်နေရင် "Don't have an account? Sign up" ဆိုတာကို လုံးဝ ဖျောက်ထားပေးပါတယ် (Security အရ အပြင်လူတွေ Sign up လုပ်လို့မရအောင်) */}
+            {!isAdminLogin && (
+              <p className="text-center text-text-muted text-sm mt-6">
+                Don't have an account?{" "}
+                <Link
+                  to="/signup"
+                  className="text-primary font-bold hover:underline"
+                >
+                  Sign up for free
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </div>
