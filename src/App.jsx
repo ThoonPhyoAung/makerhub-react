@@ -12,7 +12,11 @@ import Dashboard from "./pages/admin/Dashboard";
 import Users from "./pages/admin/Users";
 import CommunityPosts from "./pages/admin/CommunityPosts";
 import MarketItems from "./pages/admin/MarketItems";
-import Journeys from "./pages/admin/learning/Journeys";
+
+import JourneysIndex from "./pages/admin/learning/Journeys/JourneysIndex";
+import JourneyCreate from "./pages/admin/learning/Journeys/JourneyCreate";
+import JourneyEdit from "./pages/admin/learning/Journeys/JourneyEdit";
+
 import Chapters from "./pages/admin/learning/Chapters";
 import Lessons from "./pages/admin/learning/Lessons";
 
@@ -63,7 +67,18 @@ function App() {
                 <Route path="/admin/users" element={<Users />} />
                 <Route path="/admin/community" element={<CommunityPosts />} />
                 <Route path="/admin/marketplace" element={<MarketItems />} />
-                <Route path="/admin/learning/journeys" element={<Journeys />} />
+                <Route
+                  path="/admin/learning/journeys"
+                  element={<JourneysIndex />}
+                />
+                <Route
+                  path="/admin/learning/journeys/create"
+                  element={<JourneyCreate />}
+                />
+                <Route
+                  path="/admin/learning/journeys/edit/:id"
+                  element={<JourneyEdit />}
+                />
                 <Route path="/admin/learning/chapters" element={<Chapters />} />
                 <Route path="/admin/learning/lessons" element={<Lessons />} />
               </Route>

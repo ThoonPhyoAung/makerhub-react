@@ -15,7 +15,11 @@ import {
 
 import { useAlert } from "../../../context/AlertContext";
 import { useFetch } from "../../../hooks/useFetch";
-import { getLessons, getLessonBySlug } from "../../../api/lessonsApi";
+import {
+  getLessons,
+  getLessonBySlug,
+  updateLesson,
+} from "../../../api/lessonsApi";
 import { getJourneyById } from "../../../api/journeysApi";
 import LearningBreadcrumb from "../components/LearningBreadcrumb";
 
@@ -227,7 +231,7 @@ function LessonDetailPage() {
     setIsQuizOpen(true);
   };
 
-  const handleVerify = () => {
+  const handleVerify = async () => {
     const questions = currentLesson.questions || [];
     let calculatedXp = 0;
     let correct = 0;
@@ -251,6 +255,29 @@ function LessonDetailPage() {
     const lessonId = String(currentLesson.id || currentLesson._id);
 
     if (activeUser && !isAlreadyCompleted && !isPro) {
+      const userId = String(activeUser.id || activeUser._id);
+
+      // 1. Current Lesson ၏ completedUserIds ထဲသို့ User ID ထည့်သွင်းခြင်း
+      const existingCompletedIds = Array.isArray(currentLesson.completedUserIds)
+        ? currentLesson.completedUserIds
+        : [];
+
+      let updatedCompletedUserIds = [...existingCompletedIds];
+      if (!updatedCompletedUserIds.includes(userId)) {
+        updatedCompletedUserIds.push(userId);
+      }
+
+      // 2. Backend API သို့ updateLesson ဖြင့် ပို့၍ သိမ်းဆည်းခြင်း
+      try {
+        await updateLesson(lessonId, {
+          ...currentLesson,
+          completedUserIds: updatedCompletedUserIds,
+        });
+      } catch (err) {
+        console.log("Failed to update lesson completedUserIds on API:", err);
+      }
+
+      // 3. User Progress Update (Redux & UserService)
       const updatedUserData = completeLessonLogic({
         currentUser: activeUser,
         lessonId,

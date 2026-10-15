@@ -47,18 +47,18 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
     return journeys.map((j) => {
       const journeyId = j.id;
 
-      // ၁။ ဤ Journey အောက်တွင်ရှိသော Lessons များကို စစ်ထုတ်
+      // ၁။ ဤ Journey အောက်တွင်ရှိသော Lessons အားလုံးကို စစ်ထုတ်
       const journeyLessons = allLessons.filter(
         (l) => String(l.journeyId) === String(journeyId),
       );
 
-      // ၂။ Chapter အရေအတွက်ကို တိုက်ရိုက်ယူခြင်း (Safe Check)
       const totalChapters = j.chapters?.length || 0;
-
       let totalLessons = 0;
       let totalMaxXp = 0;
       let completedCount = 0;
-      let studentsCount = 0;
+
+      // 🟢 Fix: Unique learners set for each specific journey
+      const uniqueLearners = new Set();
 
       if (journeyLessons.length > 0) {
         totalLessons = journeyLessons.length;
@@ -70,23 +70,25 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
           if (lessonIdStr && completedLessonSet.has(lessonIdStr)) {
             completedCount++;
           }
-        });
 
-        // ၃။ First Lesson ရဲ့ completedUserIds အရေအတွက်ကို စစ်ဆေးခြင်း
-        const firstLessonUserIds = journeyLessons[0]?.completedUserIds;
-        studentsCount = Array.isArray(firstLessonUserIds)
-          ? firstLessonUserIds.length
-          : 0;
+          // လေ့လာသူ တစ်ဦးချင်းစီ၏ ID များကို စုဆောင်းခြင်း
+          if (Array.isArray(l.completedUserIds)) {
+            l.completedUserIds.forEach((uid) =>
+              uniqueLearners.add(String(uid)),
+            );
+          }
+        });
       } else {
         totalLessons = Number(j.totalLessons || 0);
         totalMaxXp = Number(j.totalXp || 0);
       }
 
-      // Progress Percentage တွက်ချက်ခြင်း (Division by zero safe)
       const progressPercent =
         totalLessons > 0
           ? Math.min(Math.round((completedCount / totalLessons) * 100), 100)
           : 0;
+
+      const studentsCount = uniqueLearners.size;
 
       return {
         ...j,
@@ -94,7 +96,7 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
         totalLessons,
         totalXp: totalMaxXp,
         progress: progressPercent,
-        studentsCount: studentsCount || j.studentsCount || 0,
+        studentsCount,
       };
     });
   }, [journeys, allLessons, completedLessonSet]);
