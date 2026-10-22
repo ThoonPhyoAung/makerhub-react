@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../../features/auth/authSlice";
 import { userLogout } from "../../api/userService";
 import { useAlert } from "../../context/AlertContext";
+import { useTheme } from "../../context/ThemeContext";
 import {
   Search,
   Moon,
@@ -18,29 +19,22 @@ import {
   Plus,
 } from "lucide-react";
 
-// 1. props အနေဖြင့် onToggleSidebar ကို လက်ခံပါ
 function Navbar({ onToggleSidebar }) {
   const profileDropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);
-  // (isMenuOpen သို့မဟုတ် Mobile dropdown တွေ လိုရင် ဆက်ထားလို့ရပါတယ်)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // 📌 ThemeContext မှ theme နှင့် toggleTheme ကို ရယူခြင်း
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
 
   const showAlert = useAlert();
   const { user, isLogin } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // Dark Mode DOM Sync
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
-
-  // Outside click close effects ...
+  // Outside click close effects
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -71,9 +65,8 @@ function Navbar({ onToggleSidebar }) {
   return (
     <header className="sticky top-0 z-50 bg-nav-bg border-b border-border relative">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
-        {/* ဘယ်ဘက်ခြမ်းမှာ Mobile Hamburger နဲ့ Title ကို အတူတူ ထည့်ပေးခြင်းက ပိုအဆင်ပြေပါတယ် */}
+        {/* ဘယ်ဘက်ခြမ်းမှာ Mobile Hamburger နဲ့ Title ကို အတူတူ ထည့်ပေးခြင်း */}
         <div className="flex items-center gap-3">
-          {/* Mobile Hamburger - နှိပ်လိုက်ရင် Sidebar ပွင့်လာပါမယ် */}
           <button
             onClick={onToggleSidebar}
             className="lg:hidden p-2 text-text bg-surface rounded-xl border border-border cursor-pointer"
@@ -90,7 +83,7 @@ function Navbar({ onToggleSidebar }) {
         {/* Desktop Right Controls (Theme, Notifications, Profile) */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             aria-label="Toggle Theme"
             className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
           >
@@ -154,10 +147,10 @@ function Navbar({ onToggleSidebar }) {
           </div>
         </div>
 
-        {/* Mobile Right Side (Theme toggle လေးကို အမြဲ မြင်နေရအောင် ဒီမှာလည်း ထည့်ပေးနိုင်ပါတယ်) */}
+        {/* Mobile Right Side (Theme toggle) */}
         <div className="flex lg:hidden items-center gap-2">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             className="p-2 rounded-full bg-surface text-text-muted cursor-pointer"
           >
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}

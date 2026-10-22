@@ -13,21 +13,21 @@ function CodeBlock({ codeValue, language, bIdx, copiedCodeIndex, handleCopy }) {
   }, [codeValue]);
 
   return (
-    <div className="rounded-xl overflow-hidden border border-white/10 bg-[#08090b]">
-      <div className="flex items-center justify-between px-4 py-2 bg-white/5 text-xs text-gray-400 font-mono">
+    <div className="rounded-xl overflow-hidden border border-border bg-bg-subtle shadow-sm">
+      <div className="flex items-center justify-between px-4 py-2 bg-bg-elevated border-b border-border text-xs text-text-muted font-mono">
         <span>{language || "C++"}</span>
         <button
           onClick={() => handleCopy(codeValue, bIdx)}
-          className="flex items-center gap-1 hover:text-white"
+          className="flex items-center gap-1 hover:text-text transition-colors cursor-pointer"
         >
           {copiedCodeIndex === bIdx ? (
-            <Check size={12} className="text-emerald-400" />
+            <Check size={12} className="text-emerald-500 dark:text-emerald-400" />
           ) : (
             <Copy size={12} />
           )}
         </button>
       </div>
-      <pre className="p-4 text-xs font-mono text-emerald-300 overflow-x-auto whitespace-pre-wrap">
+      <pre className="p-4 text-xs font-mono text-emerald-600 dark:text-emerald-300 overflow-x-auto whitespace-pre-wrap">
         <code ref={codeRef} className="hljs" />
       </pre>
     </div>

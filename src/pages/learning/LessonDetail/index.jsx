@@ -44,12 +44,12 @@ function getYouTubeEmbedUrl(url) {
 }
 
 function LessonDetailPage() {
-  // getting journeyId, chapterId, and lessonSlug from the URL
+  // getting journeyId, chapterId, and lessonSlug from the URL[cite: 21]
   const { journeyId, chapterId, lessonSlug } = useParams();
   const navigate = useNavigate();
-  const dispatch = useDispatch(); // Redux dispatch for updating user progress
+  const dispatch = useDispatch(); // Redux dispatch for updating user progress[cite: 21]
 
-  // able to directly search at marketplace
+  // able to directly search at marketplace[cite: 21]
   const handleMarketplaceSearch = (itemName) => {
     navigate("/marketplace", { state: { initialSearch: itemName } });
   };
@@ -72,7 +72,7 @@ function LessonDetailPage() {
   const isPro = userMode === "pro";
 
   // -------------------------------------------------------------
-  // Data Fetching Fix using useMemo (Stable Function References)
+  // Data Fetching Fix using useMemo (Stable Function References)[cite: 21]
   // -------------------------------------------------------------
   const fetchJourney = useMemo(
     () => () => getJourneyById(journeyId),
@@ -95,7 +95,7 @@ function LessonDetailPage() {
     ? totalLessonsData.length
     : 0;
 
-  // Total XP Calculation
+  // Total XP Calculation[cite: 21]
   let totalLessonXp = 20;
   if (currentLesson?.questions && currentLesson.questions.length > 0) {
     totalLessonXp = currentLesson.questions.reduce(
@@ -106,7 +106,7 @@ function LessonDetailPage() {
     totalLessonXp = currentLesson.xpReward || currentLesson.xp || 20;
   }
 
-  // Completed Status Check
+  // Completed Status Check[cite: 21]
   let isAlreadyCompleted = false;
   if (currentLesson && activeUser) {
     const currentLessonId = String(currentLesson.id || currentLesson._id || "");
@@ -119,7 +119,7 @@ function LessonDetailPage() {
   const [activeSectionId, setActiveSectionId] = useState("");
   const [copiedCodeIndex, setCopiedCodeIndex] = useState(null);
 
-  // Quiz States
+  // Quiz States[cite: 21]
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [quizAnswers, setQuizAnswers] = useState({});
@@ -128,7 +128,7 @@ function LessonDetailPage() {
   const [correctCount, setCorrectCount] = useState(0);
   const [showConfetti, setShowConfetti] = useState(false);
 
-  // Language
+  // Language[cite: 21]
   const [language, setLanguage] = useState(
     () => localStorage.getItem("lang") || "en",
   );
@@ -139,14 +139,25 @@ function LessonDetailPage() {
     localStorage.setItem("lang", next);
   };
 
-  // change language of content by this function
+  // change language of content by this function[cite: 21]
   const t = (field) => {
     if (!field) return "";
     if (typeof field === "string") return field;
-    return field?.[language] ?? field?.en ?? field?.mm ?? "";
+    if (typeof field === "number") return String(field);
+    if (typeof field === "object") {
+      const val = field[language] ?? field.en ?? field.mm;
+      if (typeof val === "string") return val;
+      if (typeof val === "number") return String(val);
+
+      const firstString = Object.values(field).find(
+        (v) => typeof v === "string",
+      );
+      return firstString || "";
+    }
+    return String(field);
   };
 
-  // Section Formatting
+  // Section Formatting[cite: 21]
   const lessonSections = currentLesson
     ? (currentLesson.sections || []).map((s, idx) => ({
         id: s.id || `section-${idx}`,
@@ -155,16 +166,14 @@ function LessonDetailPage() {
       }))
     : [];
 
-  // --- SCROLLSPY LOGIC (Window Scroll Event Based) ---
+  // --- SCROLLSPY LOGIC (Window Scroll Event Based) ---[cite: 21]
   useEffect(() => {
     if (!currentLesson || lessonSections.length === 0) return;
 
     const handleScroll = () => {
-      // section- စာလုံးပါသော id ရှိသည့် section element များကို ရှာယူခြင်း
       const sectionElements = document.querySelectorAll("[id^='section-']");
-      const scrollPosition = window.scrollY + 200; // Offset allowance
+      const scrollPosition = window.scrollY + 200;
 
-      // စာမျက်နှာ၏ အောက်ဆုံး (Bottom) ရောက်မရောက် စစ်ဆေးခြင်း
       const isAtBottom =
         window.innerHeight + window.scrollY >=
         document.documentElement.scrollHeight - 100;
@@ -176,7 +185,6 @@ function LessonDetailPage() {
         return;
       }
 
-      // တည်နေရာအလိုက် Active Section ခွဲခြားခြင်း
       sectionElements.forEach((el) => {
         const top = el.offsetTop;
         const height = el.offsetHeight;
@@ -189,8 +197,6 @@ function LessonDetailPage() {
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
-
-    // Page စတင် load လျှင် သို့မဟုတ် Lesson ပြောင်းသွားလျှင် ချက်ချင်း တစ်ကြိမ် စစ်ဆေးပေးရန်
     handleScroll();
 
     return () => window.removeEventListener("scroll", handleScroll);
@@ -257,7 +263,6 @@ function LessonDetailPage() {
     if (activeUser && !isAlreadyCompleted && !isPro) {
       const userId = String(activeUser.id || activeUser._id);
 
-      // 1. Current Lesson ၏ completedUserIds ထဲသို့ User ID ထည့်သွင်းခြင်း
       const existingCompletedIds = Array.isArray(currentLesson.completedUserIds)
         ? currentLesson.completedUserIds
         : [];
@@ -267,7 +272,6 @@ function LessonDetailPage() {
         updatedCompletedUserIds.push(userId);
       }
 
-      // 2. Backend API သို့ updateLesson ဖြင့် ပို့၍ သိမ်းဆည်းခြင်း
       try {
         await updateLesson(lessonId, {
           ...currentLesson,
@@ -277,7 +281,6 @@ function LessonDetailPage() {
         console.log("Failed to update lesson completedUserIds on API:", err);
       }
 
-      // 3. User Progress Update (Redux & UserService)
       const updatedUserData = completeLessonLogic({
         currentUser: activeUser,
         lessonId,
@@ -297,7 +300,7 @@ function LessonDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-gray-400 text-sm">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-text-muted text-sm">
         Loading lesson...
       </div>
     );
@@ -305,11 +308,11 @@ function LessonDetailPage() {
 
   if (error || !currentLesson) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex flex-col items-center justify-center gap-3 text-gray-400 text-sm">
+      <div className="min-h-screen bg-bg flex flex-col items-center justify-center gap-3 text-text-muted text-sm">
         <p>Failed to load lesson: {error || "Lesson not found"}</p>
         <Link
           to={`/learning/${journeyId}/${chapterId}`}
-          className="text-emerald-400 font-semibold"
+          className="text-primary font-semibold"
         >
           ← Back to chapter
         </Link>
@@ -318,7 +321,7 @@ function LessonDetailPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-gray-200 relative pb-16">
+    <div className="min-h-screen bg-bg text-text relative pb-16">
       {showConfetti && <ConfettiBurst />}
 
       <LearningBreadcrumb
@@ -357,10 +360,10 @@ function LessonDetailPage() {
 
         <main className="flex-1 min-w-0 order-1 lg:order-2 space-y-8">
           <div>
-            <h1 className="text-2xl sm:text-4xl font-extrabold text-white mb-3">
+            <h1 className="text-2xl sm:text-4xl font-extrabold text-text mb-3">
               {t(currentLesson.title)}
             </h1>
-            <p className="text-gray-300 text-sm mb-6">
+            <p className="text-text-muted text-sm mb-6">
               {t(currentLesson.description)}
             </p>
             {currentLesson.coverImage && (
@@ -393,7 +396,7 @@ function LessonDetailPage() {
                     return (
                       <p
                         key={bIdx}
-                        className="text-sm text-gray-300 leading-relaxed whitespace-pre-line"
+                        className="text-sm text-text-muted leading-relaxed whitespace-pre-line"
                       >
                         {t(block.value)}
                       </p>
@@ -416,7 +419,7 @@ function LessonDetailPage() {
                   if (block.type === "image") {
                     return (
                       <div key={bIdx} className="my-2">
-                        <div className="rounded-xl overflow-hidden bg-black/20">
+                        <div className="rounded-xl overflow-hidden bg-bg-subtle border border-border">
                           <img
                             src={block.url}
                             alt={t(block.caption) || "Lesson detail"}
@@ -424,7 +427,7 @@ function LessonDetailPage() {
                           />
                         </div>
                         {block.caption && (
-                          <p className="text-xs text-gray-400 mt-1.5 text-center italic">
+                          <p className="text-xs text-text-muted mt-1.5 text-center italic">
                             {t(block.caption)}
                           </p>
                         )}
@@ -436,7 +439,7 @@ function LessonDetailPage() {
                     return (
                       <div
                         key={bIdx}
-                        className="w-full aspect-video rounded-xl overflow-hidden border border-white/10 my-2 bg-black/40"
+                        className="w-full aspect-video rounded-xl overflow-hidden border border-border my-2 bg-bg-subtle shadow-sm"
                       >
                         <iframe
                           src={getYouTubeEmbedUrl(block.url)}
@@ -455,7 +458,7 @@ function LessonDetailPage() {
                     return (
                       <div key={bIdx} className="my-3">
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2 text-sky-400 font-semibold text-xs">
+                          <div className="flex items-center gap-2 text-sky-500 dark:text-sky-400 font-semibold text-xs">
                             <Play size={14} /> Interactive Simulator
                           </div>
                           {simulatorUrl && (
@@ -463,13 +466,13 @@ function LessonDetailPage() {
                               href={simulatorUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="text-xs text-sky-400 hover:text-sky-300 flex items-center gap-1 font-medium hover:underline transition-all"
+                              className="text-xs text-sky-500 dark:text-sky-400 hover:text-sky-600 flex items-center gap-1 font-medium hover:underline transition-all"
                             >
                               Visit original page <ExternalLink size={12} />
                             </a>
                           )}
                         </div>
-                        <div className="w-full h-[500px] sm:h-[600px] rounded-2xl overflow-hidden border border-white/10 bg-[#08090b] shadow-2xl">
+                        <div className="w-full h-[500px] sm:h-[600px] rounded-2xl overflow-hidden border border-border bg-bg-elevated shadow-xl">
                           <iframe
                             src={`https://wokwi.com/projects/${block.id}?embed=1`}
                             title="Wokwi Simulator"
@@ -485,25 +488,25 @@ function LessonDetailPage() {
                     return (
                       <div
                         key={bIdx}
-                        className="my-3 p-4 rounded-xl bg-indigo-950/20 border border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+                        className="my-3 p-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="p-3 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shrink-0">
+                          <div className="p-3 rounded-lg bg-indigo-500/20 text-indigo-500 dark:text-indigo-400 border border-indigo-500/30 shrink-0">
                             <Cpu size={20} />
                           </div>
                           <div>
                             <div className="flex items-center gap-2">
-                              <h4 className="text-sm font-bold text-white">
+                              <h4 className="text-sm font-bold text-text">
                                 {t(block.name || block.softwareName)}
                               </h4>
                               {(block.softwareType || block.software_type) && (
-                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-300 border border-indigo-500/30">
                                   {t(block.softwareType || block.software_type)}
                                 </span>
                               )}
                             </div>
                             {block.description && (
-                              <p className="text-xs text-gray-400 mt-1">
+                              <p className="text-xs text-text-muted mt-1">
                                 {t(block.description)}
                               </p>
                             )}
@@ -515,7 +518,7 @@ function LessonDetailPage() {
                             href={block.link || block.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shrink-0"
+                            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition-all shrink-0 shadow-sm"
                           >
                             <Download size={14} /> Get Software{" "}
                             <ExternalLink size={12} />
@@ -529,10 +532,10 @@ function LessonDetailPage() {
                     return (
                       <div
                         key={bIdx}
-                        className="my-4 p-5 rounded-2xl bg-white/5 border border-white/10"
+                        className="my-4 p-5 rounded-2xl bg-bg-elevated border border-border shadow-sm"
                       >
                         {block.title && (
-                          <h3 className="text-base font-bold text-rose-400 mb-4 flex items-center gap-2">
+                          <h3 className="text-base font-bold text-rose-500 dark:text-rose-400 mb-4 flex items-center gap-2">
                             <ShoppingBag size={18} /> {t(block.title)}
                           </h3>
                         )}
@@ -540,11 +543,11 @@ function LessonDetailPage() {
                           {(block.components || []).map((comp, cIdx) => (
                             <div
                               key={cIdx}
-                              className="p-3 rounded-xl bg-[#08090b] border border-white/10 flex items-center justify-between hover:border-rose-500/30 transition-all gap-3"
+                              className="p-3 rounded-xl bg-bg-subtle border border-border flex items-center justify-between hover:border-rose-500/40 transition-all gap-3 shadow-sm"
                             >
                               <div className="flex items-center gap-3 min-w-0">
                                 {comp.image && (
-                                  <div className="w-10 h-10 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                                  <div className="w-10 h-10 rounded-lg bg-bg border border-border flex items-center justify-center overflow-hidden shrink-0">
                                     <img
                                       src={comp.image}
                                       alt={comp.name}
@@ -553,11 +556,11 @@ function LessonDetailPage() {
                                   </div>
                                 )}
                                 <div className="flex flex-col min-w-0">
-                                  <span className="text-xs font-semibold text-white truncate">
+                                  <span className="text-xs font-semibold text-text truncate">
                                     {comp.name}
                                   </span>
                                   {comp.qty && (
-                                    <span className="text-[10px] text-rose-400 font-mono font-bold mt-0.5">
+                                    <span className="text-[10px] text-rose-500 dark:text-rose-400 font-mono font-bold mt-0.5">
                                       {comp.qty}
                                     </span>
                                   )}
@@ -567,7 +570,7 @@ function LessonDetailPage() {
                                 onClick={() =>
                                   handleMarketplaceSearch(comp.name)
                                 }
-                                className="text-[11px] font-bold text-emerald-400 flex items-center gap-1 hover:underline shrink-0 ml-2 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
+                                className="text-[11px] font-bold text-emerald-500 dark:text-emerald-400 flex items-center gap-1 hover:underline shrink-0 ml-2 bg-emerald-500/10 hover:bg-emerald-500/20 px-2.5 py-1.5 rounded-lg transition-colors"
                               >
                                 Buy <ExternalLink size={12} />
                               </button>
@@ -588,12 +591,12 @@ function LessonDetailPage() {
             <button
               onClick={openQuiz}
               disabled={isAlreadyCompleted}
-              className={`flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all ${
+              className={`flex items-center justify-center gap-2 w-full sm:w-auto px-6 py-3 rounded-xl font-bold text-sm transition-all shadow-sm ${
                 isAlreadyCompleted
-                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 cursor-not-allowed"
+                  ? "bg-emerald-500/20 text-emerald-500 dark:text-emerald-400 border border-emerald-500/30 cursor-not-allowed"
                   : isPro
-                    ? "bg-white/10 text-gray-400 border border-white/10 cursor-not-allowed"
-                    : "text-black hover:opacity-90"
+                    ? "bg-bg-subtle text-text-muted border border-border cursor-not-allowed"
+                    : "text-white hover:opacity-90"
               }`}
               style={
                 !isAlreadyCompleted && !isPro

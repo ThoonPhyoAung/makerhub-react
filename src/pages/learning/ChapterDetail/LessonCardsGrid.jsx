@@ -34,10 +34,23 @@ function LessonCardsGrid({
   const isPro = userMode === "pro";
   const activeColor = journey?.color || "#10b981";
 
+  // 🛡️ 100% Safe Translation / String Converter Helper
   const t = (field) => {
     if (!field) return "";
     if (typeof field === "string") return field;
-    return field?.[language] ?? field?.en ?? field?.mm ?? "";
+    if (typeof field === "number") return String(field);
+    if (typeof field === "object") {
+      const val = field[language] ?? field.en ?? field.mm;
+      if (typeof val === "string") return val;
+      if (typeof val === "number") return String(val);
+      if (typeof val === "object" && val !== null) {
+        const nestedVal = val[language] ?? val.en ?? val.mm;
+        if (typeof nestedVal === "string") return nestedVal;
+        return "";
+      }
+      return "";
+    }
+    return "";
   };
 
   // Sorting lessons by order before logic checks
@@ -81,7 +94,7 @@ function LessonCardsGrid({
   }, [sortedLessons, isPro, searchQuery, language]);
 
   return (
-    <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
+    <section className="relative w-full bg-bg py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
       {/* Mode Switcher & Search Bar */}
       <div className="w-full max-w-6xl flex flex-col items-center gap-4 mb-8 z-20">
         <LearnerProToggle
@@ -94,14 +107,14 @@ function LessonCardsGrid({
           <div className="relative w-full max-w-md">
             <Search
               size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
               placeholder="Search lessons by title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#121418] border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+              className="w-full pl-10 pr-4 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-all shadow-sm"
               style={{ borderColor: `${activeColor}40` }}
             />
           </div>
@@ -111,8 +124,8 @@ function LessonCardsGrid({
       {/* Lessons Grid */}
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-5 justify-items-center">
         {filteredLessons.length === 0 ? (
-          <div className="col-span-full py-12 text-center text-gray-500 text-xs sm:text-sm">
-            No lessons found matching "{searchQuery}"
+          <div className="col-span-full py-12 text-center text-text-muted text-xs sm:text-sm">
+            No lessons found matching &quot;{searchQuery}&quot;
           </div>
         ) : (
           filteredLessons.map((lesson, index) => {
@@ -142,7 +155,7 @@ function LessonCardsGrid({
               getLessonAllQuestionsXp(lesson) || lesson.xpReward || 20;
 
             const CardTag = isLocked ? "div" : Link;
-            const lessonUrl = lesson.id || lesson._id || lesson.lessonUrlParam;
+            const lessonUrl = lesson.lessonUrlParam;
 
             const cardProps = isLocked
               ? {
@@ -156,7 +169,7 @@ function LessonCardsGrid({
                     }),
                 }
               : {
-                  to: `/learning/${journey?.id || lesson.journeyId}/${chapter?.id || lesson.chapterId}/${lessonUrl}`,
+                  to: `/learning/${lesson.journeyId}/${lesson.chapterId}/${lessonUrl}`,
                 };
 
             return (
@@ -164,7 +177,6 @@ function LessonCardsGrid({
                 key={lessonUrl || index}
                 {...cardProps}
                 className={`group relative w-full min-w-0 rounded-2xl sm:rounded-2xl  flex flex-col overflow-hidden transition-all duration-300 outline-none  ${
-                  //focus-visible:ring-2 focus-visible:ring-white/40   shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)]
                   isLocked
                     ? "border-white/5 opacity-75 cursor-not-allowed"
                     : !isPro && isCompleted
@@ -184,10 +196,8 @@ function LessonCardsGrid({
                   </div>
                 )}
 
-                {/* 1. Cover Image With Badges & Tilt Animation === sm:-rotate-2 sm:group-hover:rotate-0           */}
+                {/* 1. Cover Image With Badges */}
                 <div className="relative z-0 w-full aspect-[16/10] rounded-t-2xl overflow-hidden shadow-md transition-transform duration-500 ease-out shrink-0 translate-y-3 group-hover:translate-y-0">
-                  {" "}
-                  {/* ⚡ XP Badge */}
                   {!isPro && (
                     <div className="absolute top-2 left-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/70 backdrop-blur-md border border-amber-500/30 text-amber-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
                       <Zap
@@ -197,7 +207,6 @@ function LessonCardsGrid({
                       <span>+{xpReward} XP</span>
                     </div>
                   )}
-                  {/* ✅ Completed Status Overlay */}
                   {!isPro && isCompleted && (
                     <div className="absolute top-2 right-2 z-10 flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-950/80 backdrop-blur-md border border-emerald-500/40 text-emerald-400 text-[9px] sm:text-[10px] font-bold shadow-sm">
                       <CheckCircle2
@@ -233,73 +242,72 @@ function LessonCardsGrid({
                 </div>
 
                 {/* 2. Folder-tab Panel */}
-                <div
-                  className="relative z-10 flex-1 -mt-3 sm:-mt-4 rounded-xl px-2.5 sm:px-3.5 pt-3.5 sm:pt-5 pb-2.5 flex flex-col justify-between border border-white/5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),0_10px_25px_-10px_rgba(0,0,0,0.7)]"
-                  style={{
-                    backgroundColor: "#121418",
-                    backgroundImage: `linear-gradient(${activeColor}1f, ${activeColor}1f)`,
-                    clipPath:
-                      "polygon(0 0, 48% 0, calc(48% + 10px) 12px, 100.5% 12px, 100.5% 100%, 0 100%)",
-                  }}
-                >
-                  <div>
-                    {/* Title */}
-                    <h4
-                      className="text-xs sm:text-base font-bold leading-snug line-clamp-2 tracking-tight"
-                      style={{ color: activeColor }}
-                    >
-                      {t(lesson.title) || `Lesson ${lessonNumber}`}
-                    </h4>
+              <div
+                className="relative z-10 flex-1 -mt-3 sm:-mt-4 rounded-xl px-2.5 sm:px-3.5 pt-3.5 sm:pt-5 pb-2.5 flex flex-col justify-between border-t border-border shadow-[inset_0_1px_0_var(--color-border),0_10px_25px_-10px_rgba(0,0,0,0.3)] bg-bg-elevated"
+                style={{
+                  backgroundImage: `linear-gradient(${activeColor}15, ${activeColor}15)`,
+                  clipPath:
+                    "polygon(0 0, 48% 0, calc(48% + 10px) 12px, 100.5% 12px, 100.5% 100%, 0 100%)",
+                }}
+              >
+                <div>
+                  {/* Title */}
+                  <h4
+                    className="text-xs sm:text-base font-bold leading-snug line-clamp-2 tracking-tight"
+                    style={{ color: activeColor }}
+                  >
+                    {t(lesson.title) || `Lesson ${lessonNumber}`}
+                  </h4>
 
-                    <div
-                      className="w-full h-px my-1.5 opacity-20"
-                      style={{ backgroundColor: activeColor }}
-                    />
+                  <div
+                    className="w-full h-px my-1.5 opacity-30"
+                    style={{ backgroundColor: activeColor }}
+                  />
 
-                    {/* Description */}
-                    {(lesson.description || lesson.desc) && (
-                      <p className="text-gray-300 text-[10px] sm:text-xs leading-relaxed line-clamp-2 opacity-90">
-                        {t(lesson.description || lesson.desc)}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Footer Row */}
-                  <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between text-[9px] sm:text-[11px] text-gray-400">
-                    <span className="flex items-center gap-1 shrink-0">
-                      <Clock size={10} className="text-gray-400" />
-                      {duration}
-                    </span>
-
-                    <span
-                      className={`flex items-center gap-1 truncate max-w-[55%] font-medium ${
-                        !isPro && isCompleted
-                          ? "text-emerald-400"
-                          : "text-gray-400"
-                      }`}
-                    >
-                      {!isPro && isCompleted ? (
-                        <>
-                          <CheckCircle2
-                            size={10}
-                            className="text-emerald-400 shrink-0"
-                          />
-                          <span className="truncate">Completed</span>
-                        </>
-                      ) : (
-                        <>
-                          <FileText
-                            size={10}
-                            className="text-gray-400 shrink-0"
-                          />
-                          <span className="truncate">
-                            {lesson.type || "Interactive"}
-                          </span>
-                        </>
-                      )}
-                    </span>
-                  </div>
+                  {/* Description */}
+                  {(lesson.description || lesson.desc) && (
+                    <p className="text-text-muted text-[10px] sm:text-xs leading-relaxed line-clamp-2">
+                      {t(lesson.description || lesson.desc)}
+                    </p>
+                  )}
                 </div>
+
+                {/* Footer Row */}
+                <div className="mt-2 pt-2 border-t border-border flex items-center justify-between text-[9px] sm:text-[11px] text-text-muted">
+                  <span className="flex items-center gap-1 shrink-0">
+                    <Clock size={10} className="text-text-muted" />
+                    {duration}
+                  </span>
+
+                  <span
+                    className={`flex items-center gap-1 truncate max-w-[55%] font-medium ${
+                      !isPro && isCompleted
+                        ? "text-emerald-500 dark:text-emerald-400"
+                        : "text-text-muted"
+                    }`}
+                  >
+                    {!isPro && isCompleted ? (
+                      <>
+                        <CheckCircle2
+                          size={10}
+                          className="shrink-0"
+                        />
+                        <span className="truncate">Completed</span>
+                      </>
+                    ) : (
+                      <>
+                        <FileText
+                          size={10}
+                          className="shrink-0"
+                        />
+                        <span className="truncate">
+                          {lesson.type || "Interactive"}
+                        </span>
+                      </>
+                    )}
+                  </span>
+                </div>
+              </div>
               </CardTag>
             );
           })

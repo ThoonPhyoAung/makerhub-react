@@ -10,7 +10,7 @@ const getLessonQuestionsXp = (lesson) => {
   if (Array.isArray(lesson.questions) && lesson.questions.length > 0) {
     return lesson.questions.reduce((sum, q) => sum + Number(q.xp || 0), 0);
   }
-  return Number(0);
+  return Number(lesson.xp || 0);
 };
 
 // 📍 User completed Lesson IDs များကို Set အဖြစ် ပြောင်းသည့် Helper
@@ -24,10 +24,9 @@ const getCompletedLessonSet = (activeUser) => {
     list.forEach((item) => {
       if (typeof item === "string" || typeof item === "number")
         set.add(String(item));
-      else if (item?.id || item?._id) set.add(String(item.id));
+      else if (item?.id || item?._id) set.add(String(item.id || item._id));
     });
   }
-  // console.log("Completed Lesson Set:", set);
   return set;
 };
 
@@ -45,11 +44,13 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
     if (!Array.isArray(journeys)) return [];
 
     return journeys.map((j) => {
-      const journeyId = j.id;
+      const journeyId = String(j.journeyId || j.id || "");
+      const journeySlug = String(j.journeyId || j.id || "");
 
-      // ၁။ ဤ Journey အောက်တွင်ရှိသော Lessons အားလုံးကို စစ်ထုတ်
       const journeyLessons = allLessons.filter(
-        (l) => String(l.journeyId) === String(journeyId),
+        (l) =>
+          String(l.journeyId || l.journey) === journeyId ||
+          String(l.journeyId || l.journey) === journeySlug,
       );
 
       const totalChapters = j.chapters?.length || 0;
@@ -57,7 +58,6 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
       let totalMaxXp = 0;
       let completedCount = 0;
 
-      // 🟢 Fix: Unique learners set for each specific journey
       const uniqueLearners = new Set();
 
       if (journeyLessons.length > 0) {
@@ -66,12 +66,11 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
         journeyLessons.forEach((l) => {
           totalMaxXp += getLessonQuestionsXp(l);
 
-          const lessonIdStr = String(l.id || "");
+          const lessonIdStr = String(l.id || l._id || "");
           if (lessonIdStr && completedLessonSet.has(lessonIdStr)) {
             completedCount++;
           }
 
-          // လေ့လာသူ တစ်ဦးချင်းစီ၏ ID များကို စုဆောင်းခြင်း
           if (Array.isArray(l.completedUserIds)) {
             l.completedUserIds.forEach((uid) =>
               uniqueLearners.add(String(uid)),
@@ -92,6 +91,7 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
 
       return {
         ...j,
+        resolvedId: journeyId || journeySlug,
         totalChapters,
         totalLessons,
         totalXp: totalMaxXp,
@@ -104,7 +104,6 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
   return (
     <div className="max-w-7xl mx-auto px-4 lg:px-8" id="learningSection">
       {loading ? (
-        /* Loading State */
         <div className="text-center py-16">
           <Loader2
             size={32}
@@ -113,41 +112,41 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
           <p className="text-text-muted">Loading learning journeys...</p>
         </div>
       ) : error ? (
-        /* Error State */
         <div className="text-center py-16 text-red-400">
           <p>Failed to load journeys: {String(error)}</p>
         </div>
       ) : !enrichedJourneys || enrichedJourneys.length === 0 ? (
-        /* Empty State */
         <div className="text-center py-16 text-text-muted">
           <p>No learning journeys available right now!</p>
         </div>
       ) : (
-        /* Journey Cards Grid */
         <div className="grid lg:grid-cols-2 gap-6">
           {enrichedJourneys.map((j) => (
             <div
-              key={j.id}
-              className="group relative overflow-hidden bg-bg-elevated border border-white/5 rounded-3xl p-4 sm:p-6 hover:-translate-y-1 hover:border-white/15 transition-all duration-300"
+              key={j.id || j.journeyId}
+              className="group relative overflow-hidden bg-bg-elevated border border-border rounded-3xl p-4 sm:p-6 hover:-translate-y-1.5 transition-all duration-500 shadow-sm hover:shadow-2xl"
+              style={{
+                // 🌟 Mouse တင်လိုက်စဉ် Journey ၏ သက်ဆိုင်ရာအရောင်ဖြင့် ဖျော့တော့သော 3D Glow Border & Shadow ပေါ်လာစေရန်
+                ["--journey-color"]: j.color,
+              }}
             >
-              {/* 1. Top-Left Corner Accent Glow */}
+              {/* 🌟 Premium Atmospheric Top-Left Glow */}
               <div
-                className="absolute -top-12 -left-12 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
+                className="absolute -top-24 -left-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-25 dark:group-hover:opacity-35 transition-all duration-700 pointer-events-none"
                 style={{ backgroundColor: j.color }}
               />
 
-              {/*2. Bottom-Right Corner Accent Glow */}
+              {/* 🌟 Premium Atmospheric Bottom-Right Glow */}
               <div
-                className="absolute -bottom-12 -right-12 w-36 h-36 rounded-full blur-2xl opacity-0 group-hover:opacity-40 transition-opacity duration-500 pointer-events-none"
+                className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 transition-all duration-700 pointer-events-none"
                 style={{ backgroundColor: j.color }}
               />
 
-              {/* Card Content Layer */}
               <div className="relative z-10">
                 {/* Badge & Icon */}
                 <div className="flex justify-between items-start mb-4">
                   <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl"
+                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner"
                     style={{ backgroundColor: j.colorBg, color: j.color }}
                   >
                     <RenderIcon
@@ -157,7 +156,7 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
                     />
                   </div>
                   <span
-                    className="px-3 py-1 rounded-full text-xs font-semibold"
+                    className="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
                     style={{
                       backgroundColor: j.colorBg,
                       color: j.color,
@@ -172,30 +171,35 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
                 <div className="flex justify-between items-start gap-4 mb-5">
                   <div className="flex-1 min-w-0">
                     <h3 className="text-text text-lg sm:text-xl font-bold mb-2">
-                      {j.title}
+                      {typeof j.title === "object" ? j.title.en : j.title}
                     </h3>
-                    <p className="hidden md:block text-text-muted text-sm leading-relaxed mb-3">
-                      {j.desc}
+                    <p className="hidden md:block text-text-muted text-sm leading-relaxed mb-3 line-clamp-2">
+                      {typeof j.desc === "object"
+                        ? j.desc.en
+                        : j.desc || j.description}
                     </p>
-                    <div className="flex gap-3 sm:gap-4 text-text-muted text-xs sm:text-sm">
+                    <div className="flex gap-3 sm:gap-4 text-text-muted text-xs sm:text-sm font-medium">
                       <span className="flex items-center gap-1">
-                        <BookOpen size={13} /> {j.totalChapters} chapters
+                        <BookOpen size={13} className="text-primary" />{" "}
+                        {j.totalChapters} chapters
                       </span>
                       <span className="flex items-center gap-1">
-                        <BookOpen size={13} /> {j.totalLessons} lessons
+                        <BookOpen size={13} className="text-primary" />{" "}
+                        {j.totalLessons} lessons
                       </span>
                       <span className="flex items-center gap-1 hidden sm:flex">
-                        <Users size={13} /> {j.studentsCount} learners
+                        <Users size={13} className="text-primary" />{" "}
+                        {j.studentsCount} learners
                       </span>
                     </div>
                   </div>
 
-                  <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center bg-bg-subtle/20">
+                  <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center ">
                     <img
-                      src={j.boardImage}
-                      alt={j.title}
+                      src={j.boardImage || j.image || j.coverImage}
+                      alt={typeof j.title === "object" ? j.title.en : j.title}
                       referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover opacity-80 transition-transform duration-300 group-hover:scale-105"
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src =
@@ -207,11 +211,11 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
 
                 {/* Progress Bar & Actions */}
                 <div>
-                  <div className="flex justify-between text-sm mb-1">
+                  <div className="flex justify-between text-sm mb-1 font-semibold">
                     <span className="text-text-muted">Progress</span>
-                    <span className="text-text-muted">{j.progress}%</span>
+                    <span className="text-text">{j.progress}%</span>
                   </div>
-                  <div className="h-1.5 bg-bg-subtle border border-border-muted rounded-full overflow-hidden mb-4">
+                  <div className="h-2 bg-bg-subtle border border-border rounded-full overflow-hidden mb-4">
                     <div
                       className="h-full rounded-full transition-all duration-300"
                       style={{
@@ -223,19 +227,19 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
 
                   <div className="flex justify-between items-center">
                     <span
-                      className="flex items-center gap-1 text-sm font-semibold"
+                      className="flex items-center gap-1 text-sm font-bold"
                       style={{ color: j.color }}
                     >
-                      <Star size={13} /> {j.totalXp} XP
+                      <Star size={14} className="fill-current" /> {j.totalXp} XP
                     </span>
 
                     <Link
-                      to={`/learning/${j.id}`}
-                      className="inline-flex items-center gap-1.5 text-sm font-semibold px-3 py-1.5 rounded-lg border transition-all duration-300 group-hover:bg-white/5"
+                      to={`/learning/${j.resolvedId}`}
+                      className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-4 py-2 rounded-xl border transition-all duration-300 hover:bg-surface active:scale-95 shadow-sm"
                       style={{ borderColor: j.color, color: j.color }}
                     >
                       {j.progress > 0 ? "Continue" : "Start Journey"}{" "}
-                      <ChevronRight size={12} />
+                      <ChevronRight size={14} />
                     </Link>
                   </div>
                 </div>

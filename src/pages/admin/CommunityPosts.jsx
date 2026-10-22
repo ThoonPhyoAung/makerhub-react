@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -9,56 +9,25 @@ import {
   Trash2,
   AlertTriangle,
   X,
+  Loader2,
 } from "lucide-react";
 
+// 📌 API မှ real community posts များကို ယူရန်
+import { useFetch } from "../../hooks/useFetch";
+import { getPosts } from "../../api/postsApi";
+import { useAlert } from "../../context/AlertContext";
+
 function Community() {
-  const [posts, setPosts] = useState([
-    {
-      id: 1,
-      title: "ESP32 WiFi keeps disconnecting every 30 seconds",
-      author: "Aung Min",
-      category: "Help Requests",
-      likes: 12,
-      comments: 5,
-      status: "Published",
-    },
-    {
-      id: 2,
-      title: "Solar Powered ESP32 Durian Farm Node",
-      author: "Su Su",
-      category: "Showcase Projects",
-      likes: 45,
-      comments: 14,
-      status: "Published",
-    },
-    {
-      id: 3,
-      title: "Need help configuring MQTT broker on Raspberry Pi",
-      author: "Kyaw Gyi",
-      category: "Help Requests",
-      likes: 8,
-      comments: 2,
-      status: "Reported",
-    },
-    {
-      id: 4,
-      title: "Custom PCB Designing Guide for Beginners",
-      author: "Hnin Wutt Yee",
-      category: "Showcase Projects",
-      likes: 62,
-      comments: 19,
-      status: "Published",
-    },
-    {
-      id: 5,
-      title: "Spam promotional link test post",
-      author: "Unknown Bot",
-      category: "Help Requests",
-      likes: 0,
-      comments: 0,
-      status: "Hidden",
-    },
-  ]);
+  const { data: apiPosts, loading, error } = useFetch(getPosts);
+  const [posts, setPosts] = useState([]);
+  const showAlert = useAlert();
+
+  // API data ဝင်လာသည့်အခါ local state သို့ ထည့်သွင်းခြင်း
+  useEffect(() => {
+    if (Array.isArray(apiPosts)) {
+      setPosts(apiPosts);
+    }
+  }, [apiPosts]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("All");
@@ -69,26 +38,41 @@ function Community() {
 
   // Filter logic
   const filteredPosts = posts.filter((post) => {
+    const title = post.title || "";
+    const author = post.authorName || post.author || "Anonymous";
+    const category = post.category || post.type || "Help Requests";
+
     const matchesSearch =
-      post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      post.author.toLowerCase().includes(searchTerm.toLowerCase());
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      author.toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesCategory =
-      selectedCategory === "All" || post.category === selectedCategory;
+      selectedCategory === "All" || category === selectedCategory;
+
     return matchesSearch && matchesCategory;
   });
 
-  const toggleHidePost = (id) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === id) {
-          return {
-            ...post,
-            status: post.status === "Hidden" ? "Published" : "Hidden",
-          };
-        }
-        return post;
-      }),
+  // Toggle Hide/Unhide Post
+  const toggleHidePost = async (id) => {
+    const targetPost = posts.find((p) => String(p.id) === String(id));
+    if (!targetPost) return;
+
+    const currentStatus = targetPost.status || "Published";
+    const newStatus = currentStatus === "Hidden" ? "Published" : "Hidden";
+
+    const previousPosts = [...posts];
+    const updatedPosts = posts.map((post) =>
+      String(post.id) === String(id) ? { ...post, status: newStatus } : post,
     );
+    setPosts(updatedPosts);
+
+    try {
+      showAlert(`Post status updated to ${newStatus}`);
+    } catch (err) {
+      console.error("Failed to update post status:", err);
+      setPosts(previousPosts);
+      showAlert("Failed to update post status.");
+    }
   };
 
   // Open Delete Modal
@@ -98,13 +82,33 @@ function Community() {
   };
 
   // Execute Delete after confirmation
-  const handleDeleteConfirmed = () => {
+  const handleDeleteConfirmed = async () => {
     if (postToDelete) {
-      setPosts(posts.filter((post) => post.id !== postToDelete.id));
+      const previousPosts = [...posts];
+      setPosts(
+        posts.filter((post) => String(post.id) !== String(postToDelete.id)),
+      );
       setIsDeleteModalOpen(false);
-      setPostToDelete(null);
+
+      try {
+        showAlert("Community post removed successfully.");
+        setPostToDelete(null);
+      } catch (err) {
+        console.error("Failed to delete post:", err);
+        setPosts(previousPosts);
+        showAlert("Failed to delete post.");
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-text-muted">
+        <Loader2 size={36} className="animate-spin text-primary mb-3" />
+        <p className="text-sm font-medium">Loading community management...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto relative">
@@ -173,87 +177,102 @@ function Community() {
             </thead>
             <tbody className="divide-y divide-border text-sm">
               {filteredPosts.length > 0 ? (
-                filteredPosts.map((post) => (
-                  <tr
-                    key={post.id}
-                    className="hover:bg-surface/30 transition-colors"
-                  >
-                    <td className="py-4 px-5 max-w-md">
-                      <p className="font-medium text-text line-clamp-1 hover:text-primary cursor-pointer">
-                        {post.title}
-                      </p>
-                      <p className="text-xs text-text-muted mt-0.5">
-                        by {post.author}
-                      </p>
-                    </td>
+                filteredPosts.map((post) => {
+                  const postTitle = post.title || "Untitled Post";
+                  const authorName =
+                    post.authorName || post.author || "Anonymous";
+                  const postCategory =
+                    post.category || post.type || "Help Requests";
+                  const likesCount = Array.isArray(post.likedBy)
+                    ? post.likedBy.length
+                    : Number(post.likes || 0);
+                  const commentsCount = Array.isArray(post.commentsList)
+                    ? post.commentsList.length
+                    : Number(post.comments || 0);
+                  const postStatus = post.status || "Published";
 
-                    <td className="py-4 px-5">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                          post.category === "Showcase Projects"
-                            ? "bg-primary/10 text-primary"
-                            : "bg-amber-500/10 text-amber-500"
-                        }`}
-                      >
-                        {post.category}
-                      </span>
-                    </td>
+                  return (
+                    <tr
+                      key={post.id}
+                      className="hover:bg-surface/30 transition-colors"
+                    >
+                      <td className="py-4 px-5 max-w-md">
+                        <p className="font-medium text-text line-clamp-1 hover:text-primary cursor-pointer">
+                          {postTitle}
+                        </p>
+                        <p className="text-xs text-text-muted mt-0.5">
+                          by {authorName}
+                        </p>
+                      </td>
 
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-4 text-xs text-text-muted font-medium">
-                        <span className="flex items-center gap-1">
-                          <ThumbsUp size={13} /> {post.likes}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <MessageSquare size={13} /> {post.comments}
-                        </span>
-                      </div>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                          post.status === "Published"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : post.status === "Reported"
-                              ? "bg-red-500/10 text-red-500"
-                              : "bg-slate-500/10 text-slate-400"
-                        }`}
-                      >
-                        {post.status}
-                      </span>
-                    </td>
-
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => toggleHidePost(post.id)}
-                          title={
-                            post.status === "Hidden"
-                              ? "Unhide Post"
-                              : "Hide Post"
-                          }
-                          className="p-2 rounded-xl bg-surface border border-border text-text-muted hover:text-text hover:bg-surface/80 transition-colors"
+                      <td className="py-4 px-5">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            postCategory === "Showcase Projects"
+                              ? "bg-primary/10 text-primary"
+                              : "bg-amber-500/10 text-amber-500"
+                          }`}
                         >
-                          {post.status === "Hidden" ? (
-                            <Eye size={16} />
-                          ) : (
-                            <EyeOff size={16} />
-                          )}
-                        </button>
+                          {postCategory}
+                        </span>
+                      </td>
 
-                        {/* Trigger Delete Confirmation Modal */}
-                        <button
-                          onClick={() => confirmDelete(post)}
-                          title="Delete Post"
-                          className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-4 text-xs text-text-muted font-medium">
+                          <span className="flex items-center gap-1">
+                            <ThumbsUp size={13} /> {likesCount}
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MessageSquare size={13} /> {commentsCount}
+                          </span>
+                        </div>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            postStatus === "Published"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : postStatus === "Reported"
+                                ? "bg-red-500/10 text-red-500"
+                                : "bg-slate-500/10 text-slate-400"
+                          }`}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {postStatus}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => toggleHidePost(post.id)}
+                            title={
+                              postStatus === "Hidden"
+                                ? "Unhide Post"
+                                : "Hide Post"
+                            }
+                            className="p-2 rounded-xl bg-surface border border-border text-text-muted hover:text-text hover:bg-surface/80 transition-colors"
+                          >
+                            {postStatus === "Hidden" ? (
+                              <Eye size={16} />
+                            ) : (
+                              <EyeOff size={16} />
+                            )}
+                          </button>
+
+                          {/* Trigger Delete Confirmation Modal */}
+                          <button
+                            onClick={() => confirmDelete(post)}
+                            title="Delete Post"
+                            className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td

@@ -49,9 +49,9 @@ function ChapterDetail() {
 
   if (journeyLoading || lessonsLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-gray-400 text-sm">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-text-muted text-sm">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           Loading Chapter Modules...
         </div>
       </div>
@@ -60,7 +60,7 @@ function ChapterDetail() {
 
   if (journeyError || !journey) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-red-400 text-sm">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-red-400 text-sm">
         Chapter or Journey not found!
       </div>
     );
@@ -80,7 +80,7 @@ function ChapterDetail() {
   const lessons = Array.isArray(lessonsData) ? lessonsData : [];
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white">
+    <div className="min-h-screen bg-bg text-text">
       {/* 1. Chapter Hero Banner */}
       <ChapterHero
         journey={journey}

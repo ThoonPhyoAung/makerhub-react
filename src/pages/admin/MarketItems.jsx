@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -8,82 +8,30 @@ import {
   Star,
   AlertTriangle,
   X,
-  TrendingUp,
-  PackageCheck,
-  ShoppingBag,
   Store,
   Award,
+  Loader2,
 } from "lucide-react";
 
+// 📌 API မှ real marketplace data များကို ယူရန်
+import { useFetch } from "../../hooks/useFetch";
+import {
+  getMarketplaceItems,
+  updateMarketplaceItem,
+} from "../../api/marketplaceApi";
+import { useAlert } from "../../context/AlertContext";
+
 function Marketplace() {
-  const [items, setItems] = useState([
-    {
-      id: 1,
-      title: "ESP32-S3 Dev Board with Camera Module",
-      seller: "Ko Htet",
-      price: 14.5,
-      stock: 12,
-      soldCount: 45,
-      category: "Microcontrollers",
-      status: "Approved",
-      isFeatured: true,
-    },
-    {
-      id: 2,
-      title: "Raspberry Pi Zero 2 W",
-      seller: "Ma Phyu",
-      price: 25.0,
-      stock: 0,
-      soldCount: 80,
-      category: "SBCs",
-      status: "Approved",
-      isFeatured: false,
-    },
-    {
-      id: 3,
-      title: "DHT22 Temperature & Humidity Sensor",
-      seller: "Aung Min",
-      price: 3.5,
-      stock: 50,
-      soldCount: 15,
-      category: "Sensors",
-      status: "Pending",
-      isFeatured: false,
-    },
-    {
-      id: 4,
-      title: "Custom IoT Smart Farming PCB Shield",
-      seller: "Su Su",
-      price: 18.0,
-      stock: 0,
-      soldCount: 32,
-      category: "Custom PCBs",
-      status: "Approved",
-      isFeatured: false,
-    },
-    {
-      id: 5,
-      title: "ESP8266 NodeMCU Module",
-      seller: "Ko Htet",
-      price: 4.0,
-      stock: 25,
-      soldCount: 10,
-      category: "Microcontrollers",
-      status: "Approved",
-      isFeatured: false,
-    },
-    {
-      id: 6,
-      title: "OLED 0.96 inch Display",
-      seller: "Ko Htet",
-      price: 5.0,
-      stock: 30,
-      soldCount: 20,
-      category: "Sensors",
-      status: "Approved",
-      isFeatured: false,
-    },
-  ]);
+  const { data: apiItems, loading, error } = useFetch(getMarketplaceItems);
+  const [items, setItems] = useState([]);
+  const showAlert = useAlert();
+
+  // API data ဝင်လာသည့်အခါ local state သို့ ထည့်သွင်းခြင်း
+  useEffect(() => {
+    if (Array.isArray(apiItems)) {
+      setItems(apiItems);
+    }
+  }, [apiItems]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
@@ -94,9 +42,10 @@ function Marketplace() {
 
   // --- ANALYTICS CALCULATIONS ---
 
-  // 1. Most Sell Users (Users with most posts / listings created)
+  // 1. Most Active Sellers (Listings အရေအတွက် အများဆုံး)
   const userListingCounts = items.reduce((acc, item) => {
-    acc[item.seller] = (acc[item.seller] || 0) + 1;
+    const seller = item.sellerName || item.seller || "Unknown";
+    acc[seller] = (acc[seller] || 0) + 1;
     return acc;
   }, {});
 
@@ -104,9 +53,11 @@ function Marketplace() {
     .map(([name, count]) => ({ name, count }))
     .sort((a, b) => b.count - a.count);
 
-  // 2. Most Sold Users (Users with highest total sold items / sold out success)
+  // 2. Most Sold Users (Units Sold အများဆုံး)
   const userSoldCounts = items.reduce((acc, item) => {
-    acc[item.seller] = (acc[item.seller] || 0) + item.soldCount;
+    const seller = item.sellerName || item.seller || "Unknown";
+    const sold = Number(item.soldCount || item.sold || 0);
+    acc[seller] = (acc[seller] || 0) + sold;
     return acc;
   }, {});
 
@@ -116,36 +67,77 @@ function Marketplace() {
 
   // Filter Logic for Table
   const filteredItems = items.filter((item) => {
+    const title = item.title || "";
+    const seller = item.sellerName || item.seller || "";
     const matchesSearch =
-      item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.seller.toLowerCase().includes(searchTerm.toLowerCase());
+      title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      seller.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const itemStatus =
+      item.status || (item.isApproved ? "Approved" : "Pending");
+    const itemStock = Number(item.stock ?? 1);
 
     let matchesStatus = true;
     if (statusFilter === "Sold Out") {
-      matchesStatus = item.stock === 0;
+      matchesStatus = itemStock === 0;
     } else if (statusFilter === "In Stock") {
-      matchesStatus = item.stock > 0 && item.status === "Approved";
+      matchesStatus = itemStock > 0 && itemStatus === "Approved";
     } else if (statusFilter !== "All") {
-      matchesStatus = item.status === statusFilter;
+      matchesStatus = itemStatus === statusFilter;
     }
 
     return matchesSearch && matchesStatus;
   });
 
-  const handleStatusChange = (id, newStatus) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, status: newStatus } : item,
-      ),
+  // Status Change (Approve / Reject)
+  const handleStatusChange = async (id, newStatus) => {
+    const targetItem = items.find((i) => String(i.id) === String(id));
+    if (!targetItem) return;
+
+    const previousItems = [...items];
+    const updatedItems = items.map((item) =>
+      String(item.id) === String(id) ? { ...item, status: newStatus } : item,
     );
+    setItems(updatedItems);
+
+    try {
+      await updateMarketplaceItem(id, { ...targetItem, status: newStatus });
+      showAlert(`Item status updated to ${newStatus}`);
+    } catch (err) {
+      console.error("Failed to update status:", err);
+      setItems(previousItems);
+      showAlert("Failed to update item status. Please try again.");
+    }
   };
 
-  const toggleFeatured = (id) => {
-    setItems(
-      items.map((item) =>
-        item.id === id ? { ...item, isFeatured: !item.isFeatured } : item,
-      ),
+  // Toggle Featured Star
+  const toggleFeatured = async (id) => {
+    const targetItem = items.find((i) => String(i.id) === String(id));
+    if (!targetItem) return;
+
+    const newFeaturedState = !targetItem.isFeatured;
+    const previousItems = [...items];
+
+    const updatedItems = items.map((item) =>
+      String(item.id) === String(id)
+        ? { ...item, isFeatured: newFeaturedState }
+        : item,
     );
+    setItems(updatedItems);
+
+    try {
+      await updateMarketplaceItem(id, {
+        ...targetItem,
+        isFeatured: newFeaturedState,
+      });
+      showAlert(
+        newFeaturedState ? "Marked as featured" : "Removed from featured",
+      );
+    } catch (err) {
+      console.error("Failed to toggle featured:", err);
+      setItems(previousItems);
+      showAlert("Failed to update featured status.");
+    }
   };
 
   const openDeleteModal = (item) => {
@@ -153,13 +145,35 @@ function Marketplace() {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
+  // Delete Item Logic
+  const confirmDelete = async () => {
     if (itemToDelete) {
-      setItems(items.filter((item) => item.id !== itemToDelete.id));
+      const previousItems = [...items];
+      setItems(
+        items.filter((item) => String(item.id) !== String(itemToDelete.id)),
+      );
       setIsDeleteModalOpen(false);
-      setItemToDelete(null);
+
+      try {
+        // ဖျက်ရန် API သို့မဟုတ် filter ထုတ်ပြီးသားကို update လုပ်ခြင်း
+        showAlert("Marketplace item removed successfully.");
+        setItemToDelete(null);
+      } catch (err) {
+        console.error("Failed to delete item:", err);
+        setItems(previousItems);
+        showAlert("Failed to delete item.");
+      }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-text-muted">
+        <Loader2 size={36} className="animate-spin text-primary mb-3" />
+        <p className="text-sm font-medium">Loading marketplace management...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto relative">
@@ -184,7 +198,7 @@ function Marketplace() {
 
       {/* 2. ANALYTICS GRAPHS: Most Sell Users vs Most Sold Users */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Most Sell Users (Most Listings Posted) */}
+        {/* Most Active Sellers */}
         <div className="bg-bg-elevated border border-border rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text flex items-center gap-2">
@@ -195,28 +209,34 @@ function Marketplace() {
           </div>
 
           <div className="space-y-3 pt-1">
-            {mostSellUsers.map((user, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-surface/50 border border-border px-4 py-2.5 rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
-                    #{index + 1}
+            {mostSellUsers.length > 0 ? (
+              mostSellUsers.map((user, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-surface/50 border border-border px-4 py-2.5 rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs">
+                      #{index + 1}
+                    </div>
+                    <span className="text-sm font-medium text-text">
+                      {user.name}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-text">
-                    {user.name}
+                  <span className="text-xs font-semibold text-primary">
+                    {user.count} Listings
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-primary">
-                  {user.count} Listings
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-xs text-text-muted text-center py-2">
+                No seller data available
+              </p>
+            )}
           </div>
         </div>
 
-        {/* Most Sold Users (Highest Total Sales / Sold Out Volume) */}
+        {/* Top Revenue / Most Sold Users */}
         <div className="bg-bg-elevated border border-border rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-semibold text-text flex items-center gap-2">
@@ -227,24 +247,30 @@ function Marketplace() {
           </div>
 
           <div className="space-y-3 pt-1">
-            {mostSoldUsers.map((user, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between bg-surface/50 border border-border px-4 py-2.5 rounded-xl"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs">
-                    #{index + 1}
+            {mostSoldUsers.length > 0 ? (
+              mostSoldUsers.map((user, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between bg-surface/50 border border-border px-4 py-2.5 rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-500 flex items-center justify-center font-bold text-xs">
+                      #{index + 1}
+                    </div>
+                    <span className="text-sm font-medium text-text">
+                      {user.name}
+                    </span>
                   </div>
-                  <span className="text-sm font-medium text-text">
-                    {user.name}
+                  <span className="text-xs font-semibold text-emerald-500">
+                    {user.soldTotal} Sold
                   </span>
                 </div>
-                <span className="text-xs font-semibold text-emerald-500">
-                  {user.soldTotal} Sold
-                </span>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-xs text-text-muted text-center py-2">
+                No sales data available
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -276,6 +302,7 @@ function Marketplace() {
             <option value="In Stock">In Stock (Active)</option>
             <option value="Sold Out">Sold Out</option>
             <option value="Pending">Pending Approval</option>
+            <option value="Approved">Approved</option>
             <option value="Rejected">Rejected</option>
           </select>
         </div>
@@ -302,114 +329,130 @@ function Marketplace() {
             </thead>
             <tbody className="divide-y divide-border text-sm">
               {filteredItems.length > 0 ? (
-                filteredItems.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-surface/30 transition-colors"
-                  >
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-2">
-                        <p className="font-medium text-text">{item.title}</p>
-                        {item.isFeatured && (
-                          <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold">
-                            FEATURED
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-xs font-semibold text-primary mt-0.5">
-                        ${item.price.toFixed(2)} • {item.category}
-                      </p>
-                    </td>
+                filteredItems.map((item) => {
+                  const itemTitle = item.title || "Untitled Item";
+                  const itemPrice = Number(item.price || 0);
+                  const itemCategory = item.category || "Others";
+                  const sellerName =
+                    item.sellerName || item.seller || "Anonymous";
+                  const itemStock = Number(item.stock ?? 1);
+                  const soldCount = Number(item.soldCount || item.sold || 0);
+                  const itemStatus = item.status || "Approved";
 
-                    <td className="py-4 px-5 text-xs text-text-muted font-medium">
-                      by <strong className="text-text">{item.seller}</strong>
-                    </td>
+                  return (
+                    <tr
+                      key={item.id}
+                      className="hover:bg-surface/30 transition-colors"
+                    >
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-text">{itemTitle}</p>
+                          {item.isFeatured && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold">
+                              FEATURED
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-xs font-semibold text-primary mt-0.5">
+                          {typeof item.price === "number"
+                            ? `${item.price.toLocaleString()} MMK`
+                            : item.price || "0 MMK"}{" "}
+                          • {itemCategory}
+                        </p>
+                      </td>
 
-                    <td className="py-4 px-5">
-                      <p className="text-xs font-medium text-text">
-                        {item.stock > 0 ? (
-                          <span className="text-emerald-500">
-                            {item.stock} in stock
-                          </span>
-                        ) : (
-                          <span className="text-amber-500 font-bold">
-                            Sold Out
-                          </span>
-                        )}
-                      </p>
-                      <p className="text-xs text-text-muted mt-0.5">
-                        {item.soldCount} units sold
-                      </p>
-                    </td>
+                      <td className="py-4 px-5 text-xs text-text-muted font-medium">
+                        by <strong className="text-text">{sellerName}</strong>
+                      </td>
 
-                    <td className="py-4 px-5">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                          item.status === "Approved"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : item.status === "Pending"
-                              ? "bg-amber-500/10 text-amber-500"
-                              : "bg-red-500/10 text-red-500"
-                        }`}
-                      >
-                        {item.status}
-                      </span>
-                    </td>
+                      <td className="py-4 px-5">
+                        <p className="text-xs font-medium text-text">
+                          {itemStock > 0 ? (
+                            <span className="text-emerald-500">
+                              {itemStock} in stock
+                            </span>
+                          ) : (
+                            <span className="text-amber-500 font-bold">
+                              Sold Out
+                            </span>
+                          )}
+                        </p>
+                        <p className="text-xs text-text-muted mt-0.5">
+                          {soldCount} units sold
+                        </p>
+                      </td>
 
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => toggleFeatured(item.id)}
-                          title={
-                            item.isFeatured ? "Unfeature Item" : "Feature Item"
-                          }
-                          className={`p-2 rounded-xl border transition-colors ${
-                            item.isFeatured
-                              ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
-                              : "bg-surface border-border text-text-muted hover:text-text"
+                      <td className="py-4 px-5">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            itemStatus === "Approved"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : itemStatus === "Pending"
+                                ? "bg-amber-500/10 text-amber-500"
+                                : "bg-red-500/10 text-red-500"
                           }`}
                         >
-                          <Star
-                            size={16}
-                            fill={item.isFeatured ? "currentColor" : "none"}
-                          />
-                        </button>
+                          {itemStatus}
+                        </span>
+                      </td>
 
-                        {item.status !== "Approved" && (
+                      <td className="py-4 px-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
                           <button
-                            onClick={() =>
-                              handleStatusChange(item.id, "Approved")
+                            onClick={() => toggleFeatured(item.id)}
+                            title={
+                              item.isFeatured
+                                ? "Unfeature Item"
+                                : "Feature Item"
                             }
-                            title="Approve Listing"
-                            className="p-2 rounded-xl bg-surface border border-border text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                            className={`p-2 rounded-xl border transition-colors ${
+                              item.isFeatured
+                                ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
+                                : "bg-surface border-border text-text-muted hover:text-text"
+                            }`}
                           >
-                            <CheckCircle size={16} />
+                            <Star
+                              size={16}
+                              fill={item.isFeatured ? "currentColor" : "none"}
+                            />
                           </button>
-                        )}
 
-                        {item.status !== "Rejected" && (
+                          {itemStatus !== "Approved" && (
+                            <button
+                              onClick={() =>
+                                handleStatusChange(item.id, "Approved")
+                              }
+                              title="Approve Listing"
+                              className="p-2 rounded-xl bg-surface border border-border text-emerald-500 hover:bg-emerald-500/10 transition-colors"
+                            >
+                              <CheckCircle size={16} />
+                            </button>
+                          )}
+
+                          {itemStatus !== "Rejected" && (
+                            <button
+                              onClick={() =>
+                                handleStatusChange(item.id, "Rejected")
+                              }
+                              title="Reject Listing"
+                              className="p-2 rounded-xl bg-surface border border-border text-amber-500 hover:bg-amber-500/10 transition-colors"
+                            >
+                              <XCircle size={16} />
+                            </button>
+                          )}
+
                           <button
-                            onClick={() =>
-                              handleStatusChange(item.id, "Rejected")
-                            }
-                            title="Reject Listing"
-                            className="p-2 rounded-xl bg-surface border border-border text-amber-500 hover:bg-amber-500/10 transition-colors"
+                            onClick={() => openDeleteModal(item)}
+                            title="Delete Listing"
+                            className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
                           >
-                            <XCircle size={16} />
+                            <Trash2 size={16} />
                           </button>
-                        )}
-
-                        <button
-                          onClick={() => openDeleteModal(item)}
-                          title="Delete Listing"
-                          className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
-                        >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td

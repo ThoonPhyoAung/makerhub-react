@@ -1,16 +1,16 @@
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useState, useMemo } from "react";
 import {
+  Search,
   Plus,
-  Edit3,
-  Trash2,
-  Layers,
   BookOpen,
+  Layers,
   Users,
   Star,
-  Search,
+  Edit3,
+  Trash2,
   AlertTriangle,
-  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { useFetch } from "../../../../hooks/useFetch";
 import {
@@ -32,23 +32,27 @@ const getLessonQuestionsXp = (lesson) => {
 const JourneysIndex = () => {
   const showAlert = useAlert();
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [journeyToDelete, setJourneyToDelete] = useState(null);
 
   const {
     data: journeysData,
     loading: journeysLoading,
     error: journeysError,
-    refetch,
   } = useFetch(getJourneys);
+
+  // 📌 Journeys တွေအတွက်ပါ Override State ထည့်ခြင်း
+  const [journeysOverride, setJourneysOverride] = useState(null);
+  const journeys =
+    journeysOverride ?? (Array.isArray(journeysData) ? journeysData : []);
+
   const {
     data: lessonsData,
     loading: lessonsLoading,
     error: lessonsError,
   } = useFetch(getLessons);
 
-  const journeys = Array.isArray(journeysData) ? journeysData : [];
+  // const journeys = Array.isArray(journeysData) ? journeysData : [];
   const allLessons = Array.isArray(lessonsData) ? lessonsData : [];
+
   const isLoading = journeysLoading || lessonsLoading;
   const hasError = journeysError || lessonsError;
 
@@ -56,7 +60,7 @@ const JourneysIndex = () => {
     if (!Array.isArray(journeys)) return [];
 
     return journeys.map((j) => {
-      const journeyId = j.id;
+      const journeyId = j.journeyId;
       const journeyLessons = allLessons.filter(
         (l) => String(l.journeyId) === String(journeyId),
       );
@@ -97,27 +101,39 @@ const JourneysIndex = () => {
     return enrichedJourneys.filter(
       (item) =>
         item.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.id?.toLowerCase().includes(searchTerm.toLowerCase()),
+        item.journeyId?.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [enrichedJourneys, searchTerm]);
 
+  // 📍 STEP 4.2: Delete ခလုတ်နှိပ်လိုက်ရင် AlertContext ရဲ့ Modal ပွင့်လာစေမည့် Function
   const handleDeleteClick = (journey) => {
-    setJourneyToDelete(journey);
-    setIsDeleteModalOpen(true);
+    showAlert({
+      isModal: true,
+      type: "delete", // 📌 AlertContext ထဲက အနီရောင် delete style ကို သုံးမည်
+      title: "Confirm Deletion",
+      message: `Are you sure you want to delete journey "${journey?.title}"?`,
+      cancelText: "Cancel",
+      actionText: "Yes, Delete",
+      onAction: () => confirmDelete(journey), // ဖျက်မယ့် လုပ်ဆောင်ချက်ကို ပေးခြင်း
+    });
   };
 
-  const confirmDelete = async () => {
+  // 📍 STEP 4.3: Modal ထဲက 'Yes, Delete' နှိပ်ရင် API ခေါ်ပြီး ဖျက်မည့် Function
+  const confirmDelete = async (journeyToDelete) => {
     if (!journeyToDelete) return;
 
     try {
       await deleteJourneyApi(journeyToDelete.id);
+
+      // 📌 Page Reload လုပ်မည့်အစား journeysOverride ကို သုံး၍ ဇယားထဲမှ ချက်ချင်းဖယ်ထုတ်ခြင်း
+      setJourneysOverride(
+        journeys.filter((j) => String(j.id) !== String(journeyToDelete.id)),
+      );
+
       showAlert({
         message: `Journey "${journeyToDelete.title}" deleted successfully!`,
         type: "success",
       });
-      setIsDeleteModalOpen(false);
-      setJourneyToDelete(null);
-      refetch?.();
     } catch (err) {
       console.error("Delete failed:", err);
       showAlert({
@@ -129,6 +145,7 @@ const JourneysIndex = () => {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Header & Breadcrumb */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text">Journeys Management</h1>
@@ -158,6 +175,7 @@ const JourneysIndex = () => {
         </nav>
       </div>
 
+      {/* Search Bar & Add Button */}
       <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
         <div className="relative w-full sm:w-80">
           <Search
@@ -166,7 +184,7 @@ const JourneysIndex = () => {
           />
           <input
             type="text"
-            placeholder="Search journeys by title or ID..."
+            placeholder="Search journeys by title or journeyId..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full bg-bg-elevated border border-border rounded-xl pl-10 pr-4 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
@@ -181,8 +199,13 @@ const JourneysIndex = () => {
         </Link>
       </div>
 
+      {/* Loading & Error States */}
       {isLoading && (
         <div className="text-center py-16 text-text-muted text-sm">
+          <Loader2
+            size={32}
+            className="mx-auto text-primary animate-spin mb-3"
+          />
           Loading journeys data...
         </div>
       )}
@@ -192,12 +215,13 @@ const JourneysIndex = () => {
         </div>
       )}
 
+      {/* Journeys Cards Grid UI */}
       {!isLoading && !hasError && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           {filteredJourneys.length > 0 ? (
             filteredJourneys.map((item) => (
               <div
-                key={item.id}
+                key={item.journeyId}
                 className="bg-bg-elevated border border-border rounded-2xl p-5 shadow-sm flex flex-col justify-between space-y-4 hover:border-white/20 transition-all"
               >
                 <div className="flex items-start justify-between gap-4">
@@ -230,7 +254,7 @@ const JourneysIndex = () => {
                         {item.title}
                       </h3>
                       <p className="text-xs text-text-muted font-mono mt-0.5">
-                        ID: {item.id}{" "}
+                        journeyId: {item.journeyId}{" "}
                         {item.link && (
                           <span className="text-primary ml-1">
                             ({item.link})
@@ -240,9 +264,9 @@ const JourneysIndex = () => {
                     </div>
                   </div>
 
-                  {/* Board Image Preview on Card */}
+                  {/* Board Image Preview */}
                   {item.boardImage && (
-                    <div className="w-16 h-14 rounded-xl bg-surface border border-border overflow-hidden p-1 shrink-0 flex items-center justify-center">
+                    <div className="w-24 h-20 rounded-xl bg-surface border border-border overflow-hidden p-1.5 shrink-0 flex items-center justify-center">
                       <img
                         src={item.boardImage}
                         alt={item.title}
@@ -256,6 +280,7 @@ const JourneysIndex = () => {
                   {item.desc || item.description}
                 </p>
 
+                {/* Chapters, Lessons, XP Stats */}
                 <div className="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-surface border border-border text-xs text-text-muted">
                   <div className="flex items-center gap-1.5">
                     <BookOpen size={13} className="text-primary" />
@@ -275,6 +300,7 @@ const JourneysIndex = () => {
                   </div>
                 </div>
 
+                {/* Learners & Action Buttons */}
                 <div className="flex items-center justify-between pt-2 border-t border-border text-xs">
                   <span className="text-text-muted text-[11px] flex items-center gap-1">
                     <Users size={12} /> Learners:{" "}
@@ -282,7 +308,7 @@ const JourneysIndex = () => {
                   </span>
                   <div className="flex items-center gap-2">
                     <Link
-                      to={`/admin/learning/journeys/edit/${item.id}`}
+                      to={`/admin/learning/journeys/edit/${item.journeyId}`}
                       className="p-2 rounded-xl bg-surface border border-border text-text-muted hover:text-text transition-colors"
                       title="Edit Journey"
                     >
@@ -304,44 +330,6 @@ const JourneysIndex = () => {
               No Journeys found matching your search.
             </div>
           )}
-        </div>
-      )}
-
-      {isDeleteModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="bg-bg-elevated border border-red-500/30 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
-                <AlertTriangle size={20} />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-text">
-                  Confirm Deletion
-                </h3>
-                <p className="text-xs text-text-muted mt-0.5">
-                  Are you sure you want to delete{" "}
-                  <strong className="text-text">
-                    {journeyToDelete?.title}
-                  </strong>
-                  ?
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-border">
-              <button
-                onClick={() => setIsDeleteModalOpen(false)}
-                className="px-4 py-2 rounded-xl border border-border bg-surface text-text text-xs font-semibold"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 rounded-xl bg-red-600 text-white text-xs font-semibold hover:bg-red-500"
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
         </div>
       )}
     </div>

@@ -62,11 +62,12 @@ function HeroSection() {
     <section className="relative bg-bg overflow-hidden py-16 lg:py-14 lg:min-h-[80vh] flex items-start lg:items-center">
       {/* Background grid pattern */}
       <div
-        className="absolute inset-0 opacity-100 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-60 dark:opacity-100"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px)`,
-          backgroundSize: "60px 60px",
+          backgroundImage: `linear-gradient(to right, var(--color-border, rgba(128, 128, 128, 0.025)) 1px, transparent 1px),
+                             linear-gradient(to bottom, var(--color-border, rgba(128, 128, 128, 0.025)) 1px, transparent 1px)`,
+          backgroundSize: "50px 50px",
+          opacity: 0.35,
           maskImage:
             "radial-gradient(ellipse 80% 60% at 50% 0%, black 40%, transparent 100%)",
         }}

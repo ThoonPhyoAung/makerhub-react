@@ -10,6 +10,7 @@ const defaultUsers = [
     role: "admin",
     email: "admin@makerhub.mm",
     password: "admin",
+    avatar: "",
     createdAt: "2025-08-15",
     xp: 0,
     streakDays: 0,
@@ -24,6 +25,7 @@ const defaultUsers = [
     role: "learner",
     email: "learner@makerhub.mm",
     password: "123456",
+    avatar: "",
     createdAt: "2025-08-15",
     xp: 0,
     streakDays: 0,
@@ -94,6 +96,7 @@ export const userLogin = (userinfo) => {
     name: user.name,
     role: user.role,
     email: user.email,
+    avatar: user.avatar,
     createdAt: user.createdAt || new Date().toISOString().slice(0, 7),
     xp: user.xp || 0,
     streakDates: userStreakDates,
@@ -132,6 +135,7 @@ export const userSignUp = (userData) => {
     role: "learner",
     email,
     password,
+    avatar: "",
     createdAt: currentMonthYear,
     xp: 100, // Bonus XP
     streakDates: [], // 📍 Signup စလုပ်ချိန်တွင် Array အလွတ် ဖြစ်မည်

@@ -1,9 +1,15 @@
 import { useState, useRef, useEffect } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { logout } from "../features/auth/authSlice";
 import { userLogout } from "../api/userService";
 import { useAlert } from "../context/AlertContext";
+import { useTheme } from "../context/ThemeContext";
+import { useFetch } from "../hooks/useFetch";
+import { getMarketplaceItems } from "../api/marketplaceApi";
+import { getPosts } from "../api/postsApi";
+import { getLessons } from "../api/lessonsApi";
+
 import {
   Search,
   Moon,
@@ -16,31 +22,42 @@ import {
   LogOut,
   Bell,
   Plus,
+  Package,
+  GraduationCap,
+  BookOpen,
+  Loader2,
 } from "lucide-react";
 
 function Navbar() {
   const profileDropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);
+  const searchRef = useRef(null);
+
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
   const [searchValue, setSearchValue] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
+
+  const { data: marketData, loading: marketLoading } =
+    useFetch(getMarketplaceItems);
+  const { data: postsData, loading: postsLoading } = useFetch(getPosts);
+  const { data: lessonsData, loading: lessonsLoading } = useFetch(getLessons);
+
+  const items = Array.isArray(marketData) ? marketData : [];
+  const posts = Array.isArray(postsData) ? postsData : [];
+  const lessons = Array.isArray(lessonsData) ? lessonsData : [];
+
+  const isLoading = marketLoading || postsLoading || lessonsLoading;
 
   const showAlert = useAlert();
   const { user, isLogin } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // Dark Mode DOM Sync
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
-  }, [isDarkMode]);
-
-  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (
@@ -56,10 +73,55 @@ function Navbar() {
       ) {
         setIsNotifOpen(false);
       }
+
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const query = searchValue.trim().toLowerCase();
+
+  const filteredItems = query
+    ? items
+        .filter(
+          (i) =>
+            i.title?.toLowerCase().includes(query) ||
+            i.category?.toLowerCase().includes(query),
+        )
+        .slice(0, 3)
+    : [];
+
+  const filteredPosts = query
+    ? posts
+        .filter(
+          (p) =>
+            p.title?.toLowerCase().includes(query) ||
+            p.description?.toLowerCase().includes(query),
+        )
+        .slice(0, 3)
+    : [];
+
+  const filteredLessons = query
+    ? lessons
+        .filter((l) =>
+          typeof l.title === "object"
+            ? l.title?.en?.toLowerCase().includes(query)
+            : l.title?.toLowerCase().includes(query),
+        )
+        .slice(0, 3)
+    : [];
+
+  const totalResultsCount =
+    filteredItems.length + filteredPosts.length + filteredLessons.length;
+
+  const handleInputChange = (e) => {
+    const val = e.target.value;
+    setSearchValue(val);
+    setIsOpen(val.trim().length > 0);
+  };
 
   const handleLogout = () => {
     const response = userLogout();
@@ -67,7 +129,7 @@ function Navbar() {
     showAlert(response.message);
     setIsDropdownOpen(false);
     setIsMenuOpen(false);
-    navigate("/"); // 3. Redirect to home page on logout
+    navigate("/");
   };
 
   const navLinks = [
@@ -79,12 +141,14 @@ function Navbar() {
 
   const handleSearchSubmit = (e) => {
     e.preventDefault();
-    console.log("Searching:", searchValue);
+    if (!searchValue.trim()) return;
+    setIsOpen(false);
     setIsMenuOpen(false);
+    navigate(`/search?q=${encodeURIComponent(searchValue.trim())}`);
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-nav-bg border-b border-border relative">
+    <header className="sticky top-0 z-50 bg-nav-bg border-b border-border">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
@@ -114,44 +178,191 @@ function Navbar() {
           ))}
         </ul>
 
-        {/* Desktop Search */}
-        <form
-          onSubmit={handleSearchSubmit}
-          className="hidden lg:flex items-center relative flex-1 max-w-sm"
+        {/* Desktop Search with Live Dropdown */}
+        <div
+          className="hidden lg:block relative flex-1 max-w-sm"
+          ref={searchRef}
         >
-          <Search size={16} className="absolute left-3 text-text-muted" />
-          <input
-            type="search"
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            placeholder="Search projects or items..."
-            className="w-full bg-bg-elevated border border-border rounded-full pl-9 pr-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary"
-          />
-        </form>
+          <form
+            onSubmit={handleSearchSubmit}
+            className="flex items-center relative"
+          >
+            <Search size={16} className="absolute left-3 text-text-muted" />
+            <input
+              type="text"
+              value={searchValue}
+              onChange={handleInputChange}
+              onFocus={() => {
+                if (searchValue.trim().length > 0) setIsOpen(true);
+              }}
+              placeholder="Search items, posts, or lessons..."
+              className="w-full bg-bg-elevated border border-border rounded-full pl-9 pr-8 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+            />
+            {searchValue && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchValue("");
+                  setIsOpen(false);
+                }}
+                className="absolute right-3 text-text-muted hover:text-text cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </form>
+
+          {/* Live Search Dropdown Panel */}
+          {isOpen && (
+            <div className="absolute left-0 right-0 mt-2 bg-bg-elevated border border-border rounded-2xl shadow-2xl overflow-hidden z-50 max-h-[80vh] overflow-y-auto no-scrollbar">
+              {isLoading ? (
+                <div className="p-6 text-center text-text-muted text-xs flex items-center justify-center gap-2">
+                  <Loader2 size={16} className="animate-spin text-primary" />{" "}
+                  Searching...
+                </div>
+              ) : totalResultsCount > 0 ? (
+                <div className="p-2 space-y-4">
+                  {/* Marketplace Items */}
+                  {filteredItems.length > 0 && (
+                    <div>
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                        <Package size={12} className="text-primary" />{" "}
+                        Marketplace Items
+                      </div>
+                      <div className="space-y-1 mt-1">
+                        {filteredItems.map((item) => (
+                          <Link
+                            key={item.id || item._id}
+                            to={`/marketplace/items/${item.id || item._id}`}
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-surface transition-colors group"
+                          >
+                            <img
+                              src={
+                                item.images?.[0] ||
+                                "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=500"
+                              }
+                              alt={item.title}
+                              className="w-9 h-9 rounded-lg object-cover bg-bg border border-border shrink-0"
+                            />
+                            <div className="min-w-0 flex-1">
+                              <h4 className="text-xs font-bold text-text truncate group-hover:text-primary transition-colors">
+                                {item.title}
+                              </h4>
+                              <p className="text-[11px] text-primary font-semibold">
+                                {typeof item.price === "number"
+                                  ? `${item.price.toLocaleString()} MMK`
+                                  : item.price}
+                              </p>
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Community Posts */}
+                  {filteredPosts.length > 0 && (
+                    <div className="border-t border-border/60 pt-2">
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                        <GraduationCap size={12} className="text-primary" />{" "}
+                        Community Posts
+                      </div>
+                      <div className="space-y-1 mt-1">
+                        {filteredPosts.map((post) => (
+                          <Link
+                            key={post.id || post._id}
+                            to={`/community/project/${post.id || post._id}`}
+                            onClick={() => setIsOpen(false)}
+                            className="block px-3 py-2 rounded-xl hover:bg-surface transition-colors group"
+                          >
+                            <h4 className="text-xs font-bold text-text truncate group-hover:text-primary transition-colors">
+                              {post.title}
+                            </h4>
+                            <p className="text-[11px] text-text-muted truncate mt-0.5">
+                              {post.description}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Learning Lessons */}
+                  {filteredLessons.length > 0 && (
+                    <div className="border-t border-border/60 pt-2">
+                      <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                        <BookOpen size={12} className="text-primary" /> Learning
+                        Lessons
+                      </div>
+                      <div className="space-y-1 mt-1">
+                        {filteredLessons.map((lesson) => {
+                          const lessonTitle =
+                            typeof lesson.title === "object"
+                              ? lesson.title?.en
+                              : lesson.title;
+
+                          // 📌 Journey ID နှင့် Chapter ID ကို ယူ၍ သင့်တော်သော URL ပုံစံတည်ဆောက်ခြင်း
+                          const jId =
+                            lesson.journeyId || lesson.journey || "esp32";
+                          const cId =
+                            lesson.chapterId || lesson.chapter || "esp32-basic";
+                          const lId = lesson.id || lesson._id;
+
+                          return (
+                            <Link
+                              key={lId}
+                              to={`/learning/${jId}/${cId}/${lId}`}
+                              onClick={() => {
+                                setIsOpen(false);
+                                setIsMenuOpen(false); // Mobile menu ပိတ်ရန်
+                              }}
+                              className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface transition-colors group"
+                            >
+                              <span className="text-xs font-bold text-text truncate group-hover:text-primary transition-colors">
+                                {lessonTitle}
+                              </span>
+                              <span className="text-[10px] text-text-muted shrink-0 bg-bg px-1.5 py-0.5 rounded border border-border">
+                                Lesson
+                              </span>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-8 text-center text-text-muted text-xs">
+                  No results found for &quot;
+                  <span className="text-text font-semibold">{searchValue}</span>
+                  &quot;
+                </div>
+              )}
+            </div>
+          )}
+        </div>
 
         {/* Desktop Right Controls */}
         <div className="hidden lg:flex items-center gap-3 shrink-0">
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text hover:bg-bg-subtle transition-all cursor-pointer shadow-sm"
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
-          {/* New Post Button (Pill Style) */}
           {isLogin && (
             <Link
               to="/community/create-post"
               className="inline-flex items-center gap-1.5 bg-primary hover:brightness-110 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-sm transition-all active:scale-95 shrink-0"
             >
               <Plus size={16} strokeWidth={2.5} />
-
               <span>New Post</span>
             </Link>
           )}
 
-          {/* Notification Bell */}
           {isLogin && (
             <div className="relative" ref={notifDropdownRef}>
               <button
@@ -174,7 +385,6 @@ function Navbar() {
             </div>
           )}
 
-          {/* Profile Dropdown */}
           {isLogin ? (
             <div className="relative" ref={profileDropdownRef}>
               <button
@@ -205,13 +415,7 @@ function Navbar() {
                   >
                     <User size={14} /> Profile
                   </Link>
-                  <Link
-                    to="/profile/edit"
-                    onClick={() => setIsDropdownOpen(false)}
-                    className="flex items-center gap-2 px-4 py-2 text-sm text-text-muted hover:text-text hover:bg-bg-subtle"
-                  >
-                    <Settings size={14} /> Settings
-                  </Link>
+
                   <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-500 hover:bg-bg-subtle text-left cursor-pointer"
@@ -258,7 +462,6 @@ function Navbar() {
         }`}
       >
         <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-4 overflow-y-auto max-h-[80vh]">
-          {/* Mobile top strip */}
           <div className="flex items-center justify-between pb-3 border-b border-border-muted gap-2">
             {isLogin ? (
               <div className="flex items-center gap-2 min-w-0">
@@ -297,13 +500,12 @@ function Navbar() {
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
-                onClick={() => setIsDarkMode(!isDarkMode)}
-                className="p-1.5 rounded-full bg-bg-subtle text-text-muted cursor-pointer"
+                onClick={toggleTheme}
+                className="p-1.5 rounded-full bg-bg-subtle border border-border text-text-muted cursor-pointer shadow-sm"
               >
                 {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
               </button>
 
-              {/* Mobile New Post Button: Icon-only on mobile, text on sm screens */}
               {isLogin && (
                 <Link
                   to="/community/create-post"
@@ -328,7 +530,6 @@ function Navbar() {
             </div>
           </div>
 
-          {/* Mobile Notification Panel */}
           {isNotifOpen && (
             <div className="bg-bg-elevated border border-border rounded-lg my-3">
               <p className="px-4 py-2 text-sm font-semibold text-text border-b border-border">
@@ -338,7 +539,6 @@ function Navbar() {
             </div>
           )}
 
-          {/* Mobile Nav Links */}
           <ul className="flex flex-col gap-1 py-3">
             {navLinks.map((link) => (
               <li key={link.name}>
@@ -357,7 +557,6 @@ function Navbar() {
             ))}
           </ul>
 
-          {/* Authenticated Links in Mobile View */}
           {isLogin && (
             <div className="pt-2 border-t border-border-muted space-y-2 mb-3">
               <Link
@@ -367,13 +566,7 @@ function Navbar() {
               >
                 <User size={14} /> Profile
               </Link>
-              <Link
-                to="/profile/edit"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center gap-2 py-1.5 text-sm text-text-muted hover:text-text"
-              >
-                <Settings size={14} /> Settings
-              </Link>
+
               <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 py-1.5 text-sm text-red-500 cursor-pointer"
@@ -383,32 +576,181 @@ function Navbar() {
             </div>
           )}
 
-          {/* new post btn*/}
-          {/* {isLogin && (
-            <Link
-              to="/community/create-post"
-              onClick={() => setIsMenuOpen(false)}
-              className="w-full flex items-center justify-center gap-2 bg-primary hover:brightness-110 text-white py-2.5 px-4 rounded-xl text-sm font-semibold shadow-sm my-2 transition-all active:scale-[0.98]"
+          {/* 📌 Mobile Search with Live Dropdown */}
+          <div className="relative pt-2">
+            <form
+              onSubmit={handleSearchSubmit}
+              className="relative flex items-center"
             >
-              <Plus size={18} strokeWidth={2.5} />
-              <span>Create New Post</span>
-            </Link>
-          )} */}
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
+              />
+              <input
+                type="text"
+                value={searchValue}
+                onChange={handleInputChange}
+                onFocus={() => {
+                  if (searchValue.trim().length > 0) setIsOpen(true);
+                }}
+                placeholder="Search items, posts, or lessons..."
+                className="w-full bg-bg-subtle border border-border rounded-full pl-9 pr-8 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
+              />
+              {searchValue && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchValue("");
+                    setIsOpen(false);
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              )}
+            </form>
 
-          {/* Mobile Search */}
-          <form onSubmit={handleSearchSubmit} className="relative">
-            <Search
-              size={16}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted"
-            />
-            <input
-              type="search"
-              value={searchValue}
-              onChange={(e) => setSearchValue(e.target.value)}
-              placeholder="Search projects or items..."
-              className="w-full bg-bg-subtle border border-border rounded-full pl-9 pr-3 py-2 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary"
-            />
-          </form>
+            {/* Mobile Live Search Dropdown Panel */}
+            {isOpen && (
+              <div className="mt-2 bg-bg border border-border rounded-xl shadow-xl overflow-hidden z-50 max-h-60 overflow-y-auto no-scrollbar">
+                {isLoading ? (
+                  <div className="p-4 text-center text-text-muted text-xs flex items-center justify-center gap-2">
+                    <Loader2 size={16} className="animate-spin text-primary" />{" "}
+                    Searching...
+                  </div>
+                ) : totalResultsCount > 0 ? (
+                  <div className="p-2 space-y-3">
+                    {/* Marketplace Items */}
+                    {filteredItems.length > 0 && (
+                      <div>
+                        <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
+                          <Package size={12} className="text-primary" />{" "}
+                          Marketplace Items
+                        </div>
+                        <div className="space-y-1 mt-1">
+                          {filteredItems.map((item) => (
+                            <Link
+                              key={item.id || item._id}
+                              to={`/marketplace/items/${item.id || item._id}`}
+                              onClick={() => {
+                                setIsOpen(false);
+                                setIsMenuOpen(false);
+                              }}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
+                            >
+                              <img
+                                src={
+                                  item.images?.[0] ||
+                                  "https://images.unsplash.com/photo-1608564697171-2f6118fc5f37?w=500"
+                                }
+                                alt={item.title}
+                                className="w-7 h-7 rounded-md object-cover bg-bg-elevated border border-border shrink-0"
+                              />
+                              <div className="min-w-0 flex-1">
+                                <h4 className="text-xs font-bold text-text truncate">
+                                  {item.title}
+                                </h4>
+                                <p className="text-[10px] text-primary font-semibold">
+                                  {typeof item.price === "number"
+                                    ? `${item.price.toLocaleString()} MMK`
+                                    : item.price}
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Community Posts */}
+                    {filteredPosts.length > 0 && (
+                      <div className="border-t border-border/60 pt-2">
+                        <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
+                          <GraduationCap size={12} className="text-primary" />{" "}
+                          Community Posts
+                        </div>
+                        <div className="space-y-1 mt-1">
+                          {filteredPosts.map((post) => (
+                            <Link
+                              key={post.id || post._id}
+                              to={`/community/project/${post.id || post._id}`}
+                              onClick={() => {
+                                setIsOpen(false);
+                                setIsMenuOpen(false);
+                              }}
+                              className="block px-2 py-1.5 rounded-lg hover:bg-surface transition-colors"
+                            >
+                              <h4 className="text-xs font-bold text-text truncate">
+                                {post.title}
+                              </h4>
+                              <p className="text-[10px] text-text-muted truncate">
+                                {post.description}
+                              </p>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Learning Lessons */}
+
+                    {filteredLessons.length > 0 && (
+                      <div className="border-t border-border/60 pt-2">
+                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1.5">
+                          <BookOpen size={12} className="text-primary" />{" "}
+                          Learning Lessons
+                        </div>
+                        <div className="space-y-1 mt-1">
+                          {filteredLessons.map((lesson) => {
+                            const lessonTitle =
+                              typeof lesson.title === "object"
+                                ? lesson.title?.en
+                                : lesson.title;
+
+                            // 📌 Journey ID နှင့် Chapter ID ကို ယူ၍ သင့်တော်သော URL ပုံစံတည်ဆောက်ခြင်း
+                            const jId =
+                              lesson.journeyId || lesson.journey || "esp32";
+                            const cId =
+                              lesson.chapterId ||
+                              lesson.chapter ||
+                              "esp32-basic";
+                            const lId = lesson.id || lesson._id;
+
+                            return (
+                              <Link
+                                key={lId}
+                                to={`/learning/${jId}/${cId}/${lId}`}
+                                onClick={() => {
+                                  setIsOpen(false);
+                                  setIsMenuOpen(false); // Mobile menu ပိတ်ရန်
+                                }}
+                                className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface transition-colors group"
+                              >
+                                <span className="text-xs font-bold text-text truncate group-hover:text-primary transition-colors">
+                                  {lessonTitle}
+                                </span>
+                                <span className="text-[10px] text-text-muted shrink-0 bg-bg px-1.5 py-0.5 rounded border border-border">
+                                  Lesson
+                                </span>
+                              </Link>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="p-4 text-center text-text-muted text-xs">
+                    No results for &quot;
+                    <span className="text-text font-semibold">
+                      {searchValue}
+                    </span>
+                    &quot;
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

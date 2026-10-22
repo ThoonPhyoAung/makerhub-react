@@ -16,7 +16,7 @@ function LessonSidebar({
   return (
     <aside className="hidden lg:block w-60 shrink-0">
       <div className="sticky top-39">
-        <h3 className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-3 px-1">
+        <h3 className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-3 px-1">
           Table Of Contents
         </h3>
         <nav className="flex flex-col gap-1">
@@ -26,10 +26,10 @@ function LessonSidebar({
               <button
                 key={sec.id}
                 onClick={() => scrollToSection(sec.id)}
-                className={`text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center gap-2 font-medium ${
+                className={`text-left px-3 py-2 rounded-lg text-xs transition-all flex items-center gap-2 font-medium cursor-pointer ${
                   active
                     ? "shadow-sm font-semibold"
-                    : "text-gray-400 hover:text-gray-200 hover:bg-white/[0.03]"
+                    : "text-text-muted hover:text-text hover:bg-bg-subtle"
                 }`}
                 style={
                   active
@@ -50,9 +50,9 @@ function LessonSidebar({
             <button
               onClick={openQuiz}
               disabled={isAlreadyCompleted || isPro}
-              className={`text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all mt-2 flex items-center justify-between ${
+              className={`text-left px-3 py-2 rounded-lg text-xs font-semibold transition-all mt-2 flex items-center justify-between shadow-sm cursor-pointer ${
                 isAlreadyCompleted || isPro
-                  ? "opacity-60 cursor-not-allowed bg-white/5 border border-white/10 text-gray-400"
+                  ? "opacity-60 cursor-not-allowed bg-bg-subtle border border-border text-text-muted"
                   : ""
               }`}
               style={
@@ -67,9 +67,9 @@ function LessonSidebar({
             >
               <span className="flex items-center gap-1.5">
                 {isAlreadyCompleted ? (
-                  <CheckCircle2 size={13} className="text-emerald-400" />
+                  <CheckCircle2 size={13} className="text-emerald-500 dark:text-emerald-400" />
                 ) : isPro ? (
-                  <Lock size={13} className="text-amber-400" />
+                  <Lock size={13} className="text-amber-500 dark:text-amber-400" />
                 ) : !activeUser ? (
                   <Lock size={13} />
                 ) : (
@@ -83,7 +83,7 @@ function LessonSidebar({
                       ? "Login to Quiz"
                       : "Verify & Quiz"}
               </span>
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-white/10">
+              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-bg-subtle border border-border text-text-muted">
                 {currentLesson.questions.length}
               </span>
             </button>

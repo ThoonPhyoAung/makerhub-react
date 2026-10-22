@@ -36,7 +36,7 @@ function JourneyDetail() {
 
   //  2. Journey ID အလိုက် Lessons Data Fetching (/lessons?journeyId=...)
   const lessonsFetchFn = useCallback(
-    () =>  getLessonsByJourneyId(journeyId),
+    () => getLessonsByJourneyId(journeyId),
     [journeyId],
   );
   const { data: lessonsData, loading: lessonsLoading } =
@@ -46,8 +46,8 @@ function JourneyDetail() {
 
   if (journeyLoading || lessonsLoading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-gray-400 text-sm">
-        <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin mr-2" />
+      <div className="min-h-screen bg-bg flex items-center justify-center text-text-muted text-sm">
+        <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-2" />
         Loading Journey & Lessons...
       </div>
     );
@@ -55,14 +55,14 @@ function JourneyDetail() {
 
   if (journeyError || !journey) {
     return (
-      <div className="min-h-screen bg-[#0a0a0b] flex items-center justify-center text-red-400 text-sm">
+      <div className="min-h-screen bg-bg flex items-center justify-center text-red-400 text-sm">
         Journey not found!
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0b] text-white">
+    <div className="min-h-screen bg-bg text-text">
       {/* 📍 Hero ထံ သက်ဆိုင်ရာ Lessons Array ကို ပေးပို့ခြင်း */}
       <JourneyHero
         journey={journey}

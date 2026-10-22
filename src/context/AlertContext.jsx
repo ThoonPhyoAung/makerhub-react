@@ -73,14 +73,16 @@ export function AlertProvider({ children }) {
           glow: "shadow-[0_0_25px_rgba(245,158,11,0.15)]",
         };
       case "error":
+      case "delete": // 📌 Delete အတွက် Error လိုပဲ အနီရောင် သုံးပေးမယ်
         return {
-          icon: <AlertCircle size={24} className="text-red-400 shrink-0" />,
+          icon: <AlertTriangle size={24} className="text-red-400 shrink-0" />,
           smallIcon: (
             <AlertCircle size={18} className="text-red-400 shrink-0" />
           ),
           border: "border-red-500/30",
           badgeBg: "bg-red-500/10 border-red-500/20",
           glow: "shadow-[0_0_25px_rgba(239,68,68,0.15)]",
+          actionBtn: "bg-red-600 hover:bg-red-500 shadow-red-600/20 text-white", // 📌 ဖျက်မယ့် ခလုတ်ကို အနီရောင် ပေးမယ်
         };
       case "info":
         return {
@@ -180,7 +182,7 @@ export function AlertProvider({ children }) {
                           alertConfig.onAction?.();
                           closeAlert();
                         }}
-                        className="flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-text text-xs sm:text-sm font-bold shadow-lg shadow-primary/20 transition-all active:scale-95"
+                        className={`flex-1 py-2.5 px-4 rounded-xl text-text text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95 ${style.actionBtn}`}
                       >
                         {alertConfig.actionText}
                       </button>

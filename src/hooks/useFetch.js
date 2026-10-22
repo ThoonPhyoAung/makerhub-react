@@ -3,26 +3,27 @@
 
 import { useState, useEffect } from "react";
 
+// useFetch.js ထဲမှာ refetch ကို ထည့်ထုတ်ပေးခြင်း
 export const useFetch = (apiFunction) => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const result = await apiFunction();
-        setData(result);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      const result = await apiFunction();
+      setData(result);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchData();
   }, [apiFunction]);
 
-  return { data, loading, error };
+  return { data, loading, error, refetch: fetchData }; // 📌 refetch ကိုပါ return ထုတ်ပေးလိုက်ခြင်း
 };

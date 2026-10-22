@@ -45,7 +45,7 @@ function ChapterHero({
       <LearningBreadcrumb
         items={[
           { label: "Learning", path: "/learning" },
-          { label: t(journey.title), path: `/learning/${journey.id}` },
+          { label: t(journey.title), path: `/learning/${journey.journeyId}` },
           { label: t(chapter.title) },
         ]}
         language={language}
@@ -54,10 +54,10 @@ function ChapterHero({
       />
 
       {/* 🚀 Compact & Widescreen Chapter Hero */}
-      <div className="relative w-full bg-[#0e1015] border-b border-white/5 py-6 sm:py-8 px-4 overflow-hidden">
+      <div className="relative w-full bg-bg-elevated/40 border-b border-border py-6 sm:py-8 px-4 overflow-hidden shadow-sm">
         {/* Ambient Glow */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[150px] rounded-full blur-[140px] opacity-15 pointer-events-none"
+          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[150px] rounded-full blur-[140px] opacity-20 dark:opacity-35 pointer-events-none"
           style={{ backgroundColor: activeColor }}
         />
 
@@ -65,7 +65,7 @@ function ChapterHero({
           {/* Chapter Badge */}
           <div className="mb-2">
             <span
-              className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold shadow-sm"
               style={{
                 backgroundColor: `${activeColor}15`,
                 color: activeColor,
@@ -82,31 +82,31 @@ function ChapterHero({
           </div>
 
           {/* Chapter Title (Bilingual) */}
-          <h1 className="text-xl sm:text-3xl font-extrabold text-white tracking-tight mb-2">
+          <h1 className="text-xl sm:text-3xl font-extrabold text-text tracking-tight mb-2">
             {t(chapter.title)}
           </h1>
 
           {/* Description (Bilingual) */}
           {chapter.desc && (
-            <p className="text-gray-300 text-xs sm:text-sm leading-relaxed max-w-4xl mb-3 font-normal">
+            <p className="text-text-muted text-xs sm:text-sm leading-relaxed max-w-4xl mb-3 font-normal">
               {t(chapter.desc)}
             </p>
           )}
 
           {/* Bottom Bar: Real Dynamic Stats */}
           <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 mt-1">
-            <div className="flex items-center gap-3 sm:gap-4 text-xs text-gray-300 font-medium bg-[#13161f] border border-white/10 px-4 py-2 rounded-xl">
+            <div className="flex items-center gap-3 sm:gap-4 text-xs text-text-muted font-medium bg-bg-elevated border border-border px-4 py-2 rounded-xl shadow-sm">
               <span className="flex items-center gap-1.5">
                 <BookOpen size={13} style={{ color: activeColor }} />
                 {totalLessons} Lessons
               </span>
-              <span className="text-gray-600">•</span>
+              <span className="text-text-muted/50">•</span>
               <span className="flex items-center gap-1.5">
-                <Clock size={13} className="text-amber-400" />
+                <Clock size={13} className="text-amber-500" />
                 {durationTotal} mins
               </span>
-              <span className="text-gray-600">•</span>
-              <span className="flex items-center gap-1.5 font-bold text-emerald-400">
+              <span className="text-text-muted/50">•</span>
+              <span className="flex items-center gap-1.5 font-bold text-emerald-500 dark:text-emerald-400">
                 {completedCount}/{totalLessons} completed [{progress}%]
               </span>
             </div>
@@ -114,7 +114,7 @@ function ChapterHero({
             {/* Action Button */}
             <a
               href="#modulesSection"
-              className="inline-flex items-center justify-center gap-2 px-6 py-2 rounded-xl font-extrabold text-xs text-black shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
+              className="inline-flex items-center justify-center gap-2 px-6 py-2 rounded-xl font-extrabold text-xs text-white shadow-md transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ backgroundColor: activeColor }}
             >
               {isCompleted ? (

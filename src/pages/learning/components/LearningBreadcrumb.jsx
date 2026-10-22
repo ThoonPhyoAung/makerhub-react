@@ -27,14 +27,14 @@ function LearningBreadcrumb({
   const parentItem = items.length > 1 ? items[items.length - 2] : null;
 
   return (
-    <div className="sticky top-[56px] sm:top-[64px] z-30 w-full bg-[#1C2128] border-b border-white/10 py-2 sm:py-2.5">
+    <div className="sticky top-[56px] sm:top-[61px] z-30 w-full bg-bg-elevated border-b border-border py-2 sm:py-2.5 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 text-xs">
         {/* 📱 1. MOBILE ONLY: Back Button */}
         <div className="flex md:hidden items-center min-w-0">
           {parentItem?.path ? (
             <Link
               to={parentItem.path}
-              className="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium py-1 text-xs"
+              className="flex items-center gap-1.5 text-text-muted hover:text-text font-medium py-1 text-xs transition-colors"
             >
               <ArrowLeft size={16} />
               <span>Back</span>
@@ -42,7 +42,7 @@ function LearningBreadcrumb({
           ) : (
             <button
               onClick={() => navigate(-1)}
-              className="flex items-center gap-1.5 text-gray-300 hover:text-white font-medium py-1 text-xs"
+              className="flex items-center gap-1.5 text-text-muted hover:text-text font-medium py-1 text-xs cursor-pointer transition-colors"
             >
               <ArrowLeft size={16} />
               <span>Back</span>
@@ -51,25 +51,25 @@ function LearningBreadcrumb({
         </div>
 
         {/* 💻 2. DESKTOP ONLY: Full Path */}
-        <div className="hidden md:flex items-center gap-1.5 overflow-x-auto py-0.5">
+        <div className="hidden md:flex items-center gap-1.5 overflow-x-auto py-0.5 no-scrollbar">
           {items.map((item, index) => {
             const isLast = index === items.length - 1;
 
             return (
               <div key={index} className="flex items-center gap-1.5 shrink-0">
                 {index > 0 && (
-                  <ChevronRight size={13} className="text-gray-600 shrink-0" />
+                  <ChevronRight size={13} className="text-text-muted shrink-0" />
                 )}
 
                 {item.path && !isLast ? (
                   <Link
                     to={item.path}
-                    className="text-gray-400 hover:text-white transition-colors"
+                    className="text-text-muted hover:text-text transition-colors"
                   >
                     {item.label}
                   </Link>
                 ) : (
-                  <span className="text-white font-semibold">{item.label}</span>
+                  <span className="text-text font-semibold">{item.label}</span>
                 )}
               </div>
             );
@@ -82,14 +82,14 @@ function LearningBreadcrumb({
             <>
               {/* XP Badge */}
               {xp > 0 && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 font-bold text-[10px] sm:text-[11px]">
-                  <Zap size={11} className="fill-amber-400" /> +{xp} XP
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 dark:text-amber-400 font-bold text-[10px] sm:text-[11px] shadow-sm">
+                  <Zap size={11} className="fill-current" /> +{xp} XP
                 </span>
               )}
 
               {/* Completed Badge */}
               {isCompleted && (
-                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold text-[10px] sm:text-[11px]">
+                <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 dark:text-emerald-400 font-bold text-[10px] sm:text-[11px] shadow-sm">
                   <CheckCircle2 size={11} /> Completed
                 </span>
               )}
@@ -100,9 +100,9 @@ function LearningBreadcrumb({
           {onToggleLanguage && (
             <button
               onClick={onToggleLanguage}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/5 border border-white/10 text-gray-300 font-semibold text-[10px] sm:text-[11px] hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-bg-subtle border border-border text-text font-semibold text-[10px] sm:text-[11px] hover:bg-surface transition-colors cursor-pointer shadow-sm"
             >
-              <Globe size={11} />
+              <Globe size={11} className="text-primary" />
               <span>{language === "en" ? "မြန်မာ" : "English"}</span>
             </button>
           )}

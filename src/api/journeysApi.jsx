@@ -7,9 +7,11 @@ export const getJourneys = async (params = {}) => {
 };
 
 // 2. Get Single Journey by ID (Detail Page အတွက်)[cite: 12]
-export const getJourneyById = async (id) => {
-  const response = await contentApi.get(`/journeys/${id}`);
-  return response.data;
+export const getJourneyById = async (journeyId) => {
+  const response = await contentApi.get(`/journeys?journeyId=${journeyId}`);
+
+  // 📌 Array ရဲ့ ပထမဆုံး Object ကိုသာ Return ပြန်မည် (သို့မဟုတ် null) becasue it will give back an array
+  return response.data[0] || null;
 };
 
 // 3. Create New Journey

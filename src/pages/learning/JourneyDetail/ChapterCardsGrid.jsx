@@ -86,7 +86,7 @@ function CircularProgress({ percentage = 0, color = "#10b981", size = 34 }) {
           cx={size / 2}
           cy={size / 2}
           r={radius}
-          className="stroke-white/10"
+          className="stroke-border"
           strokeWidth={strokeWidth}
           fill="transparent"
         />
@@ -107,7 +107,7 @@ function CircularProgress({ percentage = 0, color = "#10b981", size = 34 }) {
         {isCompleted ? (
           <Check size={11} strokeWidth={3.5} className="text-green-500" />
         ) : (
-          <span className="text-[8px] font-bold text-white">
+          <span className="text-[8px] font-bold text-text">
             {Math.round(validPercentage)}%
           </span>
         )}
@@ -252,7 +252,7 @@ function ChapterCardsGrid({
   };
 
   return (
-    <section className="relative w-full bg-[#0a0a0b] py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
+    <section className="relative w-full bg-bg py-8 sm:py-12 px-3 sm:px-4 min-h-screen flex flex-col items-center">
       <div className="w-full max-w-6xl flex flex-col items-center gap-4 mb-8 z-20">
         <LearnerProToggle
           mode={userMode}
@@ -264,14 +264,14 @@ function ChapterCardsGrid({
           <div className="relative w-full max-w-md">
             <Search
               size={16}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
             />
             <input
               type="text"
               placeholder="Search chapters by title..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 bg-[#121418] border border-white/10 rounded-xl text-xs sm:text-sm text-white placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+              className="w-full pl-10 pr-4 py-2 bg-bg-elevated border border-border rounded-xl text-xs sm:text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-all shadow-sm"
               style={{ borderColor: safeBorderColor }}
             />
           </div>
@@ -280,8 +280,8 @@ function ChapterCardsGrid({
 
       <div className="relative z-10 w-full max-w-6xl grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 sm:gap-6 justify-items-center">
         {displayedChapters.length === 0 ? (
-          <div className="col-span-full py-12 text-center text-gray-500 text-xs sm:text-sm">
-            No chapters found matching "{searchQuery}"
+          <div className="col-span-full py-12 text-center text-text-muted text-xs sm:text-sm">
+            No chapters found matching &quot;{searchQuery}&quot;
           </div>
         ) : (
           displayedChapters.map((chapter) => {
@@ -330,29 +330,29 @@ function ChapterCardsGrid({
                       type: "warning",
                     }),
                 }
-              : { to: `/learning/${journey?.id || journey?._id}/${chId}` };
+              : { to: `/learning/${journey?.journeyId || journey?._id}/${chId}` };
 
             return (
               <CardTag
                 key={chId || chapterNum}
                 {...cardProps}
-                className={`group relative z-10 w-full max-w-[170px] sm:max-w-[210px] min-h-[230px] sm:min-h-[270px] bg-[#121418] rounded-[20px] sm:rounded-3xl border flex flex-col overflow-hidden transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-white/40 shadow-[inset_0_1px_0_rgba(255,255,255,0.06),10px_14px_28px_-10px_rgba(0,0,0,0.7)] ${
+                className={`group relative z-10 w-full max-w-[170px] sm:max-w-[210px] min-h-[230px] sm:min-h-[270px] bg-bg-elevated rounded-[20px] sm:rounded-3xl border flex flex-col overflow-hidden transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-primary/40 shadow-sm ${
                   isLocked
-                    ? "border-white/5 opacity-80 cursor-not-allowed"
-                    : "border-white/10 cursor-pointer hover:-translate-y-1 hover:border-white/20 hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.08),14px_20px_36px_-10px_rgba(0,0,0,0.8)] active:scale-[0.98]"
+                    ? "border-border opacity-75 cursor-not-allowed"
+                    : "border-border cursor-pointer hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl active:scale-[0.98]"
                 }`}
               >
                 {isLocked && (
-                  <div className="absolute inset-0 z-30 bg-[#0a0a0b]/75 backdrop-blur-[1px] flex flex-col items-center justify-center">
-                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/5 flex items-center justify-center mb-1 border border-white/10">
-                      <Lock size={18} className="text-gray-400" />
+                  <div className="absolute inset-0 z-30 bg-bg/80 backdrop-blur-[1px] flex flex-col items-center justify-center">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-bg-subtle flex items-center justify-center mb-1 border border-border shadow-sm">
+                      <Lock size={18} className="text-text-muted" />
                     </div>
                   </div>
                 )}
 
                 <div className="w-full pt-7 sm:pt-8 pr-2.5 sm:pr-4 flex items-center justify-between">
                   <div
-                    className="w-[62%] h-10 sm:h-12 rounded-r-full flex items-center justify-center shadow-lg shrink-0"
+                    className="w-[62%] h-10 sm:h-12 rounded-r-full flex items-center justify-center shadow-md shrink-0"
                     style={{ backgroundColor: cardColor }}
                   >
                     <div className="text-white">
@@ -373,8 +373,8 @@ function ChapterCardsGrid({
                           size={32}
                         />
                       ) : (
-                        <div className="w-[32px] h-[32px] sm:w-[38px] sm:h-[38px] rounded-full bg-[#1e2329] border border-white/10 flex items-center justify-center shadow-md">
-                          <Lock size={14} className="text-gray-500" />
+                        <div className="w-[32px] h-[32px] sm:w-[38px] sm:h-[38px] rounded-full bg-bg-subtle border border-border flex items-center justify-center shadow-sm">
+                          <Lock size={14} className="text-text-muted" />
                         </div>
                       )}
                     </div>
@@ -391,29 +391,29 @@ function ChapterCardsGrid({
                   </h3>
 
                   {(chapter.desc || chapter.description) && (
-                    <p className="text-gray-400 text-[10px] sm:text-xs leading-relaxed line-clamp-2 sm:line-clamp-3 mb-2">
+                    <p className="text-text-muted text-[10px] sm:text-xs leading-relaxed line-clamp-2 sm:line-clamp-3 mb-2">
                       {t(chapter.desc || chapter.description)}
                     </p>
                   )}
 
-                  <div className="mt-auto flex items-center gap-2 text-[9px] sm:text-[11px] text-gray-400 font-medium">
+                  <div className="mt-auto flex items-center gap-2 text-[9px] sm:text-[11px] text-text-muted font-medium">
                     <span className="flex items-center gap-1">
-                      <BookOpen size={11} className="text-gray-500" />
+                      <BookOpen size={11} className="text-text-muted" />
                       {totalLessons} Lessons
                     </span>
                     <span>•</span>
                     <span className="flex items-center gap-1">
-                      <Clock size={11} className="text-gray-500" /> {duration}
+                      <Clock size={11} className="text-text-muted" /> {duration}
                     </span>
                   </div>
                 </div>
 
                 <div className="w-full flex justify-center pt-1">
                   <div
-                    className="w-[52%] h-6 sm:h-7 rounded-t-xl flex items-center justify-center transition-all group-hover:brightness-110"
+                    className="w-[52%] h-6 sm:h-7 rounded-t-xl flex items-center justify-center transition-all group-hover:brightness-110 shadow-sm"
                     style={{
                       backgroundColor: isLocked
-                        ? "rgba(255,255,255,0.05)"
+                        ? "var(--color-bg-subtle, rgba(128,128,128,0.15))"
                         : cardColor,
                     }}
                   >

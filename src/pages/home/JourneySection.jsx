@@ -5,7 +5,7 @@ import JourneyCardsGrid from "../learning/Journeys/JourneyCardsGrid";
 
 function JourneySection() {
   const {
-    data: journeys,
+    data: journeysData,
     loading: journeysLoading,
     error: journeysError,
   } = useFetch(getJourneys);
@@ -16,7 +16,14 @@ function JourneySection() {
     error: lessonsError,
   } = useFetch(getLessons);
 
-  const allLessons = Array.isArray(lessonsData) ? lessonsData : [];
+  // 📌 API Response ပုံစံ အမျိုးမျိုး (Array သို့မဟုတ် Object wrapper) ကို စစ်ဆေးပြီး Array သို့ အမှန်တကယ် ပြောင်းလဲပေးခြင်း
+  const rawJourneys =
+    journeysData?.data || journeysData?.journeys || journeysData;
+  const journeys = Array.isArray(rawJourneys) ? rawJourneys : [];
+
+  const rawLessons = lessonsData?.data || lessonsData?.lessons || lessonsData;
+  const allLessons = Array.isArray(rawLessons) ? rawLessons : [];
+
   const isLoading = journeysLoading || lessonsLoading;
   const hasError = journeysError || lessonsError;
 

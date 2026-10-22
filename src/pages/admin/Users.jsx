@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
@@ -8,56 +8,15 @@ import {
   Trash2,
   AlertTriangle,
   X,
+  Loader2,
 } from "lucide-react";
 
+// 📌 userService မှ real user data များနှင့် management function များကို ယူရန်
+import { getUsers, deleteUserAccount } from "../../api/userService";
+
 function Users() {
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Kaung Myat",
-      email: "kaungmyat@makerhub.io",
-      role: "Admin",
-      track: "React & Frontend",
-      xp: 3450,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Su Myat Noe",
-      email: "sumyat@makerhub.io",
-      role: "Maker",
-      track: "Python Django",
-      xp: 2920,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Aung Kyaw Moe",
-      email: "aungkyaw@makerhub.io",
-      role: "Learner",
-      track: "IoT & Embedded",
-      xp: 2750,
-      status: "Suspended",
-    },
-    {
-      id: 4,
-      name: "Hnin Wutt Yee",
-      email: "hninwutt@makerhub.io",
-      role: "Learner",
-      track: "UI/UX Design",
-      xp: 1750,
-      status: "Active",
-    },
-    {
-      id: 5,
-      name: "Min Thant",
-      email: "minthant@makerhub.io",
-      role: "Maker",
-      track: "React & Frontend",
-      xp: 1550,
-      status: "Active",
-    },
-  ]);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -66,12 +25,33 @@ function Users() {
   const [modalType, setModalType] = useState(null); // 'suspend' | 'delete' | null
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Filter Logic
+  // 📌 Component Mount ဖြစ်ချိန်တွင် LocalStorage ထဲမှ real users များကို ဆွဲယူခြင်း
+  useEffect(() => {
+    fetchUsersData();
+  }, []);
+
+  const fetchUsersData = () => {
+    setLoading(true);
+    try {
+      const response = getUsers();
+      if (response && Array.isArray(response.data)) {
+        setUsers(response.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Filter Logic (Search & Role filter)
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "All" || user.role === roleFilter;
+      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesRole =
+      roleFilter === "All" ||
+      (user.role && user.role.toLowerCase() === roleFilter.toLowerCase());
     return matchesSearch && matchesRole;
   });
 
@@ -91,31 +71,43 @@ function Users() {
     setSelectedUser(null);
   };
 
-  // Confirm Suspend Toggle
+  // 📌 Confirm Suspend / Active Toggle (LocalStorage တွင်ပါ ချက်ချင်း update လုပ်ရန်)
   const handleConfirmSuspend = () => {
     if (selectedUser) {
-      setUsers(
-        users.map((u) => {
-          if (u.id === selectedUser.id) {
-            return {
-              ...u,
-              status: u.status === "Active" ? "Suspended" : "Active",
-            };
-          }
-          return u;
-        }),
-      );
+      const updatedUsers = users.map((u) => {
+        if (u.id === selectedUser.id) {
+          const newStatus = u.status === "Suspended" ? "Active" : "Suspended";
+          return { ...u, status: newStatus };
+        }
+        return u;
+      });
+
+      setUsers(updatedUsers);
+      // LocalStorage သို့ပါ သိမ်းဆည်းရန်
+      const USERS_KEY = "makerhub_users";
+      localStorage.setItem(USERS_KEY, JSON.stringify(updatedUsers));
+
       closeModal();
     }
   };
 
-  // Confirm Delete
+  // 📌 Confirm Delete (userService ၏ deleteUserAccount ကို သုံး၍ LocalStorage မှ ဖယ်ရှားရန်)
   const handleConfirmDelete = () => {
     if (selectedUser) {
+      deleteUserAccount(selectedUser.id);
       setUsers(users.filter((u) => u.id !== selectedUser.id));
       closeModal();
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-text-muted">
+        <Loader2 size={36} className="animate-spin text-primary mb-3" />
+        <p className="text-sm font-medium">Loading platform users...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto relative">
@@ -159,9 +151,9 @@ function Users() {
             className="bg-surface border border-border rounded-xl px-3 py-2 text-sm text-text focus:outline-none focus:border-primary transition-colors"
           >
             <option value="All">All Roles</option>
-            <option value="Admin">Admin</option>
-            <option value="Maker">Maker</option>
-            <option value="Learner">Learner</option>
+            <option value="admin">Admin</option>
+            <option value="maker">Maker</option>
+            <option value="learner">Learner</option>
           </select>
         </div>
       </div>
@@ -185,97 +177,109 @@ function Users() {
             </thead>
             <tbody className="divide-y divide-border text-sm">
               {filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-surface/30 transition-colors"
-                  >
-                    <td className="py-4 px-5">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
-                          {user.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
+                filteredUsers.map((user) => {
+                  const userRole = user.role || "learner";
+                  const userStatus = user.status || "Active";
+                  const userXp = user.xp || 0;
+                  const userTrack = user.track || user.interest || "IoT & Embedded";
+
+                  return (
+                    <tr
+                      key={user.id}
+                      className="hover:bg-surface/30 transition-colors"
+                    >
+                      <td className="py-4 px-5">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
+                            {user.name
+                              ? user.name
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .slice(0, 2)
+                              : "U"}
+                          </div>
+                          <div>
+                            <p className="font-medium text-text">
+                              {user.name || "Unknown"}
+                            </p>
+                            <p className="text-xs text-text-muted">
+                              {user.email || "No email"}
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-text">{user.name}</p>
-                          <p className="text-xs text-text-muted">
-                            {user.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
+                      </td>
 
-                    <td className="py-4 px-5">
-                      <span
-                        className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                          user.role === "Admin"
-                            ? "bg-purple-500/10 text-purple-500"
-                            : user.role === "Maker"
-                              ? "bg-blue-500/10 text-blue-500"
-                              : "bg-emerald-500/10 text-emerald-500"
-                        }`}
-                      >
-                        {user.role}
-                      </span>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <p className="font-medium text-text text-xs">
-                        {user.track}
-                      </p>
-                      <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1">
-                        <Award size={12} className="text-amber-500" />
-                        {user.xp} XP
-                      </p>
-                    </td>
-
-                    <td className="py-4 px-5">
-                      <span
-                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
-                          user.status === "Active"
-                            ? "bg-emerald-500/10 text-emerald-500"
-                            : "bg-red-500/10 text-red-500"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </td>
-
-                    <td className="py-4 px-5 text-right">
-                      <div className="flex items-center justify-end gap-2">
-                        <button
-                          onClick={() => openSuspendModal(user)}
-                          title={
-                            user.status === "Active"
-                              ? "Suspend User"
-                              : "Activate User"
-                          }
-                          className={`p-2 rounded-xl border transition-colors ${
-                            user.status === "Active"
-                              ? "bg-surface border-border text-amber-500 hover:bg-amber-500/10"
-                              : "bg-surface border-border text-emerald-500 hover:bg-emerald-500/10"
+                      <td className="py-4 px-5">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold capitalize ${
+                            userRole === "admin"
+                              ? "bg-purple-500/10 text-purple-500"
+                              : userRole === "maker"
+                                ? "bg-blue-500/10 text-blue-500"
+                                : "bg-emerald-500/10 text-emerald-500"
                           }`}
                         >
-                          {user.status === "Active" ? (
-                            <Lock size={16} />
-                          ) : (
-                            <Unlock size={16} />
-                          )}
-                        </button>
+                          {userRole}
+                        </span>
+                      </td>
 
-                        <button
-                          onClick={() => openDeleteModal(user)}
-                          title="Remove / Delete User"
-                          className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
+                      <td className="py-4 px-5">
+                        <p className="font-medium text-text text-xs">
+                          {userTrack}
+                        </p>
+                        <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1">
+                          <Award size={12} className="text-amber-500" />
+                          {userXp.toLocaleString()} XP
+                        </p>
+                      </td>
+
+                      <td className="py-4 px-5">
+                        <span
+                          className={`px-2.5 py-1 rounded-lg text-xs font-semibold ${
+                            userStatus === "Active"
+                              ? "bg-emerald-500/10 text-emerald-500"
+                              : "bg-red-500/10 text-red-500"
+                          }`}
                         >
-                          <Trash2 size={16} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))
+                          {userStatus}
+                        </span>
+                      </td>
+
+                      <td className="py-4 px-5 text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openSuspendModal(user)}
+                            title={
+                              userStatus === "Active"
+                                ? "Suspend User"
+                                : "Activate User"
+                            }
+                            className={`p-2 rounded-xl border transition-colors ${
+                              userStatus === "Active"
+                                ? "bg-surface border-border text-amber-500 hover:bg-amber-500/10"
+                                : "bg-surface border-border text-emerald-500 hover:bg-emerald-500/10"
+                            }`}
+                          >
+                            {userStatus === "Active" ? (
+                              <Lock size={16} />
+                            ) : (
+                              <Unlock size={16} />
+                            )}
+                          </button>
+
+                          <button
+                            onClick={() => openDeleteModal(user)}
+                            title="Remove / Delete User"
+                            className="p-2 rounded-xl bg-surface border border-border text-red-500 hover:bg-red-500/10 transition-colors"
+                          >
+                            <Trash2 size={16} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
@@ -310,14 +314,14 @@ function Users() {
             </div>
             <div>
               <h3 className="text-lg font-semibold text-text">
-                {selectedUser?.status === "Active"
-                  ? "Suspend User Account?"
-                  : "Reactivate User Account?"}
+                {selectedUser?.status === "Suspended"
+                  ? "Reactivate User Account?"
+                  : "Suspend User Account?"}
               </h3>
               <p className="text-sm text-text-muted mt-1">
-                {selectedUser?.status === "Active"
-                  ? `${selectedUser?.name} will temporarily lose access to MakerHub.`
-                  : `${selectedUser?.name} will regain full access to their account.`}
+                {selectedUser?.status === "Suspended"
+                  ? `${selectedUser?.name} will regain full access to their account.`
+                  : `${selectedUser?.name} will temporarily lose access to MakerHub.`}
               </p>
             </div>
             <div className="flex items-center justify-end gap-3 pt-2">
@@ -360,7 +364,7 @@ function Users() {
               <p className="text-sm text-text-muted mt-1">
                 Are you sure you want to remove{" "}
                 <strong className="text-text">{selectedUser?.name}</strong>?
-                This action will erase all user records.
+                This action will erase all user records permanently.
               </p>
             </div>
             <div className="flex items-center justify-end gap-3 pt-2">

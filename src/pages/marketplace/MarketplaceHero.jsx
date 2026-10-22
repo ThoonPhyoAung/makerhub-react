@@ -1,18 +1,13 @@
 import { Link, useNavigate } from "react-router-dom";
 import { ShoppingCart, PlusCircle, MapPin, Bookmark, Tag } from "lucide-react";
-import { useSelector } from "react-redux"; //for checking current user login
+import { useSelector } from "react-redux";
 import { useAlert } from "../../context/AlertContext";
 
-// Original market.css ရဲ့ .market-hero က theme (dark/light) ကို ဂရုမစိုက်ဘဲ
-// #06090a dark cyber background ကို force ထားတာမို့ ဒီနေရာမှာလည်း
-// bg-bg token မသုံးဘဲ တမင် hardcode ထားတယ်.
 function MarketplaceHero({ items = [] }) {
-  // current login user
   const activeUser = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
-
-  // check login user for sell item create
   const showAlert = useAlert();
+
   const checkAuth = () => {
     if (!activeUser) {
       showAlert({
@@ -27,34 +22,28 @@ function MarketplaceHero({ items = [] }) {
     return true;
   };
 
-  // sell item btn click
   const handleSellClick = (e) => {
     if (!checkAuth()) {
-      e.preventDefault(); // Login မဝင်ထားပါက Link သွားခြင်းကို တားဆီးမည်
+      e.preventDefault();
     }
   };
 
-  // နောက်ဆုံးတင်ထားသော Latest 3 Items ကို ယူခြင်း
   const latestThree = items.length
     ? [...items]
         .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
         .slice(0, 3)
     : [];
 
-  // 🚀 Card 3 ခုအတွက် Sizing (Small -> Medium -> Big) + ItemCard Content Formatting
   const cardConfigs = [
     {
-      // Card 1: Smallest (Left Back)
       containerClass: "w-[120px] scale-90 -translate-x-40 z-[2] -rotate-4",
       imgHeight: "h-[75px]",
     },
     {
-      // Card 2: Medium (Center Top)
       containerClass: "w-[140px] scale-100 -translate-y-13 rotate-2 z-[3]",
       imgHeight: "h-[90px]",
     },
     {
-      // Card 3: Biggest (Right Front)
       containerClass:
         "w-[165px] scale-110 translate-x-34 translate-y-6 -rotate-2 z-[4]",
       imgHeight: "h-[105px]",
@@ -64,17 +53,17 @@ function MarketplaceHero({ items = [] }) {
   const delays = ["0s", "1.2s", "2.4s"];
 
   return (
-    <div className="relative bg-[#06090a] overflow-hidden border-b border-white/5">
-      {/* Tech grid lines — market.css: 40px grid, opacity 0.015 */}
+    <div className="relative bg-bg-elevated overflow-hidden border-b border-border transition-colors">
+      {/* Tech grid lines */}
       <div
-        className="absolute inset-0 pointer-events-none"
+        className="absolute inset-0 pointer-events-none opacity-40 dark:opacity-20"
         style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-                             linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)`,
+          backgroundImage: `linear-gradient(var(--color-border) 1px, transparent 1px),
+                             linear-gradient(90deg, var(--color-border) 1px, transparent 1px)`,
           backgroundSize: "40px 40px",
         }}
       />
-      {/* Ambient glows — green bottom-left, purple top-right */}
+      {/* Ambient glows */}
       <div
         className="absolute inset-0 pointer-events-none"
         style={{
@@ -89,7 +78,7 @@ function MarketplaceHero({ items = [] }) {
           <h1 className="text-text font-black text-3xl md:text-4xl lg:text-5xl tracking-tight mb-4 flex flex-wrap items-center justify-center lg:justify-start gap-2">
             Trade & Sell
             <span className="block w-full lg:w-auto" />
-            <span className="text-primary drop-shadow-[0_0_20px_rgba(34,197,94,0.35)]">
+            <span className="text-primary drop-shadow-[0_0_20px_rgba(34,197,94,0.25)]">
               Maker Hardware
             </span>
             <ShoppingCart size={28} className="text-primary" />
@@ -103,13 +92,13 @@ function MarketplaceHero({ items = [] }) {
           <Link
             to="/marketplace/sell"
             onClick={handleSellClick}
-            className="inline-flex items-center gap-2 bg-primary text-black font-bold px-5 py-3 rounded-[10px] shadow-[0_4px_20px_rgba(34,197,94,0.25)] hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(13,148,136,0.45)] transition-all"
+            className="inline-flex items-center gap-2 bg-primary text-black font-bold px-5 py-3 rounded-[10px] shadow-[0_4px_20px_rgba(34,197,94,0.25)] hover:brightness-95 hover:-translate-y-0.5 hover:shadow-[0_8px_25px_rgba(13,148,136,0.45)] transition-all cursor-pointer"
           >
             <PlusCircle size={18} /> Sell an Item
           </Link>
         </div>
 
-        {/* RIGHT — Compact Floating Cards (Matches JS width: 130px style) */}
+        {/* RIGHT — Compact Floating Cards */}
         <div className="hidden lg:flex relative items-center justify-center min-h-[300px]">
           {latestThree.length > 0 ? (
             latestThree.reverse().map((item, index) => {
@@ -117,9 +106,8 @@ function MarketplaceHero({ items = [] }) {
               const mainImage =
                 item.images && item.images.length > 0 ? item.images[0] : null;
 
-              // Location safely formatting
               const locationText =
-                typeof item.location === "object"
+                typeof item.location === "object" && item.location !== null
                   ? [item.location.township, item.location.state]
                       .filter(Boolean)
                       .join(", ")
@@ -131,15 +119,15 @@ function MarketplaceHero({ items = [] }) {
                 <div
                   key={itemId || index}
                   style={{ animationDelay: delays[index] }}
-                  className={`absolute animate-float transition-all duration-300 hover:-translate-y-2 hover:brightness-110 group ${config.containerClass}`}
+                  className={`absolute animate-float transition-all duration-300 hover:-translate-y-2 hover:brightness-105 group ${config.containerClass}`}
                 >
                   <Link
                     to={`/marketplace/items/${itemId}`}
-                    className="block bg-bg-elevated border border-border rounded-xl overflow-hidden shadow-2xl transition-colors hover:border-primary/50"
+                    className="block bg-surface border border-border rounded-xl overflow-hidden shadow-xl transition-colors hover:border-primary/50"
                   >
-                    {/* Image Area + Condition Badge + Price Badge */}
+                    {/* Image Area */}
                     <div
-                      className={`relative w-full ${config.imgHeight} bg-bg overflow-hidden`}
+                      className={`relative w-full ${config.imgHeight} bg-bg-subtle overflow-hidden`}
                     >
                       {mainImage ? (
                         <img
@@ -155,7 +143,7 @@ function MarketplaceHero({ items = [] }) {
 
                       {/* Condition Badge */}
                       {item.condition && (
-                        <span className="absolute top-1.5 left-1.5 bg-black/70 backdrop-blur-md text-text-muted text-[8px] px-1.5 py-0.5 rounded font-medium border border-white/10">
+                        <span className="absolute top-1.5 left-1.5 bg-black/70 backdrop-blur-md text-white text-[8px] px-1.5 py-0.5 rounded font-medium border border-white/10">
                           {item.condition}
                         </span>
                       )}
@@ -168,7 +156,7 @@ function MarketplaceHero({ items = [] }) {
                       </span>
                     </div>
 
-                    {/* Item Card Content (Matches React ItemCard structure) */}
+                    {/* Item Card Content */}
                     <div className="p-2 flex flex-col gap-1">
                       <h4 className="text-[11px] font-bold text-text truncate">
                         {item.title}
@@ -190,13 +178,13 @@ function MarketplaceHero({ items = [] }) {
                       </div>
 
                       {/* Card Footer */}
-                      <div className="pt-1 mt-0.5 border-t border-border/60 flex items-center justify-between text-[9px] text-text-muted">
-                        <span className="truncate max-w-[70px] font-medium">
+                      <div className="pt-1 mt-0.5 border-t border-border flex items-center justify-between text-[9px] text-text-muted">
+                        <span className="truncate max-w-[70px] font-medium text-text">
                           {item.seller?.username || item.sellerName || "Seller"}
                         </span>
                         <div className="flex items-center gap-0.5 shrink-0">
-                          <Bookmark size={9} />
-                          <span>{item.savedUsers.length || 0}</span>
+                          <Bookmark size={9} className="text-primary" />
+                          <span>{item.savedUsers?.length || 0}</span>
                         </div>
                       </div>
                     </div>
@@ -205,7 +193,7 @@ function MarketplaceHero({ items = [] }) {
               );
             })
           ) : (
-            <div className="text-text-muted text-xs border border-dashed border-border/40 p-4 rounded-xl">
+            <div className="text-text-muted text-xs border border-dashed border-border p-4 rounded-xl">
               No recent items available.
             </div>
           )}

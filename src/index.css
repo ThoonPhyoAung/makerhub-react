@@ -3,7 +3,7 @@
 @theme {
   --font-sans: "Nunito", system-ui, sans-serif;
 
-  /* Backgrounds */
+  /* Backgrounds (Default Dark) */
   --color-bg: #0a0e0f;
   --color-bg-elevated: #161b22;
   --color-bg-subtle: #1c2128;
@@ -16,7 +16,7 @@
   --color-border-muted: rgba(240, 246, 252, 0.06);
   --color-border-accent: rgba(34, 197, 94, 0.25);
 
-  /* Accent (Teal = "green" in original) */
+  /* Accent */
   --color-primary: #0d9488;
   --color-primary-dim: rgba(13, 148, 136, 0.1);
   --color-purple: #8b5cf6;
@@ -27,16 +27,34 @@
   --color-text-muted: #94a3b8;
   --color-text-subtle: #64748b;
 
-  /* Brand colors (per journey card) */
+  /* Brand colors */
   --color-clr-arduino: #8b5cf6;
   --color-clr-esp32: #3b82f6;
   --color-clr-esp8266: #f97316;
   --color-clr-rpi: #22c55e;
 }
 
+/* 📌 Light Mode Variables */
+.light {
+  --color-bg: #f8fafc;
+  --color-bg-elevated: #ffffff;
+  --color-bg-subtle: #f1f5f9;
+  --color-nav-bg: #ffffff;
+  --color-surface: #e2e8f0;
+  --color-surface-2: #cbd5e1;
+
+  --color-border: rgba(15, 23, 42, 0.1);
+  --color-border-muted: rgba(15, 23, 42, 0.06);
+  --color-border-accent: rgba(13, 148, 136, 0.25);
+
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-text-subtle: #94a3b8;
+}
+
 @layer base {
   body {
-    @apply bg-bg text-text;
+    @apply bg-bg text-text transition-colors duration-200;
   }
 }
 
@@ -69,7 +87,6 @@
 .animate-pulse-icon {
   animation: pulse-icon 5s ease-in-out infinite;
 }
-
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
