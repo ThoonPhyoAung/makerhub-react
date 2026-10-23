@@ -3,7 +3,7 @@ import { ShoppingCart, PlusCircle, MapPin, Bookmark, Tag } from "lucide-react";
 import { useSelector } from "react-redux";
 import { useAlert } from "../../context/AlertContext";
 
-function MarketplaceHero({ items = [] }) {
+function MarketplaceHero({ items = [], loading = false }) {
   const activeUser = useSelector((state) => state.auth.user);
   const navigate = useNavigate();
   const showAlert = useAlert();
@@ -98,9 +98,23 @@ function MarketplaceHero({ items = [] }) {
           </Link>
         </div>
 
-        {/* RIGHT — Compact Floating Cards */}
+        {/* RIGHT — Compact Floating Cards or Skeletons */}
         <div className="hidden lg:flex relative items-center justify-center min-h-[300px]">
-          {latestThree.length > 0 ? (
+          {loading ? (
+            // 🚀 Loading ဖြစ်နေစဉ် ပြမည့် Skeleton Cards
+            cardConfigs.map((config, index) => (
+              <div
+                key={index}
+                className={`absolute animate-pulse ${config.containerClass}`}
+              >
+                <div className="block bg-surface border border-border rounded-xl overflow-hidden shadow-xl p-2.5 space-y-2">
+                  <div className={`w-full ${config.imgHeight} bg-bg-subtle rounded-lg`} />
+                  <div className="h-2.5 bg-bg-subtle rounded w-3/4" />
+                  <div className="h-2 bg-bg-subtle rounded w-1/2" />
+                </div>
+              </div>
+            ))
+          ) : latestThree.length > 0 ? (
             latestThree.reverse().map((item, index) => {
               const itemId = item._id || item.id;
               const mainImage =

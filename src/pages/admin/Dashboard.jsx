@@ -61,16 +61,16 @@ function StatCard({ label, value, icon: Icon, to }) {
   return (
     <Link
       to={to}
-      className="block bg-bg-elevated border border-border rounded-2xl p-4 sm:p-5 space-y-3 shadow-sm hover:border-primary/40 transition-colors"
+      className="block bg-bg-elevated border border-border rounded-2xl p-3.5 sm:p-4 space-y-1.5 shadow-sm hover:border-primary/40 transition-colors"
     >
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-text-muted">{label}</span>
-        <div className="p-2 rounded-xl bg-primary/10 text-primary shrink-0">
-          <Icon size={18} />
+        <div className="p-1.5 rounded-lg bg-primary/10 text-primary shrink-0">
+          <Icon size={16} />
         </div>
       </div>
       <div>
-        <h3 className="text-xl sm:text-2xl font-bold text-text">{value}</h3>
+        <h3 className="text-lg sm:text-xl font-bold text-text">{value} {label}</h3>
       </div>
     </Link>
   );

@@ -20,7 +20,22 @@ export function ThemeProvider({ children }) {
   }, [theme]);
 
   const toggleTheme = () => {
-    setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
+    // 1. Disable transitions temporarily
+    const css = document.createElement("style");
+    css.appendChild(
+      document.createTextNode(
+        `* { -webkit-transition: none !important; -moz-transition: none !important; -o-transition: none !important; -ms-transition: none !important; transition: none !important; }`,
+      ),
+    );
+    document.head.appendChild(css);
+
+    // 2. Switch theme mode (dark/light class on html element)
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+
+    // 3. Re-enable transitions after paint
+    setTimeout(() => {
+      document.head.removeChild(css);
+    }, 10);
   };
 
   return (

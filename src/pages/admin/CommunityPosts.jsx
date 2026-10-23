@@ -4,8 +4,6 @@ import {
   Filter,
   MessageSquare,
   ThumbsUp,
-  Eye,
-  EyeOff,
   Trash2,
   AlertTriangle,
   X,
@@ -51,29 +49,6 @@ function Community() {
 
     return matchesSearch && matchesCategory;
   });
-
-  // Toggle Hide/Unhide Post
-  const toggleHidePost = async (id) => {
-    const targetPost = posts.find((p) => String(p.id) === String(id));
-    if (!targetPost) return;
-
-    const currentStatus = targetPost.status || "Published";
-    const newStatus = currentStatus === "Hidden" ? "Published" : "Hidden";
-
-    const previousPosts = [...posts];
-    const updatedPosts = posts.map((post) =>
-      String(post.id) === String(id) ? { ...post, status: newStatus } : post,
-    );
-    setPosts(updatedPosts);
-
-    try {
-      showAlert(`Post status updated to ${newStatus}`);
-    } catch (err) {
-      console.error("Failed to update post status:", err);
-      setPosts(previousPosts);
-      showAlert("Failed to update post status.");
-    }
-  };
 
   // Open Delete Modal
   const confirmDelete = (post) => {
@@ -136,7 +111,7 @@ function Community() {
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
           />
           <input
-            type="text"
+            type="search"
             placeholder="Search by title or author..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -244,22 +219,6 @@ function Community() {
 
                       <td className="py-4 px-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => toggleHidePost(post.id)}
-                            title={
-                              postStatus === "Hidden"
-                                ? "Unhide Post"
-                                : "Hide Post"
-                            }
-                            className="p-2 rounded-xl bg-surface border border-border text-text-muted hover:text-text hover:bg-surface/80 transition-colors"
-                          >
-                            {postStatus === "Hidden" ? (
-                              <Eye size={16} />
-                            ) : (
-                              <EyeOff size={16} />
-                            )}
-                          </button>
-
                           {/* Trigger Delete Confirmation Modal */}
                           <button
                             onClick={() => confirmDelete(post)}

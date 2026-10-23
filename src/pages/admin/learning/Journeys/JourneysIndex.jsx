@@ -183,7 +183,7 @@ const JourneysIndex = () => {
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
           />
           <input
-            type="text"
+            type="search"
             placeholder="Search journeys by title or journeyId..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}

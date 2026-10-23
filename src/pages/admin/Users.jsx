@@ -47,8 +47,10 @@ function Users() {
   // Filter Logic (Search & Role filter)
   const filteredUsers = users.filter((user) => {
     const matchesSearch =
-      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
+      (user.name &&
+        user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email &&
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole =
       roleFilter === "All" ||
       (user.role && user.role.toLowerCase() === roleFilter.toLowerCase());
@@ -135,7 +137,7 @@ function Users() {
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
           />
           <input
-            type="text"
+            type="search"
             placeholder="Search by name or email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -152,7 +154,6 @@ function Users() {
           >
             <option value="All">All Roles</option>
             <option value="admin">Admin</option>
-            <option value="maker">Maker</option>
             <option value="learner">Learner</option>
           </select>
         </div>
@@ -181,7 +182,8 @@ function Users() {
                   const userRole = user.role || "learner";
                   const userStatus = user.status || "Active";
                   const userXp = user.xp || 0;
-                  const userTrack = user.track || user.interest || "IoT & Embedded";
+                  const userTrack =
+                    user.track || user.interest || "IoT & Embedded";
 
                   return (
                     <tr

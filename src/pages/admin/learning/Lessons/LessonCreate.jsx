@@ -921,42 +921,52 @@ function LessonCreate() {
 
                             {block.type === "text" && (
                               <div className="grid md:grid-cols-2 gap-3">
-                                <textarea
-                                  rows={2}
-                                  value={block.value?.en || ""}
-                                  onChange={(e) => {
-                                    const updatedVal = {
-                                      ...block.value,
-                                      en: e.target.value,
-                                    };
-                                    updateBlockField(
-                                      secIndex,
-                                      blockIndex,
-                                      "value",
-                                      updatedVal,
-                                    );
-                                  }}
-                                  placeholder="Text content (English)..."
-                                  className="bg-bg-subtle border border-border text-text text-sm rounded-xl p-3 focus:outline-none focus:border-primary"
-                                />
-                                <textarea
-                                  rows={2}
-                                  value={block.value?.mm || ""}
-                                  onChange={(e) => {
-                                    const updatedVal = {
-                                      ...block.value,
-                                      mm: e.target.value,
-                                    };
-                                    updateBlockField(
-                                      secIndex,
-                                      blockIndex,
-                                      "value",
-                                      updatedVal,
-                                    );
-                                  }}
-                                  placeholder="စာသား အကြောင်းအရာ (မြန်မာ)..."
-                                  className="bg-bg-subtle border border-border text-text text-sm rounded-xl p-3 focus:outline-none focus:border-primary"
-                                />
+                                <div>
+                                  <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                    Text Content (English)
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    value={block.value?.en || ""}
+                                    onChange={(e) => {
+                                      const updatedVal = {
+                                        ...block.value,
+                                        en: e.target.value,
+                                      };
+                                      updateBlockField(
+                                        secIndex,
+                                        blockIndex,
+                                        "value",
+                                        updatedVal,
+                                      );
+                                    }}
+                                    placeholder="Write English text..."
+                                    className="w-full bg-bg-subtle border border-border text-text text-sm rounded-xl p-3 focus:outline-none focus:border-primary"
+                                  />
+                                </div>
+                                <div>
+                                  <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                    စာသား အကြောင်းအရာ (Myanmar 🇲🇲)
+                                  </label>
+                                  <textarea
+                                    rows={2}
+                                    value={block.value?.mm || ""}
+                                    onChange={(e) => {
+                                      const updatedVal = {
+                                        ...block.value,
+                                        mm: e.target.value,
+                                      };
+                                      updateBlockField(
+                                        secIndex,
+                                        blockIndex,
+                                        "value",
+                                        updatedVal,
+                                      );
+                                    }}
+                                    placeholder="မြန်မာလို ရေးရန်..."
+                                    className="w-full bg-bg-subtle border border-border text-text text-sm rounded-xl p-3 focus:outline-none focus:border-primary"
+                                  />
+                                </div>
                               </div>
                             )}
 
@@ -1119,7 +1129,7 @@ function LessonCreate() {
                             {block.type === "simulator" && (
                               <div className="flex flex-col gap-3">
                                 <div className="flex items-center gap-2">
-                                  <span className="text-xs text-text-muted font-medium">
+                                  <span className="text-xs text-text-muted font-medium shrink-0">
                                     Provider: Wokwi
                                   </span>
                                   <input
@@ -1133,52 +1143,207 @@ function LessonCreate() {
                                         e.target.value,
                                       )
                                     }
-                                    placeholder="Wokwi Project ID"
+                                    placeholder="Wokwi Project ID (e.g., 362541578326176769)"
                                     className="flex-1 bg-bg-subtle border border-border text-text text-sm rounded-xl px-3.5 py-2.5 font-mono"
                                   />
                                 </div>
+
+                                {/* 🚀 Wokwi Simulator Live Preview */}
+                                {block.id?.trim() ? (
+                                  <div className="space-y-1.5 mt-2">
+                                    <span className="block text-[11px] font-semibold text-text-subtle uppercase tracking-wider">
+                                      Simulator Live Preview
+                                    </span>
+                                    <div className="w-full h-[350px] sm:h-[450px] rounded-xl overflow-hidden border border-border bg-bg-elevated shadow-sm">
+                                      <iframe
+                                        src={`https://wokwi.com/projects/${block.id}?embed=1`}
+                                        title="Wokwi Simulator Preview"
+                                        className="w-full h-full border-0"
+                                        allow="autoplay"
+                                      />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <p className="text-[11px] text-text-muted italic">
+                                    * Wokwi Project ID ထည့်သွင်းပါက ဆင်မြူလေတာ
+                                    ပုံစံငယ်ကို ဤနေရာတွင်
+                                    တိုက်ရိုက်ကြည့်ရှုနိုင်မည်။
+                                  </p>
+                                )}
                               </div>
                             )}
 
                             {block.type === "software" && (
-                              <div className="flex flex-col gap-3">
+                              <div className="flex flex-col gap-4">
+                                {/* Software Name (EN & MM) */}
                                 <div className="grid md:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      Software Name (English)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={block.name?.en || ""}
+                                      onChange={(e) => {
+                                        const n = {
+                                          ...block.name,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "name",
+                                          n,
+                                        );
+                                      }}
+                                      placeholder="e.g., Arduino IDE"
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      ဆော့ဖ်ဝဲအမည် (Myanmar 🇲🇲)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={block.name?.mm || ""}
+                                      onChange={(e) => {
+                                        const n = {
+                                          ...block.name,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "name",
+                                          n,
+                                        );
+                                      }}
+                                      placeholder="ဥပမာ - Arduino IDE"
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Software Type (EN & MM) */}
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      Software Type (English)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={block.softwareType?.en || ""}
+                                      onChange={(e) => {
+                                        const st = {
+                                          ...block.softwareType,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "softwareType",
+                                          st,
+                                        );
+                                      }}
+                                      placeholder="e.g., IDE / Compiler"
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      ဆော့ဖ်ဝဲအမျိုးအစား (Myanmar 🇲🇲)
+                                    </label>
+                                    <input
+                                      type="text"
+                                      value={block.softwareType?.mm || ""}
+                                      onChange={(e) => {
+                                        const st = {
+                                          ...block.softwareType,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "softwareType",
+                                          st,
+                                        );
+                                      }}
+                                      placeholder="ဥပမာ - IDE / ဆော့ဖ်ဝဲလ် ရေးသားရန်"
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Software Link */}
+                                <div>
+                                  <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                    Software Link (URL)
+                                  </label>
                                   <input
-                                    type="text"
-                                    value={block.name?.en || ""}
+                                    type="url"
+                                    value={block.link || ""}
                                     onChange={(e) => {
-                                      const n = {
-                                        ...block.name,
-                                        en: e.target.value,
-                                      };
                                       updateBlockField(
                                         secIndex,
                                         blockIndex,
-                                        "name",
-                                        n,
+                                        "link",
+                                        e.target.value,
                                       );
                                     }}
-                                    placeholder="Software Name (EN)"
-                                    className="bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
+                                    placeholder="https://www.arduino.cc/en/software"
+                                    className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2 font-mono"
                                   />
-                                  <input
-                                    type="text"
-                                    value={block.name?.mm || ""}
-                                    onChange={(e) => {
-                                      const n = {
-                                        ...block.name,
-                                        mm: e.target.value,
-                                      };
-                                      updateBlockField(
-                                        secIndex,
-                                        blockIndex,
-                                        "name",
-                                        n,
-                                      );
-                                    }}
-                                    placeholder="ဆော့ဖ်ဝဲအမည် (MM)"
-                                    className="bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
-                                  />
+                                </div>
+
+                                {/* Description (EN & MM) */}
+                                <div className="grid md:grid-cols-2 gap-3">
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      Description (English)
+                                    </label>
+                                    <textarea
+                                      rows={2}
+                                      value={block.description?.en || ""}
+                                      onChange={(e) => {
+                                        const desc = {
+                                          ...block.description,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "description",
+                                          desc,
+                                        );
+                                      }}
+                                      placeholder="Open-source electronics prototyping platform."
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg p-2.5"
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                                      ဖော်ပြချက် (Myanmar 🇲🇲)
+                                    </label>
+                                    <textarea
+                                      rows={2}
+                                      value={block.description?.mm || ""}
+                                      onChange={(e) => {
+                                        const desc = {
+                                          ...block.description,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "description",
+                                          desc,
+                                        );
+                                      }}
+                                      placeholder="အီလက်ထရွန်နစ် ပရောဂျက်များ ဖန်တီးစမ်းသပ်ရန်..."
+                                      className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg p-2.5"
+                                    />
+                                  </div>
                                 </div>
                               </div>
                             )}
@@ -1191,15 +1356,110 @@ function LessonCreate() {
                                 {(block.components || []).map((comp, cIdx) => (
                                   <div
                                     key={cIdx}
-                                    className="flex flex-col sm:flex-row items-center gap-3 bg-bg-subtle p-3 rounded-xl border border-border"
+                                    className="flex flex-col gap-3 bg-bg-subtle p-3.5 rounded-xl border border-border"
                                   >
-                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
-                                      <input
-                                        type="text"
-                                        value={comp.name}
-                                        onChange={(e) => {
-                                          const comps = [...block.components];
-                                          comps[cIdx].name = e.target.value;
+                                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                                      {/* 🚀 Image Preview Box */}
+                                      <div className="w-12 h-12 rounded-lg bg-surface border border-border flex items-center justify-center overflow-hidden shrink-0 shadow-xs">
+                                        {comp.image?.trim() ? (
+                                          <img
+                                            src={comp.image}
+                                            alt={comp.name || "Preview"}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                              e.currentTarget.style.display =
+                                                "none";
+                                            }}
+                                          />
+                                        ) : (
+                                          <Wrench
+                                            size={18}
+                                            className="text-text-muted"
+                                          />
+                                        )}
+                                      </div>
+
+                                      {/* Input Fields */}
+                                      <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2.5 w-full">
+                                        <div>
+                                          <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider mb-0.5">
+                                            Component Name
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={comp.name}
+                                            onChange={(e) => {
+                                              const comps = [
+                                                ...block.components,
+                                              ];
+                                              comps[cIdx].name = e.target.value;
+                                              updateBlockField(
+                                                secIndex,
+                                                blockIndex,
+                                                "components",
+                                                comps,
+                                              );
+                                            }}
+                                            placeholder="e.g., Arduino Uno"
+                                            className="w-full bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider mb-0.5">
+                                            Quantity (Qty)
+                                          </label>
+                                          <input
+                                            type="text"
+                                            value={comp.qty}
+                                            onChange={(e) => {
+                                              const comps = [
+                                                ...block.components,
+                                              ];
+                                              comps[cIdx].qty = e.target.value;
+                                              updateBlockField(
+                                                secIndex,
+                                                blockIndex,
+                                                "components",
+                                                comps,
+                                              );
+                                            }}
+                                            placeholder="e.g., 1x"
+                                            className="w-full bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
+                                          />
+                                        </div>
+                                        <div>
+                                          <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider mb-0.5">
+                                            Image URL
+                                          </label>
+                                          <input
+                                            type="url"
+                                            value={comp.image}
+                                            onChange={(e) => {
+                                              const comps = [
+                                                ...block.components,
+                                              ];
+                                              comps[cIdx].image =
+                                                e.target.value;
+                                              updateBlockField(
+                                                secIndex,
+                                                blockIndex,
+                                                "components",
+                                                comps,
+                                              );
+                                            }}
+                                            placeholder="https://..."
+                                            className="w-full bg-surface border border-border text-text text-xs rounded-lg px-3 py-2 font-mono"
+                                          />
+                                        </div>
+                                      </div>
+
+                                      {/* Remove Component Button */}
+                                      <button
+                                        type="button"
+                                        onClick={() => {
+                                          const comps = block.components.filter(
+                                            (_, i) => i !== cIdx,
+                                          );
                                           updateBlockField(
                                             secIndex,
                                             blockIndex,
@@ -1207,44 +1467,33 @@ function LessonCreate() {
                                             comps,
                                           );
                                         }}
-                                        placeholder="Component Name"
-                                        className="bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
-                                      />
-                                      <input
-                                        type="text"
-                                        value={comp.qty}
-                                        onChange={(e) => {
-                                          const comps = [...block.components];
-                                          comps[cIdx].qty = e.target.value;
-                                          updateBlockField(
-                                            secIndex,
-                                            blockIndex,
-                                            "components",
-                                            comps,
-                                          );
-                                        }}
-                                        placeholder="Qty"
-                                        className="bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
-                                      />
-                                      <input
-                                        type="url"
-                                        value={comp.image}
-                                        onChange={(e) => {
-                                          const comps = [...block.components];
-                                          comps[cIdx].image = e.target.value;
-                                          updateBlockField(
-                                            secIndex,
-                                            blockIndex,
-                                            "components",
-                                            comps,
-                                          );
-                                        }}
-                                        placeholder="Image URL"
-                                        className="bg-surface border border-border text-text text-xs rounded-lg px-3 py-2 font-mono"
-                                      />
+                                        className="text-text-muted hover:text-red-400 p-1.5 self-center"
+                                        title="Remove Component"
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
                                     </div>
                                   </div>
                                 ))}
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const comps = [
+                                      ...(block.components || []),
+                                      { name: "", qty: "1x", image: "" },
+                                    ];
+                                    updateBlockField(
+                                      secIndex,
+                                      blockIndex,
+                                      "components",
+                                      comps,
+                                    );
+                                  }}
+                                  className="mt-1 flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg bg-bg-subtle border border-border text-text-muted hover:text-primary self-start transition-colors"
+                                >
+                                  <Plus size={13} /> Add Component
+                                </button>
                               </div>
                             )}
                           </div>
@@ -1278,6 +1527,34 @@ function LessonCreate() {
                             className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-bg-subtle border border-border text-text-muted hover:text-primary"
                           >
                             <Code2 size={12} /> + Code
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() =>
+                              addBlockToSection(secIndex, "simulator")
+                            }
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-bg-subtle border border-border text-text-muted hover:text-primary"
+                          >
+                            <Cpu size={12} /> + Simulator
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              addBlockToSection(secIndex, "software")
+                            }
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-bg-subtle border border-border text-text-muted hover:text-primary"
+                          >
+                            <Code2 size={12} /> + Software
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              addBlockToSection(secIndex, "hardware")
+                            }
+                            className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-lg bg-bg-subtle border border-border text-text-muted hover:text-primary"
+                          >
+                            <Wrench size={12} /> + Hardware
                           </button>
                         </div>
                       </div>
@@ -1326,78 +1603,118 @@ function LessonCreate() {
                   </button>
                 </div>
 
+                {/* Question Inputs with Labels */}
                 <div className="grid md:grid-cols-2 gap-3">
-                  <input
-                    type="text"
-                    value={q.question.en}
-                    onChange={(e) =>
-                      updateQuestionLang(qIndex, "en", e.target.value)
-                    }
-                    placeholder="Question (English)..."
-                    className="bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5"
-                  />
-                  <input
-                    type="text"
-                    value={q.question.mm}
-                    onChange={(e) =>
-                      updateQuestionLang(qIndex, "mm", e.target.value)
-                    }
-                    placeholder="မေးခွန်း (မြန်မာ)..."
-                    className="bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5"
-                  />
+                  <div>
+                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                      Question (English)
+                    </label>
+                    <input
+                      type="text"
+                      value={q.question.en}
+                      onChange={(e) =>
+                        updateQuestionLang(qIndex, "en", e.target.value)
+                      }
+                      placeholder="Question (English)..."
+                      className="w-full bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                      မေးခွန်း (Myanmar 🇲🇲)
+                    </label>
+                    <input
+                      type="text"
+                      value={q.question.mm}
+                      onChange={(e) =>
+                        updateQuestionLang(qIndex, "mm", e.target.value)
+                      }
+                      placeholder="မေးခွန်း (မြန်မာ)..."
+                      className="w-full bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5"
+                    />
+                  </div>
                 </div>
 
-                <div className="flex flex-col gap-2 pl-2 border-l-2 border-border-muted">
+                {/* Options with Labels */}
+                <div className="flex flex-col gap-3 pl-2 border-l-2 border-border-muted">
                   <span className="text-xs font-medium text-text-muted">
-                    Options:
+                    Options (မှန်ကန်သော အဖြေကို Radio Button ဖြင့် ရွေးပါ):
                   </span>
                   {q.options.map((opt, optIndex) => (
-                    <div key={optIndex} className="flex items-center gap-2">
-                      <input
-                        type="radio"
-                        name={`correct-${qIndex}`}
-                        checked={q.correctIndex === optIndex}
-                        onChange={() =>
-                          updateQuestionField(qIndex, "correctIndex", optIndex)
-                        }
-                        className="accent-primary"
-                      />
-                      <input
-                        type="text"
-                        value={opt.en}
-                        onChange={(e) =>
-                          updateOptionLang(
-                            qIndex,
-                            optIndex,
-                            "en",
-                            e.target.value,
-                          )
-                        }
-                        placeholder={`Option ${optIndex + 1} (EN)`}
-                        className="flex-1 bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
-                      />
-                      <input
-                        type="text"
-                        value={opt.mm}
-                        onChange={(e) =>
-                          updateOptionLang(
-                            qIndex,
-                            optIndex,
-                            "mm",
-                            e.target.value,
-                          )
-                        }
-                        placeholder={`Option ${optIndex + 1} (MM)`}
-                        className="flex-1 bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
-                      />
+                    <div
+                      key={optIndex}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-surface/40 p-2.5 rounded-xl border border-border/60"
+                    >
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <input
+                          type="radio"
+                          name={`correct-${qIndex}`}
+                          checked={q.correctIndex === optIndex}
+                          onChange={() =>
+                            updateQuestionField(
+                              qIndex,
+                              "correctIndex",
+                              optIndex,
+                            )
+                          }
+                          className="accent-primary"
+                          title="Correct Answer"
+                        />
+                        <span className="text-xs font-semibold text-text-muted sm:hidden">
+                          Option {optIndex + 1}
+                        </span>
+                      </div>
+
+                      <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2 w-full">
+                        <div>
+                          <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider mb-0.5">
+                            Option {optIndex + 1} (EN)
+                          </label>
+                          <input
+                            type="text"
+                            value={opt.en}
+                            onChange={(e) =>
+                              updateOptionLang(
+                                qIndex,
+                                optIndex,
+                                "en",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="English option..."
+                            className="w-full bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-[9px] font-semibold text-text-muted uppercase tracking-wider mb-0.5">
+                            ရွေးချယ်စရာ {optIndex + 1} (MM)
+                          </label>
+                          <input
+                            type="text"
+                            value={opt.mm}
+                            onChange={(e) =>
+                              updateOptionLang(
+                                qIndex,
+                                optIndex,
+                                "mm",
+                                e.target.value,
+                              )
+                            }
+                            placeholder="မြန်မာ option..."
+                            className="w-full bg-surface border border-border text-text text-xs rounded-lg px-3 py-2"
+                          />
+                        </div>
+                      </div>
+
                       <button
                         type="button"
                         onClick={() =>
                           removeOptionFromQuestion(qIndex, optIndex)
                         }
-                        className="text-text-subtle hover:text-red-400 p-1"
+                        className="text-text-subtle hover:text-red-400 p-1 self-end sm:self-center"
+                        title="Remove Option"
                       >
-                        <Trash2 size={13} />
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   ))}

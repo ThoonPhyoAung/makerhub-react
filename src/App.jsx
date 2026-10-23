@@ -27,6 +27,8 @@ import LessonEdit from "./pages/admin/learning/Lessons/LessonEdit";
 
 // Theme
 import { ThemeProvider } from "./context/ThemeContext";
+// Scroll
+import ScrollToTop from "./components/ScrollToTop";
 
 // Profile
 import Profile from "./pages/user/Profile";
@@ -58,6 +60,7 @@ function App() {
     <AlertProvider>
       <ThemeProvider>
         <div>
+          <ScrollToTop />
           <Routes>
             {/* Unathorized */}
             <Route path="/unauthorized" element={<Unauthorized />} />

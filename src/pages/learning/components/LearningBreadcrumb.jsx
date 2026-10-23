@@ -27,7 +27,7 @@ function LearningBreadcrumb({
   const parentItem = items.length > 1 ? items[items.length - 2] : null;
 
   return (
-    <div className="sticky top-[56px] sm:top-[61px] z-30 w-full bg-bg-elevated border-b border-border py-2 sm:py-2.5 shadow-sm">
+    <div className="sticky top-[63px] sm:top-[63px] z-30 w-full bg-bg-elevated border-b border-border py-2 sm:py-2.5 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 lg:px-8 flex items-center justify-between gap-2 text-xs">
         {/* 📱 1. MOBILE ONLY: Back Button */}
         <div className="flex md:hidden items-center min-w-0">

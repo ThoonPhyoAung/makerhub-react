@@ -95,6 +95,10 @@ function LessonDetailPage() {
     ? totalLessonsData.length
     : 0;
 
+    const currentChapter = journey?.chapters?.find(
+    (ch) => String(ch.id || ch._id) === String(chapterId)
+  );
+
   // Total XP Calculation[cite: 21]
   let totalLessonXp = 20;
   if (currentLesson?.questions && currentLesson.questions.length > 0) {
@@ -327,13 +331,10 @@ function LessonDetailPage() {
       <LearningBreadcrumb
         items={[
           { label: "Learning", path: "/learning" },
-          {
-            label: journeyId?.replace(/-/g, " "),
-            path: `/learning/${journeyId}`,
-          },
-          {
-            label: chapterId?.replace(/-/g, " "),
-            path: `/learning/${journeyId}/${chapterId}`,
+          { label: t(journey.title), path: `/learning/${journey.journeyId}` },
+          { 
+            label: t(currentChapter?.title || "Chapter"), 
+            path: `/learning/${journeyId}/${chapterId}` 
           },
           { label: t(currentLesson.title) },
         ]}

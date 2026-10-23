@@ -2,10 +2,7 @@ import { useState, useEffect } from "react";
 import {
   Search,
   Filter,
-  CheckCircle,
-  XCircle,
   Trash2,
-  Star,
   AlertTriangle,
   X,
   Store,
@@ -86,55 +83,6 @@ function Marketplace() {
 
     return matchesSearch && matchesStatus;
   });
-
-  const handleStatusChange = async (id, newStatus) => {
-    const targetItem = items.find((i) => String(i.id) === String(id));
-    if (!targetItem) return;
-
-    const previousItems = [...items];
-    const updatedItems = items.map((item) =>
-      String(item.id) === String(id) ? { ...item, status: newStatus } : item,
-    );
-    setItems(updatedItems);
-
-    try {
-      await updateMarketplaceItem(id, { ...targetItem, status: newStatus });
-      showAlert(`Item status updated to ${newStatus}`);
-    } catch (err) {
-      console.error("Failed to update status:", err);
-      setItems(previousItems);
-      showAlert("Failed to update item status.");
-    }
-  };
-
-  const toggleFeatured = async (id) => {
-    const targetItem = items.find((i) => String(i.id) === String(id));
-    if (!targetItem) return;
-
-    const newFeaturedState = !targetItem.isFeatured;
-    const previousItems = [...items];
-
-    const updatedItems = items.map((item) =>
-      String(item.id) === String(id)
-        ? { ...item, isFeatured: newFeaturedState }
-        : item,
-    );
-    setItems(updatedItems);
-
-    try {
-      await updateMarketplaceItem(id, {
-        ...targetItem,
-        isFeatured: newFeaturedState,
-      });
-      showAlert(
-        newFeaturedState ? "Marked as featured" : "Removed from featured",
-      );
-    } catch (err) {
-      console.error("Failed to toggle featured:", err);
-      setItems(previousItems);
-      showAlert("Failed to update featured status.");
-    }
-  };
 
   const openDeleteModal = (item) => {
     setItemToDelete(item);
@@ -272,7 +220,7 @@ function Marketplace() {
             className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-muted"
           />
           <input
-            type="text"
+            type="search"
             placeholder="Search products or sellers..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -317,14 +265,7 @@ function Marketplace() {
                   return (
                     <tr key={item.id} className="hover:bg-surface/30 transition-colors">
                       <td className="py-4 px-5">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-text">{itemTitle}</p>
-                          {item.isFeatured && (
-                            <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-500 text-[10px] font-bold">
-                              FEATURED
-                            </span>
-                          )}
-                        </div>
+                        <p className="font-medium text-text">{itemTitle}</p>
                         <p className="text-xs font-semibold text-primary mt-0.5">
                           {typeof item.price === "number"
                             ? `${item.price.toLocaleString()} MMK`
@@ -351,21 +292,6 @@ function Marketplace() {
 
                       <td className="py-4 px-5 text-right">
                         <div className="flex items-center justify-end gap-2">
-                          <button
-                            onClick={() => toggleFeatured(item.id)}
-                            title={item.isFeatured ? "Unfeature Item" : "Feature Item"}
-                            className={`p-2 rounded-xl border transition-colors cursor-pointer ${
-                              item.isFeatured
-                                ? "bg-amber-500/10 border-amber-500/20 text-amber-500"
-                                : "bg-surface border-border text-text-muted hover:text-text"
-                            }`}
-                          >
-                            <Star
-                              size={16}
-                              fill={item.isFeatured ? "currentColor" : "none"}
-                            />
-                          </button>
-
                           <button
                             onClick={() => openDeleteModal(item)}
                             title="Delete Listing"

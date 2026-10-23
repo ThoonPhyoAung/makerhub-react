@@ -10,9 +10,10 @@ import { getMarketplaceItems } from "../../api/marketplaceApi";
 function Marketplace() {
   const location = useLocation();
   const [activeCategory, setActiveCategory] = useState("all");
-  const [searchQuery, setSearchQuery] = useState(""); //Search Input Bar ထဲမှာ ပေါ်နေမယ့် စာသား
+  const [searchQuery, setSearchQuery] = useState(""); // Search Input Bar ထဲမှာ ပေါ်နေမယ့် စာသား
 
-  const { data: items } = useFetch(getMarketplaceItems);
+  // 🚀 loading ကိုပါ useFetch မှ ထုတ်ယူမည်
+  const { data: items, loading } = useFetch(getMarketplaceItems);
   const [itemList, setItemList] = useState([]);
 
   useEffect(() => {
@@ -25,8 +26,6 @@ function Marketplace() {
   useEffect(() => {
     if (location.state?.initialSearch) {
       setSearchQuery(location.state.initialSearch);
-
-      // (Optional) စာမျက်နှာကို Refresh ပြန်လုပ်ရင် မူလအတိုင်း ပြန်ဖြစ်အောင် history state ကို clean ပြန်လုပ်ထားနိုင်ပါတယ်
       window.history.replaceState({}, document.title);
     }
   }, [location]);
@@ -41,13 +40,13 @@ function Marketplace() {
   // Category switch လုပ်သည့်အခါ Search Bar ကို Clear လုပ်ပေးမည်
   const handleCategoryChange = (categoryId) => {
     setActiveCategory(categoryId);
-    setSearchQuery(""); // Nav tab နှိပ်လိုက်ရင် search bar ပါ တန်းပြီး clear ဖြစ်သွားမယ်
+    setSearchQuery("");
   };
 
   return (
     <div>
-      {/* Latest Items 3 ခုကို Hero Component ထံ Prop အဖြစ် လွှဲပေးမည် */}
-      <MarketplaceHero items={latestThreeItems} />
+      {/* 🚀 loading prop ကိုပါ MarketplaceHero ထံ ပေးပို့မည် */}
+      <MarketplaceHero items={latestThreeItems} loading={loading} />
 
       {/* Pass searchQuery and onSearchChange props */}
       <MarketplaceCategoryNav
