@@ -405,23 +405,21 @@ function MarketplacePostForm() {
       // 2. Form Data ကို API Format ရောက်အောင် Structure ပြောင်းလဲခြင်း
       const payload = {
         title: form.title,
-        price: Number(form.price) || 0, // String မှ Number သို့ ပြောင်းမည်
+        price: Number(form.price) || 0,
         category: form.category,
         boardTag: form.boardTag,
         condition: form.condition,
-        images: form.images, // Image URLs / Base64 Array
+        images: form.images,
         components: form.components,
         description: form.description,
         demoVideoUrl: form.demoVideoUrl || "",
         isNegotiable: Boolean(form.isNegotiable),
 
-        // Nested Location Object
         location: {
           state: form.state,
           township: form.township,
         },
 
-        // Nested Contact Methods Object
         contactMethods: {
           phone: form.phone,
           preferredMethod: form.preferredMethod || "any",
@@ -431,18 +429,16 @@ function MarketplacePostForm() {
           tiktok: activeSocials.includes("tiktok") ? form.tiktok : "",
         },
 
-        // Seller Metadata (Auth State ထဲမှ ယူမည်)
         sellerId: userId || "usr_default",
-        sellerName: userName || "Thoon Phyo Aung",
+        sellerName: userName || "Anonymous",
         sellerAvatar: userAvatar,
         sellerJoinDate:
           user?.createdAt ||
           user?.joinDate ||
           new Date().toISOString().slice(0, 7),
 
-        // System Defaults
         createdAt: new Date().toISOString(),
-        isSold: false,
+        isSold: false, // ★ Sold Out ဖြစ်မဖြစ် စစ်ရန် boolean တစ်ခုတည်းသာ ထိန်းထားပါသည်
         reportCount: 0,
         savedUsers: [],
       };
@@ -1121,7 +1117,6 @@ function MarketplacePostForm() {
                       }}
                       className="px-3 py-2 rounded-xl text-xs font-bold border flex items-center gap-2 transition-all active:scale-95"
                     >
-
                       {isActive ? "✓ " : "+ "}
                       <svg
                         className="w-4 h-4 fill-current"

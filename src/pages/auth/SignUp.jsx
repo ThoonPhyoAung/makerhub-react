@@ -1,24 +1,31 @@
 import { useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { User, Mail, Lock, ArrowRight, Cpu, Moon, Sun } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { User, Mail, Lock, ArrowRight, Moon, Sun } from "lucide-react";
+import { FaMicrochip } from "react-icons/fa6";
 import { useDispatch } from "react-redux";
 
 // use fake api did with userService.jsx
 import { login } from "../../features/auth/authSlice";
 import { userSignUp } from "../../api/userService";
 
-// show alert
+// show alert & global theme context
 import { useAlert } from "../../context/AlertContext";
+import { useTheme } from "../../context/ThemeContext";
 
 function SignUp() {
   const nameRef = useRef(null);
   const emailRef = useRef(null);
   const passwordRef = useRef(null);
+  const confirmPasswordRef = useRef(null);
+
   const [errors, setErrors] = useState({});
   const [signUpError, setSignUpError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true);
+
+  // 📌 Theme Context
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
+
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const showAlert = useAlert();
@@ -29,17 +36,16 @@ function SignUp() {
     if (Object.keys(err).length > 0) {
       return false;
     } else {
-      setIsSubmitting(true); // this is for button text "Signing in..."
+      setIsSubmitting(true);
       let name = nameRef.current.value;
       let email = emailRef.current.value;
       let password = passwordRef.current.value;
 
-      //if api have,  call API - login API
+      // call API
       const response = userSignUp({ name, email, password });
       if (response.status === 1) {
         dispatch(login(response.data));
-        showAlert(response.message); // "signup sucess"
-        // navigate("/login");
+        showAlert(response.message);
         navigate("/");
       } else {
         setIsSubmitting(false);
@@ -53,66 +59,80 @@ function SignUp() {
     const errs = {};
     if (!nameRef.current.value) errs.name = "Name is Required";
     if (!emailRef.current.value) errs.email = "Email is Required";
-    if (!passwordRef.current.value) errs.password = "Password is required";
+    if (!passwordRef.current.value) {
+      errs.password = "Password is required";
+    } else if (passwordRef.current.value.length < 6) {
+      errs.password = "Password must be at least 6 characters";
+    }
+
+    if (!confirmPasswordRef.current.value) {
+      errs.confirmPassword = "Please confirm your password";
+    } else if (passwordRef.current.value !== confirmPasswordRef.current.value) {
+      errs.confirmPassword = "Passwords do not match";
+    }
+
     setErrors(errs);
     return errs;
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-bg">
-      {/* Top bar — Navbar.jsx ရဲ့ design language အတိုင်း (bg-nav-bg, border,
-          max-w-7xl container, padding) ချည်းသာ tabs/search မပါဘဲ stripped-down */}
+      {/* Top bar */}
       <header className="bg-nav-bg border-b border-border">
         <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3">
           <Link
             to="/"
             className="inline-flex items-center gap-2 shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <Cpu size={20} className="text-primary" />
+            <FaMicrochip size={20} className="text-primary" />
             <span className="text-text font-bold text-lg">
               Maker<span className="text-primary">Hub</span> MM
             </span>
           </Link>
 
           <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+            onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors"
+            className="p-2 rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text hover:bg-bg-subtle transition-all cursor-pointer shadow-sm"
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </nav>
       </header>
 
-      {/* Card — form ချည်းပဲ */}
-      <div className="flex-1 flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-sm">
-          <div className="bg-bg-elevated border border-border rounded-2xl shadow-lg p-6 md:p-8">
-            <div className="text-center mb-8">
-              <h1 className="text-text text-2xl font-bold tracking-tight mb-1.5">
-                Sign Up
+      {/* Centered Form Card */}
+      <div className="flex-1 flex items-center justify-center px-4 py-8">
+        <div className="w-full max-w-md">
+          <div className="bg-bg-elevated border border-border rounded-2xl shadow-xl p-6 sm:p-8">
+            <div className="text-center mb-6">
+              <h1 className="text-text text-2xl font-bold tracking-tight mb-1">
+                Create Account
               </h1>
-              <p className="text-text-muted text-sm max-w-xs mx-auto leading-relaxed">
-                Create an account to Join our community.
+              <p className="text-text-muted text-sm">
+                Join our community of makers and innovators.
               </p>
             </div>
 
-            {/* error message box */}
+            {/* Error message box */}
             {signUpError && (
-              <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-lg px-3 py-2 mb-4">
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 text-sm rounded-xl px-3 py-2.5 mb-5">
                 {signUpError}
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <form
+              onSubmit={handleSubmit}
+              noValidate
+              className="flex flex-col gap-3.5"
+            >
               <div>
                 <label
                   htmlFor="name"
-                  className="block text-text-muted text-sm font-medium mb-1.5"
+                  className="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-1.5"
                 >
                   Full Name
                 </label>
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5 focus-within:border-primary transition-colors">
+                <div className="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary transition-colors">
                   <User size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="name"
@@ -124,42 +144,41 @@ function SignUp() {
                   />
                 </div>
                 {errors.name && (
-                  <p className="text-sm text-red-500 mt-1">{errors.name}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.name}</p>
                 )}
               </div>
 
               <div>
                 <label
                   htmlFor="email"
-                  className="block text-text-muted text-sm font-medium mb-1.5"
+                  className="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-1.5"
                 >
-                  Email address
+                  Email Address
                 </label>
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5 focus-within:border-primary transition-colors">
+                <div className="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary transition-colors">
                   <Mail size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="email"
                     type="email"
                     ref={emailRef}
                     autoComplete="email"
-                    // onChange={(e) => setEmail(e.target.value)}
                     placeholder="name@example.com"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
                 </div>
                 {errors.email && (
-                  <p className="text-sm text-red-500 mt-1">{errors.email}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.email}</p>
                 )}
               </div>
 
               <div>
                 <label
                   htmlFor="password"
-                  className="block text-text-muted text-sm font-medium mb-1.5"
+                  className="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-1.5"
                 >
                   Password
                 </label>
-                <div className="flex items-center gap-2 bg-surface border border-border rounded-xl px-3 py-2.5 focus-within:border-primary transition-colors">
+                <div className="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary transition-colors">
                   <Lock size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="password"
@@ -172,29 +191,56 @@ function SignUp() {
                   />
                 </div>
                 {errors.password && (
-                  <p className="text-sm text-red-500 mt-1">{errors.password}</p>
+                  <p className="text-xs text-red-500 mt-1">{errors.password}</p>
+                )}
+              </div>
+
+              <div>
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-text-muted text-xs font-semibold uppercase tracking-wider mb-1.5"
+                >
+                  Confirm Password
+                </label>
+                <div className="flex items-center gap-2.5 bg-surface border border-border rounded-xl px-3.5 py-2.5 focus-within:border-primary transition-colors">
+                  <Lock size={16} className="text-text-subtle shrink-0" />
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    ref={confirmPasswordRef}
+                    autoComplete="new-password"
+                    placeholder="Re-enter your password"
+                    className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
+                  />
+                </div>
+                {errors.confirmPassword && (
+                  <p className="text-xs text-red-500 mt-1">
+                    {errors.confirmPassword}
+                  </p>
                 )}
               </div>
 
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-2.5 rounded-xl mt-2 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-3 rounded-xl mt-3 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer shadow-md shadow-primary/20"
               >
                 {isSubmitting ? "Creating account..." : "Get Started"}
-                {!isSubmitting && <ArrowRight size={15} />}
+                {!isSubmitting && <ArrowRight size={16} />}
               </button>
             </form>
 
-            <p className="text-center text-text-muted text-sm mt-6">
-              Already have an account?{" "}
-              <Link
-                to="/login"
-                className="text-primary font-bold hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
+            <div className="mt-6 text-center border-t border-border pt-5">
+              <p className="text-text-muted text-sm">
+                Already have an account?{" "}
+                <Link
+                  to="/login"
+                  className="text-primary font-bold hover:underline"
+                >
+                  Sign in
+                </Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

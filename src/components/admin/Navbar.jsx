@@ -5,13 +5,13 @@ import { logout } from "../../features/auth/authSlice";
 import { userLogout } from "../../api/userService";
 import { useAlert } from "../../context/AlertContext";
 import { useTheme } from "../../context/ThemeContext";
+import { FaMicrochip } from "react-icons/fa6";
 import {
   Search,
   Moon,
   Sun,
   Menu,
   X,
-  Cpu,
   User,
   Settings,
   LogOut,
@@ -65,7 +65,7 @@ function Navbar({ onToggleSidebar }) {
   return (
     <header className="sticky top-0 z-50 bg-nav-bg border-b border-border relative">
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
-        {/* ဘယ်ဘက်ခြမ်းမှာ Mobile Hamburger နဲ့ Title ကို အတူတူ ထည့်ပေးခြင်း */}
+        {/* ဘယ်ဘက်ခြမ်းမှာ Mobile Hamburger နဲ့ Logo/Title ကို အတူတူ ထည့်ပေးခြင်း */}
         <div className="flex items-center gap-3">
           <button
             onClick={onToggleSidebar}
@@ -75,9 +75,12 @@ function Navbar({ onToggleSidebar }) {
             <Menu size={20} />
           </button>
 
-          <span className="text-text font-bold text-base md:text-lg truncate">
-            Maker<span className="text-primary">Hub</span> MM . Admin
-          </span>
+          <Link to="/" className="flex items-center gap-2 truncate">
+            <FaMicrochip size={20} className="text-primary shrink-0" />
+            <span className="text-text font-bold text-base md:text-lg truncate">
+              Maker<span className="text-primary">Hub</span> MM . Admin
+            </span>
+          </Link>
         </div>
 
         {/* Desktop Right Controls (Theme, Notifications, Profile) */}
@@ -85,7 +88,7 @@ function Navbar({ onToggleSidebar }) {
           <button
             onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors cursor-pointer"
+            className="p-2 rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text hover:bg-bg-subtle transition-all cursor-pointer shadow-sm"
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -151,7 +154,7 @@ function Navbar({ onToggleSidebar }) {
         <div className="flex lg:hidden items-center gap-2">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-full bg-surface text-text-muted cursor-pointer"
+            className="p-1.5 rounded-full bg-bg-subtle border border-border text-text-muted cursor-pointer shadow-sm"
           >
             {isDarkMode ? <Sun size={16} /> : <Moon size={16} />}
           </button>

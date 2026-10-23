@@ -1,24 +1,23 @@
 import { useRef, useState } from "react";
-
 import {
   Mail,
   Lock,
   ArrowRight,
-  Cpu,
   Moon,
   Sun,
   ShieldAlert,
 } from "lucide-react";
+import { FaMicrochip } from "react-icons/fa6";
 import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { useLocation, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 // use fake api did with userService.jsx
 import { login } from "../../features/auth/authSlice";
 import { userLogin } from "../../api/userService";
 
-// show alert
+// show alert and global theme context
 import { useAlert } from "../../context/AlertContext";
+import { useTheme } from "../../context/ThemeContext";
 
 function Login() {
   const emailRef = useRef(null);
@@ -26,7 +25,11 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(true); // dummy state pattern — Navbar.jsx အတိုင်း
+
+  // 📌 Theme Context
+  const { theme, toggleTheme } = useTheme();
+  const isDarkMode = theme === "dark";
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const currentRoute = useLocation();
@@ -45,11 +48,10 @@ function Login() {
       let email = emailRef.current.value;
       let password = passwordRef.current.value;
 
-      //if api have,  call API - login API
+      //if api have, call API - login API
       const response = userLogin({ email, password });
       if (response.status === 1) {
         dispatch(login(response.data)); // login action creator
-        // console.log(currentRoute);
 
         if (
           currentRoute.pathname.includes("/admin") &&
@@ -91,16 +93,16 @@ function Login() {
             to="/"
             className="inline-flex items-center gap-2 shrink-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
-            <Cpu size={20} className="text-primary" />
+            <FaMicrochip size={20} className="text-primary" />
             <span className="text-text font-bold text-lg">
               Maker<span className="text-primary">Hub</span> MM
             </span>
           </Link>
 
-          <button
-            onClick={() => setIsDarkMode(!isDarkMode)}
+         <button
+            onClick={toggleTheme}
             aria-label="Toggle Theme"
-            className="p-2 rounded-full bg-bg-elevated text-text-muted hover:text-text transition-colors"
+            className="p-2 rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text hover:bg-bg-subtle transition-all cursor-pointer shadow-sm"
           >
             {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -201,7 +203,7 @@ function Login() {
 
               <button
                 type="submit"
-                className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-2.5 rounded-xl mt-2 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 bg-primary text-white font-semibold text-sm py-2.5 rounded-xl mt-2 hover:brightness-110 transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 {isSubmitting
                   ? "Signing in..."

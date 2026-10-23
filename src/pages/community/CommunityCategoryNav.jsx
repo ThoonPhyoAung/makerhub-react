@@ -16,7 +16,7 @@ function CommunityCategoryNav({ activeCategory, onCategoryChange }) {
   return (
     <div
       id="categoryNavBar"
-      className="sticky top-[64px] z-30 bg-bg-elevated border-y border-border-muted"
+      className="sticky top-[62px] z-30 bg-bg-elevated border-y border-border-muted"
     >
       <div className="max-w-7xl mx-auto px-4 lg:px-8">
         <div className="flex items-center relative">

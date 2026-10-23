@@ -7,11 +7,8 @@ import { getLessons } from "../../api/lessonsApi";
 import {
   Rocket,
   ArrowRight,
-  Star,
-  Flame,
   TrendingUp,
   Wifi,
-  Code,
   CodeXml,
   Cpu,
 } from "lucide-react";
@@ -40,7 +37,7 @@ function HeroSection() {
   const progressPercent = user?.progress || 0;
 
   // 📍 Lessons Data API ခေါ်ယူခြင်း
-  const { data: lessonsData, loading: lessonsLoading } = useFetch(getLessons);
+  const { data: lessonsData } = useFetch(getLessons);
   const allLessons = Array.isArray(lessonsData) ? lessonsData : [];
 
   // 📍 Platform ပေါ်ရှိ Lessons အားလုံး၏ Total Max XP ကို တွက်ချက်ခြင်း
@@ -49,10 +46,7 @@ function HeroSection() {
     0,
   );
 
-  // Default Max XP (API Data မလာသေးမီ သို့မဟုတ် Lessons မရှိသေးပါက fallback 100 ထားမည်)
   const maxAvailableXp = totalPlatformXp > 0 ? totalPlatformXp : 100;
-
-  // XP Percentage တွက်ချက်ခြင်း
   const xpPercentage = Math.min(
     Math.round(((xp || 0) / maxAvailableXp) * 100),
     100,
@@ -79,42 +73,43 @@ function HeroSection() {
       <div className="relative max-w-7xl mx-auto px-4 lg:px-8 grid lg:grid-cols-2 gap-12 items-start w-full">
         {/* LEFT COLUMN */}
         <div>
-          {/* Badge */}
-          <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full px-3.5 py-1.5 text-xs font-bold mb-6">
+          {/* HeroSection.jsx ၏ Badge နေရာ */}
+          <div className="inline-flex items-center gap-1.5 bg-primary/10 border border-primary/20 text-primary rounded-full px-3.5 py-1.5 text-xs font-black tracking-wider uppercase mb-6">
             <Rocket size={13} className="text-amber-400" />
-            #1 IoT Learning Platform in Myanmar
+            #CHALLENGE_THE_ESTABLISHMENT
           </div>
 
           {/* Title */}
-          <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1] tracking-tight text-text mb-4">
-            Learn{" "}
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black leading-[1.15] tracking-tight text-text mb-4">
+            Practical{" "}
             <span className="text-primary drop-shadow-[0_0_40px_rgba(34,197,94,0.25)]">
               Arduino
             </span>{" "}
             & <br />
             <span className="text-purple-400 drop-shadow-[0_0_40px_rgba(139,92,246,0.25)]">
-              IoT
+              IoT Learning
             </span>{" "}
-            in Myanmar
+            for Makers in Myanmar
           </h1>
 
           {/* Lead text */}
-          <p className="text-text-muted max-w-md leading-relaxed mb-9">
-            Interactive learning journeys for future makers and developers.
-            Build real-world hardware projects from scratch.
+          <p className="text-text-muted max-w-md leading-relaxed text-sm sm:text-base mb-8">
+            <strong className="text-text">Learn, Build, & Share.</strong>{" "}
+            Interactive learning journeys for future makers and developers to
+            build real-world hardware projects from scratch.
           </p>
 
           {/* Buttons */}
           <div className="flex flex-wrap gap-3 mb-12">
             <Link
               to="/learning/"
-              className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-extrabold text-sm px-6 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(34,197,94,0.3)] transition-all"
+              className="inline-flex items-center gap-1.5 bg-primary text-[#052010] font-extrabold text-sm px-6 py-2.5 rounded-lg hover:-translate-y-0.5 hover:shadow-[0_4px_20px_rgba(34,197,94,0.3)] transition-all cursor-pointer"
             >
               Start Learning <ArrowRight size={16} />
             </Link>
             <a
               href="#journeys"
-              className="inline-flex items-center bg-bg-subtle text-text-muted font-bold text-sm px-6 py-2.5 rounded-lg border border-purple-400 hover:text-white hover:bg-purple-900/20 transition-all"
+              className="inline-flex items-center bg-bg-subtle text-text-muted font-bold text-sm px-6 py-2.5 rounded-lg border border-purple-400/50 hover:text-text hover:bg-purple-900/10 transition-all cursor-pointer"
             >
               Explore Journeys
             </a>
@@ -122,7 +117,7 @@ function HeroSection() {
 
           {/* Stat Cards */}
           <div className="grid grid-cols-3 gap-3">
-            {/* XP Card (Dynamic Total XP Logic) */}
+            {/* XP Card */}
             <div className="bg-bg-elevated border border-border rounded-2xl p-4 min-h-[150px] hover:border-surface-2 transition-all">
               <div className="flex items-center gap-2 mb-2">
                 <DotLottieReact
@@ -140,7 +135,7 @@ function HeroSection() {
                   {xp}
                 </span>
                 <span className="text-text-subtle text-xs font-medium">
-                  / {lessonsLoading ? "..." : maxAvailableXp.toLocaleString()}
+                  / {maxAvailableXp.toLocaleString()}
                 </span>
               </div>
               <div className="h-[5px] bg-border rounded-full overflow-hidden">
@@ -227,7 +222,7 @@ function HeroSection() {
           <img
             src="/assets/esp32.png"
             alt="ESP32"
-            className="absolute w-[32%] top-0 right-[40%] top-[10%] -rotate-6 z-[9] drop-shadow-[0_24px_48px_rgba(0,0,0,0.7)] animate-float"
+            className="absolute w-[32%] right-[40%] top-[10%] -rotate-6 z-[9] drop-shadow-[0_24px_48px_rgba(0,0,0,0.7)] animate-float"
             style={{ animationDelay: "1.5s" }}
           />
           <img

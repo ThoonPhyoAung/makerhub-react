@@ -28,6 +28,8 @@ import {
   Loader2,
 } from "lucide-react";
 
+import { FaMicrochip } from "react-icons/fa6";
+
 function Navbar() {
   const profileDropdownRef = useRef(null);
   const notifDropdownRef = useRef(null);
@@ -152,7 +154,8 @@ function Navbar() {
       <nav className="max-w-7xl mx-auto flex items-center justify-between px-4 lg:px-8 py-3 gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <Cpu size={20} className="text-primary" />
+          <FaMicrochip size={20} className="text-primary" />{" "}
+          {/* 2. Use FaMicrochip with the same props */}
           <span className="text-text font-bold text-lg">
             Maker<span className="text-primary">Hub</span> MM
           </span>

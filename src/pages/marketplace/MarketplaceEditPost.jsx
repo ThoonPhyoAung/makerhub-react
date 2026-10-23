@@ -92,7 +92,6 @@ function MarketplaceEditPost() {
   const showAlert = useAlert();
   const currentUser = useSelector((state) => state.auth?.user);
 
-  // ★ useFetch Pattern: API Call ပြုလုပ်ရန် useCallback ဖြင့် ခေါ်ယူခြင်း
   const fetchFn = useCallback(() => getMarketplaceItemById(id), [id]);
   const { data: itemData, loading, error } = useFetch(fetchFn, [fetchFn]);
 
@@ -102,10 +101,8 @@ function MarketplaceEditPost() {
   const [imageUrlInput, setImageUrlInput] = useState("");
   const [activeSocials, setActiveSocials] = useState([]);
 
-  // ★ Fetch ရရှိလာသော Data ကို Form State သို့ ပြောင်းလဲသတ်မှတ်ခြင်း
   useEffect(() => {
     if (itemData) {
-      // Ownership Verification (ပိုင်ရှင်ဟုတ်မဟုတ် စစ်ဆေးခြင်း)
       if (
         currentUser &&
         itemData.sellerId &&
@@ -146,7 +143,6 @@ function MarketplaceEditPost() {
         isSold: Boolean(itemData.isSold),
       });
 
-      // Active ဖြစ်နေသော Social Platform toggles များကို ဖော်ပြရန် Set လုပ်ခြင်း
       const activeIds = socialPlatforms
         .map((p) => p.id)
         .filter((sId) =>
@@ -175,7 +171,6 @@ function MarketplaceEditPost() {
     if (errors[key]) setErrors((prev) => ({ ...prev, [key]: "" }));
   };
 
-  // Image Handlers
   const handleAddImage = (e) => {
     e.preventDefault();
     const url = imageUrlInput.trim();
@@ -186,12 +181,6 @@ function MarketplaceEditPost() {
         type: "warning",
       });
       return;
-    }
-    if (form.images.length + 1 === 5) {
-      showAlert({
-        message: "Maximum 5 images reached",
-        type: "info",
-      });
     }
     if (form.images.length >= 5) {
       showAlert({ message: "Maximum 5 images allowed", type: "warning" });
@@ -214,7 +203,6 @@ function MarketplaceEditPost() {
     setForm((prev) => ({ ...prev, images: [selected, ...rest] }));
   };
 
-  // Components Handlers
   const addComponent = () => {
     setForm((prev) => ({
       ...prev,
@@ -284,7 +272,7 @@ function MarketplaceEditPost() {
         description: form.description,
         demoVideoUrl: form.demoVideoUrl || "",
         isNegotiable: Boolean(form.isNegotiable),
-        isSold: Boolean(form.isSold),
+        isSold: Boolean(form.isSold), // ★ Sold Out Status သာ ထားရှိသည်
 
         location: {
           state: form.state,
@@ -325,20 +313,18 @@ function MarketplaceEditPost() {
     }
   };
 
-  // Cancel Handler with Warning Alert
   const handleCancel = () => {
     showAlert({
       message: "Unsaved changes will be lost. Leave this page?",
       actionText: "Leave",
       type: "warning",
-      duration: 0, // user click လုပ်မှ ပိတ်မည်
+      duration: 0,
       onAction: () => {
         navigate(`/marketplace/items/${id}`);
       },
     });
   };
 
-  // Delete Handler
   const handleDeleteItem = (e) => {
     e.preventDefault();
 
@@ -347,7 +333,7 @@ function MarketplaceEditPost() {
         "Are you sure you want to delete this marketplace item? This action cannot be undone.",
       actionText: "Delete",
       type: "warning",
-      duration: 0, // user click လုပ်မှ ပိတ်မည်
+      duration: 0,
       onAction: async () => {
         try {
           await deleteMarketplaceItem(id);
@@ -369,7 +355,6 @@ function MarketplaceEditPost() {
     });
   };
 
-  // ★ Loading State ကို useFetch ၏ loading ပေါ် မူတည်၍ ပြသခြင်း
   if (loading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center py-16">
@@ -381,7 +366,6 @@ function MarketplaceEditPost() {
     );
   }
 
-  // ★ Error State သို့မဟုတ် Data မရှိပါက ပြသခြင်း
   if (error || !form) {
     return (
       <div className="text-center py-24 text-red-400">
@@ -446,6 +430,7 @@ function MarketplaceEditPost() {
           </div>
         </div>
 
+        {/* Form Fields Body */}
         <div className="p-5 md:p-6 flex flex-col gap-6">
           {/* Section 1: Item Details */}
           <div className="space-y-4 bg-surface p-4 rounded-2xl border border-border">
@@ -663,7 +648,7 @@ function MarketplaceEditPost() {
             )}
           </div>
 
-          {/* Section 4: Components (BOM List) */}
+          {/* Section 4: Components */}
           <div className="space-y-3 bg-surface p-4 rounded-2xl border border-border">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-text-subtle uppercase tracking-wider flex items-center gap-1.5">
@@ -923,7 +908,7 @@ function MarketplaceEditPost() {
               </select>
             </div>
 
-            {/* Social Media Toggles & Input Fields */}
+            {/* Social Media Toggles */}
             <div className="pt-2 border-t border-border/60">
               <label className="block text-text-muted text-xs font-medium mb-2">
                 Additional Social Media Channels

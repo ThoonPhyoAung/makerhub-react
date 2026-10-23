@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
+import { FaMicrochip } from "react-icons/fa6";
 import {
   LayoutDashboard,
   Users,
@@ -11,7 +12,6 @@ import {
   BookOpen,
   ChevronDown,
   ArrowLeft,
-  Cpu,
   X,
 } from "lucide-react";
 
@@ -69,7 +69,7 @@ function Sidebar({ isOpen, onClose }) {
         {/* Logo & Close button for mobile */}
         <div className="flex items-center justify-between border-b border-border pb-4 mb-4">
           <Link to="/" className="flex items-center gap-2">
-            <Cpu size={22} className="text-primary" />
+            <FaMicrochip size={22} className="text-primary" />
             <span className="text-text font-bold text-lg">
               Maker<span className="text-primary">Hub</span> Admin
             </span>
