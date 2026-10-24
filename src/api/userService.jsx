@@ -21,7 +21,7 @@ const defaultUsers = [
   },
   {
     id: "usr_learner",
-    name: "Thoon Phyo Aung",
+    name: "learner 1",
     role: "learner",
     email: "learner@makerhub.mm",
     password: "123456",
@@ -30,7 +30,7 @@ const defaultUsers = [
     xp: 0,
     streakDays: 0,
     progress: 0,
-    completedLessons: ["esp32-basics-01"],
+    completedLessons: [],
     completedChapters: [],
     completedJourneys: [],
   },

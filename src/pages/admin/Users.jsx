@@ -193,13 +193,19 @@ function Users() {
                       <td className="py-4 px-5">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs uppercase">
-                            {user.name
-                              ? user.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .slice(0, 2)
-                              : "U"}
+                            {user.avatar ? (
+                              <img
+                                src={user.avatar}
+                                alt="Avatar Preview"
+                                className="w-full h-full object-cover border rounded-full"
+                              />
+                            ) : (
+                              user.name
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .slice(0, 2)
+                            )}
                           </div>
                           <div>
                             <p className="font-medium text-text">

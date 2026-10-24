@@ -877,25 +877,37 @@ function LessonCreate() {
 
                   {isOpen && (
                     <div className="p-4 sm:p-5 flex flex-col gap-4">
+                      {/* Section Title Inputs with Labels */}
                       <div className="grid md:grid-cols-2 gap-3">
-                        <input
-                          type="text"
-                          value={section.label.en}
-                          onChange={(e) =>
-                            updateSectionLabel(secIndex, "en", e.target.value)
-                          }
-                          placeholder="Section Label (English) e.g., 1. Introduction"
-                          className="bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary"
-                        />
-                        <input
-                          type="text"
-                          value={section.label.mm}
-                          onChange={(e) =>
-                            updateSectionLabel(secIndex, "mm", e.target.value)
-                          }
-                          placeholder="Section Label (Myanmar) ဥပမာ - ၁။ မိတ်ဆက်"
-                          className="bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary"
-                        />
+                        <div>
+                          <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                            Section Label (English)
+                          </label>
+                          <input
+                            type="text"
+                            value={section.label.en}
+                            onChange={(e) =>
+                              updateSectionLabel(secIndex, "en", e.target.value)
+                            }
+                            placeholder="e.g., 1. Introduction & Overview"
+                            className="w-full bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                            Section Label (Myanmar 🇲🇲)
+                          </label>
+                          <input
+                            type="text"
+                            value={section.label.mm}
+                            onChange={(e) =>
+                              updateSectionLabel(secIndex, "mm", e.target.value)
+                            }
+                            placeholder="Section Label (Myanmar) ဥပမာ - ၁။ မိတ်ဆက်"
+                            className="w-full bg-surface border border-border text-text text-sm rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-primary"
+                          />
+                        </div>
                       </div>
 
                       <div className="flex flex-col gap-3 pl-2 md:pl-4 border-l-2 border-border-muted">
