@@ -152,7 +152,7 @@ function LessonCardsGrid({
               lesson.duration ||
               `${lesson.durationMin || 10}m`;
             const xpReward =
-              getLessonAllQuestionsXp(lesson) || lesson.xpReward || 20;
+              getLessonAllQuestionsXp(lesson) || lesson.xpReward || 0;
 
             const CardTag = isLocked ? "div" : Link;
             const lessonUrl = lesson.lessonUrlParam;

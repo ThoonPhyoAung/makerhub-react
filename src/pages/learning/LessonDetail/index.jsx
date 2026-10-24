@@ -100,14 +100,14 @@ function LessonDetailPage() {
   );
 
   // Total XP Calculation[cite: 21]
-  let totalLessonXp = 20;
+  let totalLessonXp = 0;
   if (currentLesson?.questions && currentLesson.questions.length > 0) {
     totalLessonXp = currentLesson.questions.reduce(
       (sum, q) => sum + Number(q.xp || q.xpReward || 10),
       0,
     );
   } else if (currentLesson) {
-    totalLessonXp = currentLesson.xpReward || currentLesson.xp || 20;
+    totalLessonXp = currentLesson.xpReward || currentLesson.xp || 0;
   }
 
   // Completed Status Check[cite: 21]
