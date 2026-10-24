@@ -70,6 +70,7 @@ function LessonEdit() {
   // Load target lesson details into form on initial fetch
   useEffect(() => {
     if (!lessonsLoading && allLessons.length > 0) {
+      // 🚀 API data ရဲ့ id (`"4"`) သို့မဟုတ် lessonUrlParam နဲ့ တိုက်စစ်ခြင်း
       const target = allLessons.find(
         (l) =>
           String(l.id) === String(lessonId) ||
@@ -78,33 +79,24 @@ function LessonEdit() {
 
       if (target) {
         setForm({
+          id: target.id, // API ID ကို သိမ်းဆည်းရန် အလွန်အရေးကြီးပါသည်
           journeyId: target.journeyId || "",
           chapterId: target.chapterId || "",
-          lessonUrlParam: target.lessonUrlParam || target.id || "",
+          lessonUrlParam: target.lessonUrlParam || "",
           order: target.order || 1,
           durationMin: target.durationMin || 10,
           title: {
-            en: target.title?.en || target.title || "",
+            en: target.title?.en || "",
             mm: target.title?.mm || "",
           },
           description: {
-            en: target.description?.en || target.desc?.en || "",
-            mm: target.description?.mm || target.desc?.mm || "",
+            en: target.description?.en || "",
+            mm: target.description?.mm || "",
           },
           coverImage: target.coverImage || "",
           sections: Array.isArray(target.sections)
             ? target.sections.map((sec) => ({ ...sec, isOpen: true }))
-            : [
-                {
-                  id: `sec-1`,
-                  label: {
-                    en: "1. Introduction & Setup",
-                    mm: "၁။ မိတ်ဆက်နှင့် ပြင်ဆင်ပုံ",
-                  },
-                  isOpen: true,
-                  blocks: [{ type: "text", value: { en: "", mm: "" } }],
-                },
-              ],
+            : [],
           questions: Array.isArray(target.questions) ? target.questions : [],
         });
       }
@@ -425,61 +417,32 @@ function LessonEdit() {
 
     setIsSubmitting(true);
     try {
-      const chapterLessons = allLessons
-        .filter(
-          (l) =>
-            l.journeyId === form.journeyId && l.chapterId === form.chapterId,
-        )
-        .sort((a, b) => (a.order || 1) - (b.order || 1));
-
-      const currentIndex = chapterLessons.findIndex(
-        (l) =>
-          String(l.id || l._id) === String(lessonId) ||
-          String(l.lessonUrlParam) === String(lessonId),
-      );
-
-      if (currentIndex === -1) {
-        throw new Error("Lesson not found in chapter");
-      }
-
       const cleanedSections = form.sections.map(({ isOpen, ...sec }) => sec);
       const cleanedQuestions = form.questions.filter(
         (q) => q.question.en?.trim() || q.question.mm?.trim(),
       );
 
-      const targetOrder = Math.max(1, Number(form.order) || 1);
+      // 🚀 API data structure အတိုင်း တိကျသေချာသော Payload ကို တည်ဆောက်ခြင်း
+      const updatedLessonData = {
+        id: form.id || lessonId, // API မျှော်လင့်ထားသော id (`"4"`) ကို သုံးခြင်း
+        createdAt: form.createdAt || new Date().toISOString(),
+        journeyId: form.journeyId,
+        chapterId: form.chapterId,
+        lessonUrlParam: form.lessonUrlParam,
+        order: Number(form.order) || 1,
+        durationMin: Number(form.durationMin) || 10,
+        title: form.title,
+        description: form.description,
+        coverImage: form.coverImage,
+        sections: cleanedSections,
+        questions: cleanedQuestions,
+        completedUserIds: form.completedUserIds || [],
+      };
 
-      const updatedLessons = [...chapterLessons];
-      const [movedLesson] = updatedLessons.splice(currentIndex, 1);
+      console.log("Sending Payload to API:", updatedLessonData);
 
-      movedLesson.journeyId = form.journeyId;
-      movedLesson.chapterId = form.chapterId;
-      movedLesson.lessonUrlParam = form.lessonUrlParam;
-      movedLesson.durationMin = Number(form.durationMin) || 10;
-      movedLesson.title = form.title;
-      movedLesson.description = form.description;
-      movedLesson.coverImage = form.coverImage;
-      movedLesson.sections = cleanedSections;
-      movedLesson.questions = cleanedQuestions;
-      movedLesson.order = targetOrder;
-
-      const targetIndex = Math.max(
-        0,
-        Math.min(targetOrder - 1, updatedLessons.length),
-      );
-      updatedLessons.splice(targetIndex, 0, movedLesson);
-
-      const finalLessons = updatedLessons.map((item, idx) => ({
-        ...item,
-        order: idx + 1,
-      }));
-
-      for (const item of finalLessons) {
-        const itemId = item.id || item._id;
-        if (itemId) {
-          await updateLesson(itemId, item);
-        }
-      }
+      // API Call to Update (id ကို တိုက်ရိုက် ပို့ပေးခြင်း)
+      await updateLesson(updatedLessonData.id, updatedLessonData);
 
       showAlert({
         message: "Lesson updated successfully!",
@@ -487,7 +450,7 @@ function LessonEdit() {
       });
       navigate("/admin/learning/lessons");
     } catch (err) {
-      console.error("Failed to update lesson:", err);
+      console.error("Failed to update lesson API error:", err);
       showAlert({
         message: "Failed to update lesson. Please try again.",
         type: "error",
@@ -571,11 +534,11 @@ function LessonEdit() {
               id="journeyId"
               value={form.journeyId}
               onChange={(e) => {
-                changeInput(e);
+                const selectedVal = e.target.value;
                 setForm((prev) => ({
                   ...prev,
-                  journeyId: e.target.value,
-                  chapterId: "",
+                  journeyId: selectedVal,
+                  chapterId: "", // Journey ပြောင်းလိုက်ရင် Chapter ကို အသစ်ပြန်ရွေးခိုင်းရန် Reset လုပ်ခြင်း
                 }));
                 if (errors.journeyId)
                   setErrors((prev) => ({ ...prev, journeyId: "" }));
@@ -609,7 +572,11 @@ function LessonEdit() {
               id="chapterId"
               value={form.chapterId}
               onChange={(e) => {
-                changeInput(e);
+                const selectedVal = e.target.value;
+                setForm((prev) => ({
+                  ...prev,
+                  chapterId: selectedVal,
+                }));
                 if (errors.chapterId)
                   setErrors((prev) => ({ ...prev, chapterId: "" }));
               }}
@@ -1196,7 +1163,9 @@ function LessonEdit() {
                                   </div>
                                 ) : (
                                   <p className="text-[11px] text-text-muted italic">
-                                    * Wokwi Project ID ထည့်သွင်းပါက ဆင်မြူလေတာ ပုံစံငယ်ကို ဤနေရာတွင် တိုက်ရိုက်ကြည့်ရှုနိုင်မည်။
+                                    * Wokwi Project ID ထည့်သွင်းပါက ဆင်မြူလေတာ
+                                    ပုံစံငယ်ကို ဤနေရာတွင်
+                                    တိုက်ရိုက်ကြည့်ရှုနိုင်မည်။
                                   </p>
                                 )}
                               </div>
@@ -1214,8 +1183,16 @@ function LessonEdit() {
                                       type="text"
                                       value={block.name?.en || ""}
                                       onChange={(e) => {
-                                        const n = { ...block.name, en: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "name", n);
+                                        const n = {
+                                          ...block.name,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "name",
+                                          n,
+                                        );
                                       }}
                                       placeholder="e.g., Arduino IDE"
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
@@ -1229,8 +1206,16 @@ function LessonEdit() {
                                       type="text"
                                       value={block.name?.mm || ""}
                                       onChange={(e) => {
-                                        const n = { ...block.name, mm: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "name", n);
+                                        const n = {
+                                          ...block.name,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "name",
+                                          n,
+                                        );
                                       }}
                                       placeholder="ဥပမာ - Arduino IDE"
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
@@ -1247,8 +1232,16 @@ function LessonEdit() {
                                       type="text"
                                       value={block.softwareType?.en || ""}
                                       onChange={(e) => {
-                                        const st = { ...block.softwareType, en: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "softwareType", st);
+                                        const st = {
+                                          ...block.softwareType,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "softwareType",
+                                          st,
+                                        );
                                       }}
                                       placeholder="e.g., IDE / Compiler"
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
@@ -1262,8 +1255,16 @@ function LessonEdit() {
                                       type="text"
                                       value={block.softwareType?.mm || ""}
                                       onChange={(e) => {
-                                        const st = { ...block.softwareType, mm: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "softwareType", st);
+                                        const st = {
+                                          ...block.softwareType,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "softwareType",
+                                          st,
+                                        );
                                       }}
                                       placeholder="ဥပမာ - IDE / ဆော့ဖ်ဝဲလ် ရေးသားရန်"
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2"
@@ -1279,7 +1280,12 @@ function LessonEdit() {
                                     type="url"
                                     value={block.link || ""}
                                     onChange={(e) => {
-                                      updateBlockField(secIndex, blockIndex, "link", e.target.value);
+                                      updateBlockField(
+                                        secIndex,
+                                        blockIndex,
+                                        "link",
+                                        e.target.value,
+                                      );
                                     }}
                                     placeholder="https://www.arduino.cc/en/software"
                                     className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg px-3 py-2 font-mono"
@@ -1295,8 +1301,16 @@ function LessonEdit() {
                                       rows={2}
                                       value={block.description?.en || ""}
                                       onChange={(e) => {
-                                        const desc = { ...block.description, en: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "description", desc);
+                                        const desc = {
+                                          ...block.description,
+                                          en: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "description",
+                                          desc,
+                                        );
                                       }}
                                       placeholder="Open-source electronics prototyping platform."
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg p-2.5"
@@ -1310,8 +1324,16 @@ function LessonEdit() {
                                       rows={2}
                                       value={block.description?.mm || ""}
                                       onChange={(e) => {
-                                        const desc = { ...block.description, mm: e.target.value };
-                                        updateBlockField(secIndex, blockIndex, "description", desc);
+                                        const desc = {
+                                          ...block.description,
+                                          mm: e.target.value,
+                                        };
+                                        updateBlockField(
+                                          secIndex,
+                                          blockIndex,
+                                          "description",
+                                          desc,
+                                        );
                                       }}
                                       placeholder="အီလက်ထရွန်နစ် ပရောဂျက်များ ဖန်တီးစမ်းသပ်ရန်..."
                                       className="w-full bg-bg-subtle border border-border text-text text-xs rounded-lg p-2.5"
@@ -1345,7 +1367,10 @@ function LessonEdit() {
                                             }}
                                           />
                                         ) : (
-                                          <Wrench size={18} className="text-text-muted" />
+                                          <Wrench
+                                            size={18}
+                                            className="text-text-muted"
+                                          />
                                         )}
                                       </div>
 
@@ -1358,7 +1383,9 @@ function LessonEdit() {
                                             type="text"
                                             value={comp.name}
                                             onChange={(e) => {
-                                              const comps = [...block.components];
+                                              const comps = [
+                                                ...block.components,
+                                              ];
                                               comps[cIdx].name = e.target.value;
                                               updateBlockField(
                                                 secIndex,
@@ -1379,7 +1406,9 @@ function LessonEdit() {
                                             type="text"
                                             value={comp.qty}
                                             onChange={(e) => {
-                                              const comps = [...block.components];
+                                              const comps = [
+                                                ...block.components,
+                                              ];
                                               comps[cIdx].qty = e.target.value;
                                               updateBlockField(
                                                 secIndex,
@@ -1400,8 +1429,11 @@ function LessonEdit() {
                                             type="url"
                                             value={comp.image}
                                             onChange={(e) => {
-                                              const comps = [...block.components];
-                                              comps[cIdx].image = e.target.value;
+                                              const comps = [
+                                                ...block.components,
+                                              ];
+                                              comps[cIdx].image =
+                                                e.target.value;
                                               updateBlockField(
                                                 secIndex,
                                                 blockIndex,
@@ -1599,14 +1631,21 @@ function LessonEdit() {
                     Options (မှန်ကန်သော အဖြေကို Radio Button ဖြင့် ရွေးပါ):
                   </span>
                   {q.options.map((opt, optIndex) => (
-                    <div key={optIndex} className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-surface/40 p-2.5 rounded-xl border border-border/60">
+                    <div
+                      key={optIndex}
+                      className="flex flex-col sm:flex-row items-start sm:items-center gap-2 bg-surface/40 p-2.5 rounded-xl border border-border/60"
+                    >
                       <div className="flex items-center gap-2 w-full sm:w-auto">
                         <input
                           type="radio"
                           name={`correct-${qIndex}`}
                           checked={q.correctIndex === optIndex}
                           onChange={() =>
-                            updateQuestionField(qIndex, "correctIndex", optIndex)
+                            updateQuestionField(
+                              qIndex,
+                              "correctIndex",
+                              optIndex,
+                            )
                           }
                           className="accent-primary"
                           title="Correct Answer"
