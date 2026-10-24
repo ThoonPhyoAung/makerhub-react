@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { SavePlus, Loader2 } from "lucide-react";
 import { useFetch } from "../../../../hooks/useFetch";
@@ -16,13 +16,16 @@ const ChapterEdit = () => {
 
   const [saving, setSaving] = useState(false);
   const [loadingChapter, setLoadingChapter] = useState(true);
-  const [errors, setErrors] = useState({}); // 📌 Validation Errors State
+  const [errors, setErrors] = useState({});
 
-  const titleEnRef = useRef(null);
-  const titleMmRef = useRef(null);
-  const descEnRef = useRef(null);
-  const descMmRef = useRef(null);
-  const orderRef = useRef(null);
+  // 🚀 useRef အစား React State များကို အသုံးပြုခြင်း
+  const [formData, setFormData] = useState({
+    titleEn: "",
+    titleMm: "",
+    descEn: "",
+    descMm: "",
+    order: 1,
+  });
 
   const findTargetJourney = (list) => {
     return list.find(
@@ -44,56 +47,44 @@ const ChapterEdit = () => {
         );
 
         if (chapter) {
-          if (titleEnRef.current) {
-            titleEnRef.current.value =
+          // 🚀 State ထဲသို့ Data များကို ထည့်သွင်းခြင်းဖြင့် Input တွေမှာ အလိုအလျောက် ပေါ်လာစေရန်
+          setFormData({
+            titleEn:
               typeof chapter.title === "object"
                 ? chapter.title?.en || ""
-                : chapter.title || "";
-          }
-          if (titleMmRef.current) {
-            titleMmRef.current.value =
-              typeof chapter.title === "object" ? chapter.title?.mm || "" : "";
-          }
-          if (descEnRef.current) {
-            descEnRef.current.value =
+                : chapter.title || "",
+            titleMm:
+              typeof chapter.title === "object" ? chapter.title?.mm || "" : "",
+            descEn:
               typeof chapter.desc === "object"
                 ? chapter.desc?.en || ""
-                : chapter.desc || chapter.description || "";
-          }
-          if (descMmRef.current) {
-            descMmRef.current.value =
-              typeof chapter.desc === "object" ? chapter.desc?.mm || "" : "";
-          }
-          if (orderRef.current) {
-            orderRef.current.value = chapter.order || 1;
-          }
+                : chapter.desc || chapter.description || "",
+            descMm:
+              typeof chapter.desc === "object" ? chapter.desc?.mm || "" : "",
+            order: chapter.order || 1,
+          });
         }
       }
       setLoadingChapter(false);
     }
   }, [journeysLoading, journeys, journeySystemId, chapterId]);
 
-  // 📌 စာစရိုက်လိုက်သည်နှင့် သက်ဆိုင်ရာ field ၏ error ကို ချက်ချင်းဖျက်ပေးသည့် handler
-  const handleInputChange = (fieldKey) => {
-    if (errors[fieldKey]) {
-      setErrors((prev) => ({ ...prev, [fieldKey]: "" }));
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
     }
   };
 
-  // --- VALIDATION LOGIC (Submit ခလုတ်နှိပ်မှသာ စစ်ဆေးမည်) ---
   const validateData = () => {
     let errs = {};
-    const titleEn = titleEnRef.current?.value.trim() || "";
-    const titleMm = titleMmRef.current?.value.trim() || "";
-
-    // 📌 English နဲ့ Myanmar နှစ်ခုစလုံးကို မဖြစ်မနေ တောင်းဆိုခြင်း
-    if (!titleEn) {
+    if (!formData.titleEn.trim()) {
       errs["titleEn"] = "Chapter title (English) is required.";
     }
-    if (!titleMm) {
+    if (!formData.titleMm.trim()) {
       errs["titleMm"] = "Chapter title (Myanmar) is required.";
     }
-
     setErrors(errs);
     return errs;
   };
@@ -110,12 +101,6 @@ const ChapterEdit = () => {
       return;
     }
 
-    const titleEn = titleEnRef.current?.value.trim() || "";
-    const titleMm = titleMmRef.current?.value.trim() || "";
-    const descEn = descEnRef.current?.value.trim() || "";
-    const descMm = descMmRef.current?.value.trim() || "";
-    const targetOrder = Number(orderRef.current?.value) || 1;
-
     try {
       setSaving(true);
 
@@ -128,10 +113,6 @@ const ChapterEdit = () => {
         ? journey.chapters
         : [];
 
-      // ==========================================
-      // 📌 ORDER LOGIC & REORDERING (EDIT):
-      // ==========================================
-      // 1. ပြင်ဆင်မည့် Chapter ရဲ့ လက်ရှိ နေရာ (Index) ကို ရှာခြင်း
       const currentIndex = existingChapters.findIndex(
         (ch) =>
           String(ch.id) === String(chapterId) ||
@@ -143,28 +124,28 @@ const ChapterEdit = () => {
       }
 
       const updatedChapters = [...existingChapters];
-
-      // 2. မူလနေရာမှ Chapter ကို ဖြုတ်ထုတ်ခြင်း (splice)
       const [movedChapter] = updatedChapters.splice(currentIndex, 1);
 
-      // အချက်အလက်နှင့် Order အသစ်ကို ထည့်သွင်းခြင်း
-      movedChapter.title = { en: titleEn, mm: titleMm };
-      movedChapter.desc = { en: descEn, mm: descMm };
-      movedChapter.order = targetOrder;
+      movedChapter.title = {
+        en: formData.titleEn.trim(),
+        mm: formData.titleMm.trim(),
+      };
+      movedChapter.desc = {
+        en: formData.descEn.trim(),
+        mm: formData.descMm.trim(),
+      };
+      movedChapter.order = Number(formData.order) || 1;
 
-      // 3. နေရာသစ် (targetIndex) တွင် အသစ်ပြန်လည် ညှပ်ထည့်ခြင်း
       const targetIndex = Math.max(
         0,
-        Math.min(targetOrder - 1, updatedChapters.length),
+        Math.min(movedChapter.order - 1, updatedChapters.length),
       );
       updatedChapters.splice(targetIndex, 0, movedChapter);
 
-      // 4. Chapter အားလုံး၏ order နံပါတ်များကို ၁, ၂, ၃ အစဉ်လိုက် အသစ်ပြန်စီခြင်း
       const finalChapters = updatedChapters.map((chapter, idx) => ({
         ...chapter,
         order: idx + 1,
       }));
-      // ==========================================
 
       await updateJourney(journey.id, {
         ...journey,
@@ -244,8 +225,9 @@ const ChapterEdit = () => {
             </label>
             <input
               type="text"
-              ref={titleEnRef}
-              onChange={() => handleInputChange("titleEn")}
+              name="titleEn"
+              value={formData.titleEn}
+              onChange={handleChange}
               placeholder="e.g., Getting Started & Basics"
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
@@ -262,8 +244,9 @@ const ChapterEdit = () => {
             </label>
             <input
               type="text"
-              ref={titleMmRef}
-              onChange={() => handleInputChange("titleMm")}
+              name="titleMm"
+              value={formData.titleMm}
+              onChange={handleChange}
               placeholder="ဥပမာ - အခြေခံနှင့် စတင်ခြင်း"
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
@@ -282,7 +265,9 @@ const ChapterEdit = () => {
             </label>
             <textarea
               rows={4}
-              ref={descEnRef}
+              name="descEn"
+              value={formData.descEn}
+              onChange={handleChange}
               placeholder="Briefly describe what learners will build or learn..."
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
@@ -293,7 +278,9 @@ const ChapterEdit = () => {
             </label>
             <textarea
               rows={4}
-              ref={descMmRef}
+              name="descMm"
+              value={formData.descMm}
+              onChange={handleChange}
               placeholder="မြန်မာလို ဖော်ပြချက်..."
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
             />
@@ -306,7 +293,9 @@ const ChapterEdit = () => {
           </label>
           <input
             type="number"
-            ref={orderRef}
+            name="order"
+            value={formData.order}
+            onChange={handleChange}
             placeholder="1"
             className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-primary transition-colors"
           />

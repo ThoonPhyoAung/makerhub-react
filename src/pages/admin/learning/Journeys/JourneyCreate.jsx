@@ -1,6 +1,12 @@
 import { useState, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { Image as ImageIcon, Wrench, Palette, Plus } from "lucide-react";
+import {
+  Image as ImageIcon,
+  Wrench,
+  Palette,
+  Plus,
+  Loader2,
+} from "lucide-react"; // 🚀 Loader2 ကို သေချာစွာ import လုပ်ခြင်း
 import { createJourney } from "../../../../api/journeysApi";
 import { useAlert } from "../../../../context/AlertContext";
 import { boardIconMap, RenderIcon } from "../../../../utils/iconMaps";
@@ -33,9 +39,7 @@ function JourneyCreate() {
     if (!levelRef.current?.value)
       errs["level"] = "Difficulty level is required.";
 
-    // 📌 iconKey State ကို တိုက်ရိုက် စစ်ဆေးခြင်း
     if (!iconKey || !iconKey.trim()) errs["iconKey"] = "Icon key is required.";
-
     if (!selectedColor.trim()) errs["color"] = "Theme color is required.";
     if (!boardImage.trim()) errs["boardImage"] = "Board image URL is required.";
     if (!descRef.current?.value.trim())
@@ -60,7 +64,7 @@ function JourneyCreate() {
       level: levelRef.current.value,
       iconKey: iconKey,
       color: selectedColor,
-      colorBg: `${selectedColor}20`, //"#00588f20" , opacity 20
+      colorBg: `${selectedColor}20`,
       boardImage: boardImage.trim(),
       link: `/${journeyId.toLowerCase().replace(/\s+/g, "-")}`,
       desc: descRef.current.value.trim(),
@@ -73,23 +77,26 @@ function JourneyCreate() {
       setIsCreating(true);
       await createJourney(newJourney);
 
-      navigate("/admin/learning/journeys");
       showAlert({
         message: `Journey "${newJourney.title}" created successfully!`,
         type: "success",
       });
+      navigate("/admin/learning/journeys");
     } catch (apiErr) {
       console.error("API create failed:", apiErr);
       showAlert({
         message: "Failed to create journey via API. Please try again.",
         type: "error",
       });
+    } finally {
+      // 🚀 Error တက်သည်ဖြစ်စေ၊ အောင်မြင်သည်ဖြစ်စေ Button ကို ပြန်ဖွင့်ပေးရန်
+      setIsCreating(false);
     }
   };
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
-      {/* 📌 Header & Breadcrumb */}
+      {/* Header & Breadcrumb */}
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold text-text">Create New Journey</h1>
@@ -129,9 +136,8 @@ function JourneyCreate() {
         </nav>
       </div>
 
-      {/* 📌 Main Form Card Container */}
+      {/* Main Form Card Container */}
       <div className="bg-bg-elevated border border-border rounded-2xl p-6 sm:p-8 shadow-sm space-y-6">
-        {/* 📌 Header with Current Date on the Right */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between border-b border-border pb-4 gap-2">
           <div>
             <h2 className="text-lg font-bold text-text">
@@ -142,7 +148,6 @@ function JourneyCreate() {
             </p>
           </div>
 
-          {/* Current Date Badge */}
           <div className="self-start sm:self-auto bg-surface border border-border px-3 py-1.5 rounded-xl text-xs font-mono text-text-muted flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span>
@@ -221,7 +226,6 @@ function JourneyCreate() {
               Icon Key <span className="text-rose-500">*</span>
             </label>
 
-            {/* Trigger Box */}
             <div
               onClick={() => setIsOpen(!isOpen)}
               className="w-full bg-surface border border-border rounded-xl px-4 py-2.5 text-sm text-text flex items-center justify-between cursor-pointer hover:border-primary transition-colors"
@@ -242,12 +246,11 @@ function JourneyCreate() {
               </span>
             </div>
 
-            {/* Dropdown Menu List */}
             {isOpen && (
-              <div className="absolute z-20 w-full mt-1.5 bg-surface border border-border rounded-xl shadow-lg overflow-hidden py-1">
-                {Object.keys(boardIconMap).map((key) => (
+              <div className="absolute z-20 w-full mt-1.5 bg-surface border border-border rounded-xl shadow-lg overflow-hidden py-1 max-h-60 overflow-y-auto">
+                {Object.keys(boardIconMap).map((key, index) => (
                   <div
-                    key={key}
+                    key={`${key}-${index}`} // 🚀 Unique key ဖြစ်စေရန် index ပါ တွဲသုံးခြင်း
                     onClick={() => {
                       setIconKey(key);
                       setIsOpen(false);
@@ -272,7 +275,7 @@ function JourneyCreate() {
             )}
           </div>
 
-          {/* Advanced Color Picker with Hex Input Support */}
+          {/* Advanced Color Picker */}
           <div>
             <label className="block text-xs font-semibold text-text mb-2 flex items-center gap-1">
               <Palette size={14} className="text-primary" /> Theme Color{" "}
@@ -301,7 +304,7 @@ function JourneyCreate() {
           </div>
         </div>
 
-        {/* Board Image URL with Optimized Preview Size */}
+        {/* Board Image URL with Preview */}
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-5 items-start">
           <div className="sm:col-span-3">
             <label className="block text-xs font-semibold text-text mb-2 flex items-center gap-1">
@@ -322,7 +325,6 @@ function JourneyCreate() {
             )}
           </div>
 
-          {/* Optimized Image Preview Box */}
           <div>
             <label className="block text-xs font-semibold text-text mb-2">
               Preview
@@ -377,11 +379,11 @@ function JourneyCreate() {
             type="button"
             onClick={saveJourney}
             disabled={isCreating}
-            className="inline-flex items-center  gap-2 px-6 py-2.5 rounded-xl bg-primary hover:opacity-90 text-white text-xs font-bold transition-all shadow-sm cursor-pointer"
+            className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary hover:opacity-90 text-white text-xs font-bold transition-all shadow-sm cursor-pointer disabled:opacity-50"
           >
             {isCreating ? (
               <>
-                <Loader2 size={16} className="animate-spin" /> Createing...
+                <Loader2 size={16} className="animate-spin" /> Creating...
               </>
             ) : (
               <>
