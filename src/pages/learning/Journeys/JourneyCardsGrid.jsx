@@ -100,7 +100,7 @@ function JourneyCardItem({ j, completedLessonSet, allLessons }) {
           </div>
 
           {/* 🌟 Image Container with Loading Skeleton */}
-          <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative bg-bg-subtle">
+          <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative">
             {!imgLoaded && (
               <div className="absolute inset-0 flex items-center justify-center bg-bg-subtle animate-pulse">
                 <Loader2 size={20} className="text-primary animate-spin" />
