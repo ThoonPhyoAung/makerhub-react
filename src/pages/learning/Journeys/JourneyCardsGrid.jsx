@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Link } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Loader2, BookOpen, Users, Star, ChevronRight } from "lucide-react";
@@ -29,6 +29,139 @@ const getCompletedLessonSet = (activeUser) => {
   }
   return set;
 };
+
+// 🌟 Single Journey Card Component (Individual state for image loading)
+function JourneyCardItem({ j, completedLessonSet, allLessons }) {
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  return (
+    <div
+      className="group relative overflow-hidden bg-bg-elevated border border-border rounded-3xl p-4 sm:p-6 hover:-translate-y-1.5 transition-all duration-500 shadow-sm hover:shadow-2xl"
+      style={{
+        ["--journey-color"]: j.color,
+      }}
+    >
+      {/* 🌟 Premium Atmospheric Top-Left Glow */}
+      <div
+        className="absolute -top-24 -left-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-25 dark:group-hover:opacity-35 transition-all duration-700 pointer-events-none"
+        style={{ backgroundColor: j.color }}
+      />
+
+      {/* 🌟 Premium Atmospheric Bottom-Right Glow */}
+      <div
+        className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 transition-all duration-700 pointer-events-none"
+        style={{ backgroundColor: j.color }}
+      />
+
+      <div className="relative z-10">
+        {/* Badge & Icon */}
+        <div className="flex justify-between items-start mb-4">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner"
+            style={{ backgroundColor: j.colorBg, color: j.color }}
+          >
+            <RenderIcon iconKey={j.iconKey} map={boardIconMap} size={22} />
+          </div>
+          <span
+            className="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
+            style={{
+              backgroundColor: j.colorBg,
+              color: j.color,
+              border: `1px solid ${j.color}33`,
+            }}
+          >
+            {j.level}
+          </span>
+        </div>
+
+        {/* Title, Desc & Image */}
+        <div className="flex justify-between items-start gap-4 mb-5">
+          <div className="flex-1 min-w-0">
+            <h3 className="text-text text-lg sm:text-xl font-bold mb-2">
+              {typeof j.title === "object" ? j.title.en : j.title}
+            </h3>
+            <p className="hidden md:block text-text-muted text-sm leading-relaxed mb-3 line-clamp-2">
+              {typeof j.desc === "object" ? j.desc.en : j.desc || j.description}
+            </p>
+            <div className="flex gap-3 sm:gap-4 text-text-muted text-xs sm:text-sm font-medium">
+              <span className="flex items-center gap-1">
+                <BookOpen size={13} className="text-primary" />{" "}
+                {j.totalChapters} chapters
+              </span>
+              <span className="flex items-center gap-1">
+                <BookOpen size={13} className="text-primary" /> {j.totalLessons}{" "}
+                lessons
+              </span>
+              <span className="flex items-center gap-1 hidden sm:flex">
+                <Users size={13} className="text-primary" /> {j.studentsCount}{" "}
+                learners
+              </span>
+            </div>
+          </div>
+
+          {/* 🌟 Image Container with Loading Skeleton */}
+          <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center relative bg-bg-subtle">
+            {!imgLoaded && (
+              <div className="absolute inset-0 flex items-center justify-center bg-bg-subtle animate-pulse">
+                <Loader2 size={20} className="text-primary animate-spin" />
+              </div>
+            )}
+            <img
+              src={j.boardImage || j.image || j.coverImage}
+              alt={typeof j.title === "object" ? j.title.en : j.title}
+              referrerPolicy="no-referrer"
+              onLoad={() => setImgLoaded(true)}
+              className={`w-full h-full object-cover transition-all duration-500 group-hover:scale-105 ${
+                imgLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onError={(e) => {
+                setImgLoaded(true);
+                e.target.onerror = null;
+                e.target.src =
+                  "https://placehold.co/300x200/18181b/ffffff?text=Microcontroller";
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Progress Bar & Actions */}
+        <div>
+          <div className="flex justify-between text-sm mb-1 font-semibold">
+            <span className="text-text-muted">Progress</span>
+            <span className="text-text">{j.progress}%</span>
+          </div>
+          <div className="h-2 bg-bg-subtle border border-border rounded-full overflow-hidden mb-4">
+            <div
+              className="h-full rounded-full transition-all duration-300"
+              style={{
+                width: `${j.progress}%`,
+                backgroundColor: j.color,
+              }}
+            />
+          </div>
+
+          <div className="flex justify-between items-center">
+            <span
+              className="flex items-center gap-1 text-sm font-bold"
+              style={{ color: j.color }}
+            >
+              <Star size={14} className="fill-current" /> {j.totalXp} XP
+            </span>
+
+            <Link
+              to={`/learning/${j.resolvedId}`}
+              className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-4 py-2 rounded-xl border transition-all duration-300 hover:bg-surface active:scale-95 shadow-sm"
+              style={{ borderColor: j.color, color: j.color }}
+            >
+              {j.progress > 0 ? "Continue" : "Start Journey"}{" "}
+              <ChevronRight size={14} />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
   // Redux မှ Active User ရယူခြင်း
@@ -122,129 +255,12 @@ function JourneyCardsGrid({ journeys = [], allLessons = [], loading, error }) {
       ) : (
         <div className="grid lg:grid-cols-2 gap-6">
           {enrichedJourneys.map((j) => (
-            <div
+            <JourneyCardItem
               key={j.id || j.journeyId}
-              className="group relative overflow-hidden bg-bg-elevated border border-border rounded-3xl p-4 sm:p-6 hover:-translate-y-1.5 transition-all duration-500 shadow-sm hover:shadow-2xl"
-              style={{
-                // 🌟 Mouse တင်လိုက်စဉ် Journey ၏ သက်ဆိုင်ရာအရောင်ဖြင့် ဖျော့တော့သော 3D Glow Border & Shadow ပေါ်လာစေရန်
-                ["--journey-color"]: j.color,
-              }}
-            >
-              {/* 🌟 Premium Atmospheric Top-Left Glow */}
-              <div
-                className="absolute -top-24 -left-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-25 dark:group-hover:opacity-35 transition-all duration-700 pointer-events-none"
-                style={{ backgroundColor: j.color }}
-              />
-
-              {/* 🌟 Premium Atmospheric Bottom-Right Glow */}
-              <div
-                className="absolute -bottom-24 -right-24 w-64 h-64 rounded-full blur-[70px] opacity-0 group-hover:opacity-20 dark:group-hover:opacity-30 transition-all duration-700 pointer-events-none"
-                style={{ backgroundColor: j.color }}
-              />
-
-              <div className="relative z-10">
-                {/* Badge & Icon */}
-                <div className="flex justify-between items-start mb-4">
-                  <div
-                    className="w-12 h-12 rounded-xl flex items-center justify-center text-xl shadow-inner"
-                    style={{ backgroundColor: j.colorBg, color: j.color }}
-                  >
-                    <RenderIcon
-                      iconKey={j.iconKey}
-                      map={boardIconMap}
-                      size={22}
-                    />
-                  </div>
-                  <span
-                    className="px-3 py-1 rounded-full text-xs font-semibold shadow-sm"
-                    style={{
-                      backgroundColor: j.colorBg,
-                      color: j.color,
-                      border: `1px solid ${j.color}33`,
-                    }}
-                  >
-                    {j.level}
-                  </span>
-                </div>
-
-                {/* Title, Desc & Image */}
-                <div className="flex justify-between items-start gap-4 mb-5">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-text text-lg sm:text-xl font-bold mb-2">
-                      {typeof j.title === "object" ? j.title.en : j.title}
-                    </h3>
-                    <p className="hidden md:block text-text-muted text-sm leading-relaxed mb-3 line-clamp-2">
-                      {typeof j.desc === "object"
-                        ? j.desc.en
-                        : j.desc || j.description}
-                    </p>
-                    <div className="flex gap-3 sm:gap-4 text-text-muted text-xs sm:text-sm font-medium">
-                      <span className="flex items-center gap-1">
-                        <BookOpen size={13} className="text-primary" />{" "}
-                        {j.totalChapters} chapters
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <BookOpen size={13} className="text-primary" />{" "}
-                        {j.totalLessons} lessons
-                      </span>
-                      <span className="flex items-center gap-1 hidden sm:flex">
-                        <Users size={13} className="text-primary" />{" "}
-                        {j.studentsCount} learners
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="w-[100px] h-[85px] sm:w-[140px] sm:h-[110px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center ">
-                    <img
-                      src={j.boardImage || j.image || j.coverImage}
-                      alt={typeof j.title === "object" ? j.title.en : j.title}
-                      referrerPolicy="no-referrer"
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src =
-                          "https://placehold.co/300x200/18181b/ffffff?text=Microcontroller";
-                      }}
-                    />
-                  </div>
-                </div>
-
-                {/* Progress Bar & Actions */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1 font-semibold">
-                    <span className="text-text-muted">Progress</span>
-                    <span className="text-text">{j.progress}%</span>
-                  </div>
-                  <div className="h-2 bg-bg-subtle border border-border rounded-full overflow-hidden mb-4">
-                    <div
-                      className="h-full rounded-full transition-all duration-300"
-                      style={{
-                        width: `${j.progress}%`,
-                        backgroundColor: j.color,
-                      }}
-                    />
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span
-                      className="flex items-center gap-1 text-sm font-bold"
-                      style={{ color: j.color }}
-                    >
-                      <Star size={14} className="fill-current" /> {j.totalXp} XP
-                    </span>
-
-                    <Link
-                      to={`/learning/${j.resolvedId}`}
-                      className="inline-flex items-center gap-1.5 text-xs sm:text-sm font-bold px-4 py-2 rounded-xl border transition-all duration-300 hover:bg-surface active:scale-95 shadow-sm"
-                      style={{ borderColor: j.color, color: j.color }}
-                    >
-                      {j.progress > 0 ? "Continue" : "Start Journey"}{" "}
-                      <ChevronRight size={14} />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            </div>
+              j={j}
+              completedLessonSet={completedLessonSet}
+              allLessons={allLessons}
+            />
           ))}
         </div>
       )}

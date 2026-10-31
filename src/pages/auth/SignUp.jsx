@@ -1,6 +1,15 @@
 import { useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { User, Mail, Lock, ArrowRight, Moon, Sun } from "lucide-react";
+import {
+  User,
+  Mail,
+  Lock,
+  ArrowRight,
+  Moon,
+  Sun,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { FaMicrochip } from "react-icons/fa6";
 import { useDispatch } from "react-redux";
 
@@ -21,6 +30,10 @@ function SignUp() {
   const [errors, setErrors] = useState({});
   const [signUpError, setSignUpError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 📌 States for toggling password visibility
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // 📌 Theme Context
   const { theme, toggleTheme } = useTheme();
@@ -182,13 +195,23 @@ function SignUp() {
                   <Lock size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     minLength={6}
                     ref={passwordRef}
                     autoComplete="new-password"
                     placeholder="Minimum 6 characters"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-text-subtle hover:text-text transition-colors cursor-pointer shrink-0"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-xs text-red-500 mt-1">{errors.password}</p>
@@ -206,12 +229,28 @@ function SignUp() {
                   <Lock size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="confirmPassword"
-                    type="password"
+                    type={showConfirmPassword ? "text" : "password"}
                     ref={confirmPasswordRef}
                     autoComplete="new-password"
                     placeholder="Re-enter your password"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="text-text-subtle hover:text-text transition-colors cursor-pointer shrink-0"
+                    aria-label={
+                      showConfirmPassword
+                        ? "Hide confirm password"
+                        : "Show confirm password"
+                    }
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff size={16} />
+                    ) : (
+                      <Eye size={16} />
+                    )}
+                  </button>
                 </div>
                 {errors.confirmPassword && (
                   <p className="text-xs text-red-500 mt-1">

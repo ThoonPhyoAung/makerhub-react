@@ -137,7 +137,7 @@ export const userSignUp = (userData) => {
     password,
     avatar: "",
     createdAt: currentMonthYear,
-    xp: 100, // Bonus XP
+    xp: 0, // Bonus XP
     streakDates: [], // 📍 Signup စလုပ်ချိန်တွင် Array အလွတ် ဖြစ်မည်
     streakDays: 0, // 📍 Signup စလုပ်ချိန်တွင် 0 ဖြစ်မည်
     progress: 0,

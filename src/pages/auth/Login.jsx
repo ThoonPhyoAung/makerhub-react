@@ -6,6 +6,8 @@ import {
   Moon,
   Sun,
   ShieldAlert,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { FaMicrochip } from "react-icons/fa6";
 import { useDispatch } from "react-redux";
@@ -25,6 +27,9 @@ function Login() {
   const [errors, setErrors] = useState({});
   const [loginError, setLoginError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // 📌 State for toggling password visibility
+  const [showPassword, setShowPassword] = useState(false);
 
   // 📌 Theme Context
   const { theme, toggleTheme } = useTheme();
@@ -99,7 +104,7 @@ function Login() {
             </span>
           </Link>
 
-         <button
+          <button
             onClick={toggleTheme}
             aria-label="Toggle Theme"
             className="p-2 rounded-full bg-bg-elevated border border-border text-text-muted hover:text-text hover:bg-bg-subtle transition-all cursor-pointer shadow-sm"
@@ -189,12 +194,22 @@ function Login() {
                   <Lock size={16} className="text-text-subtle shrink-0" />
                   <input
                     id="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     ref={passwordRef}
                     autoComplete="current-password"
                     placeholder="••••••••"
                     className="w-full bg-transparent text-text placeholder:text-text-subtle text-sm focus:outline-none"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-text-subtle hover:text-text transition-colors cursor-pointer shrink-0"
+                    aria-label={
+                      showPassword ? "Hide password" : "Show password"
+                    }
+                  >
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
                 </div>
                 {errors.password && (
                   <p className="text-sm text-red-500 mt-1">{errors.password}</p>
