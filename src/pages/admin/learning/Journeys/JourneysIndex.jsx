@@ -26,7 +26,7 @@ const getLessonQuestionsXp = (lesson) => {
   if (Array.isArray(lesson.questions) && lesson.questions.length > 0) {
     return lesson.questions.reduce((sum, q) => sum + Number(q.xp || 0), 0);
   }
-  return Number(lesson.xpReward || lesson.xp || 20);
+  return Number(lesson.xpReward || lesson.xp || 0);
 };
 
 const JourneysIndex = () => {
