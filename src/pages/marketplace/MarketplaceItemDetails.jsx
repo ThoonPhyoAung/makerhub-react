@@ -490,7 +490,7 @@ function MarketplaceItemDetails() {
                 </button>
               </div>
             ) : (
-              <div className="text-xs text-amber-400/90 bg-amber-950/30 border border-amber-800/40 px-3 py-2 rounded-xl text-center">
+              <div className="text-xs text-amber-400/90 bg-amber-950/10 border border-amber-800/40 px-3 py-2 rounded-xl text-center">
                 ဖုန်းနံပါတ် သီးသန့်ထည့်သွင်းထားခြင်းမရှိပါ။
               </div>
             )}
